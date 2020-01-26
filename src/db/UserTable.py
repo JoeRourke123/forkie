@@ -9,7 +9,7 @@ class UserTable(db.Model):
     username = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(355), unique=True, nullable=False)
-    lastlogin = db.Column(db.TIMESTAMP(timezone=False), default=datetime.now())
+    lastlogin = db.Column(db.DateTime, default=datetime.now())
 
     def __init__(self, data):
         self.username = data["username"]
