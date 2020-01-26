@@ -1,8 +1,8 @@
 from flask import Flask, request, render_template
 from src.db import db, UserTable
 from flask_heroku import Heroku
-from time import time
 
+from datetime import datetime
 import sys
 
 app = Flask(__name__)
@@ -23,7 +23,7 @@ def signup():
         "username": request.form["username"],
         "email": request.form["email"],
         "password": request.form["password"], # Replace with hashed password eventually
-        "lastlogin": time()
+        "lastlogin": datetime.now()
     })
 
     try:
@@ -35,6 +35,11 @@ def signup():
         sys.stdout.flush()
 
     return "Sign up Complete!"
+
+
+@app.route("/api/0.1/signin", methods=["POST"])
+def signin():
+
 
 
 if __name__ == "main":
