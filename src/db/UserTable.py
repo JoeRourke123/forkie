@@ -11,7 +11,7 @@ class UserTable(db.Model):
     lastlogin = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.userid = uuid.UUID(data["userid"]).int  # Place in once utils key hash function implemented
+        self.userid = uuid.UUID(data["userid"])  # Place in once utils key hash function implemented
         self.username = data["username"]
         self.password = data["password"]
         self.email = data["email"]
