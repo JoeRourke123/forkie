@@ -41,9 +41,7 @@ def signup():
 @app.route("/api/0.1/signin", methods=["POST"])
 def signin():
     if request.form["email"] or request.form["password"]:
-        query = UserTable.query.filter_by(
-            email == request.form['email'] and password == request.form["password"]
-        ).first()
+        query = UserTable.query.filter_by(email=request.form['email']).filter_by(password=request.form['password']).first()
 
         return str(query)
 
