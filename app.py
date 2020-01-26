@@ -24,7 +24,7 @@ def signup():
         "email": request.form["email"],
         "password": request.form["password"], # Replace with hashed password eventually
         "lastlogin": time()
-    }).__dict__
+    })
 
     try:
         db.session.add(userdata)
