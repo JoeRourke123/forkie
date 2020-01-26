@@ -1,7 +1,7 @@
 from src.db import db
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-import datetime
+from datetime import datetime
 
 class UserTable(db.Model):
     __tablename__ = "usertable"
@@ -9,7 +9,7 @@ class UserTable(db.Model):
     username = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(355), unique=True, nullable=False)
-    lastlogin = db.Column(db.TIMESTAMP(timezone=False), server_default=db.func.current_timestamp())
+    lastlogin = db.Column(db.TIMESTAMP(timezone=False), default=datetime.now())
 
     def __init__(self, data):
         self.username = data["username"]
