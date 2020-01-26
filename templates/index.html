@@ -1,0 +1,32 @@
+<html>
+<head>
+    <title>
+        file-rep0
+    </title>
+</head>
+<body>
+    <h1>
+        Welcome!
+    </h1>
+    <h2>
+        Sign Up...
+    </h2>
+    <form action="/api/0.1/signup" method="post" id="signup">
+        <input type="text" name="username" placeholder="Your Name">
+        <input type="email" name="email" placeholder="Your Email">
+        <input type="password" name="password" placeholder="Your Password">
+        <input type="submit" value="Sign up!">
+    </form>
+
+    <h2>
+        Sign in
+    </h2>
+    <form action="/api/0.1/signin" method="post" id="signin">
+        <input type="email" name="email" placeholder="Your Email">
+        <input type="password" name="password" placeholder="Your Password">
+        <input type="submit" value="Sign in!">
+    </form>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+</html>

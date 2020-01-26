@@ -8,7 +8,7 @@ class UserTable(db.Model):
     lastlogin = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, data):
-        self.userid = "" # Place in once utils key hash function implemented
+        self.userid = "@7bj?U!z5+QHD@Y8n2g@uwTbYMMD3?!^G#pCY*?t!F5mMzxvH?BG3dg%hejVAx=58X6xMt6PdCbc+7@Sg34?^zM-eX*Gz+Tgh9n_NaVL%=eV2s?Qfy3u&yVWvkw&=KB&" # Place in once utils key hash function implemented
         self.username = data["username"]
         self.password = data["password"]
         self.email = data["email"]
