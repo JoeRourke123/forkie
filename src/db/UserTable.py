@@ -15,4 +15,3 @@ class UserTable(db.Model):
         self.username = data["username"]
         self.password = data["password"]
         self.email = data["email"]
-        self.lastlogin = data["lastlogin"]
