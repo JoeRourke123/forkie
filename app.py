@@ -19,7 +19,7 @@ def index():
 # APIs
 @app.route("/api/0.1/signup", methods=["POST"])
 def signup():
-    userData = UserTable({
+    userdata = UserTable.UserTable({
         "username": request.form["username"],
         "email": request.form["email"],
         "password": request.form["password"], # Replace with hashed password eventually
@@ -27,7 +27,7 @@ def signup():
     }).__dict__
 
     try:
-        db.session.add(userData)
+        db.session.add(userdata)
         db.session.commit()
     except Exception as e:
         print("Failed Signup for user... " + request.form["email"])
