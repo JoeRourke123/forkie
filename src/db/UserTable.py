@@ -19,7 +19,7 @@ class UserTable(db.Model):
 
     def serialise(self):
         return {
-            "userid": self.userid,
+            "userid": str(self.userid),
             "username": self.username,
             "email": self.email,
             "lastlogin": self.lastlogin
