@@ -14,7 +14,7 @@ db.init_app(app)
 
 @app.route("/")
 def index(msg=None):
-    return render_template("index.html", msg)
+    return render_template("index.html", msg=msg)
 
 
 # APIs
