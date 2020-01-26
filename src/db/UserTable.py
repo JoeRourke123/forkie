@@ -22,5 +22,5 @@ class UserTable(db.Model):
             "userid": str(self.userid),
             "username": self.username,
             "email": self.email,
-            "lastlogin": self.lastlogin
+            "lastlogin": str(self.lastlogin)
         }
