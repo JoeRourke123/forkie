@@ -20,7 +20,6 @@ def index():
 @app.route("/api/0.1/signup", methods=["POST"])
 def signup():
     userdata = UserTable.UserTable({
-        "userid": "@7bj?U!z5+QHD@Y8n2g@uwTbYMMD3?!^G#pCY*?t!F5mMzxvH?BG3dg%hejVAx=58X6xMt6PdCbc+7@Sg34?^zM-eX*Gz+Tgh9n_NaVL%=eV2s?Qfy3u&yVWvkw&=KB&",
         "username": request.form["username"],
         "email": request.form["email"],
         "password": request.form["password"], # Replace with hashed password eventually
