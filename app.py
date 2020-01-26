@@ -5,6 +5,7 @@ from flask_heroku import Heroku
 
 from datetime import datetime
 import sys
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -43,7 +44,7 @@ def signin():
     if request.form["email"] or request.form["password"]:
         query = UserTable.query.filter_by(email=request.form['email']).filter_by(password=request.form['password']).first()
 
-        return str(query)
+        return json.dumps(query.serialise())
 
     return url_for('index', msg="Please enter a username and password")
 

@@ -16,3 +16,11 @@ class UserTable(db.Model):
         self.password = data["password"]
         self.email = data["email"]
         self.lastlogin = data["lastlogin"]
+
+    def serialise(self):
+        return {
+            "userid": self.userid,
+            "username": self.username,
+            "email": self.email,
+            "lastlogin": self.lastlogin
+        }
