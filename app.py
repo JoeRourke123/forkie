@@ -3,6 +3,8 @@ from src.db import db, UserTable
 from flask_heroku import Heroku
 from time import time
 
+import sys
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -29,6 +31,8 @@ def signup():
         db.session.commit()
     except Exception as e:
         print("Failed Signup for user... " + request.form["email"])
+        print(e)
+        sys.stdout.flush()
 
     return "Sign up Complete!"
 
