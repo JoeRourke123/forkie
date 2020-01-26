@@ -1,14 +1,12 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-import sys
-import json
+from src.db import db
 from flask_heroku import Heroku
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 heroku = Heroku(app)
-db = SQLAlchemy(app)
+db.init_app(app)
 
 @app.route("/")
 def index():
