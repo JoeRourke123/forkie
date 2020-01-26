@@ -58,13 +58,16 @@ def signin():
         try:
             query = UserTable.query.filter_by(email=request.form['email']).filter_by(password=request.form['password']).first()
 
+            if not query:
+                return result(400)
+
             query.lastlogin = datetime.now()
             db.session.commit()
 
             response = make_response(result(200, {
                 "userid": str(query.userid)
             }))
-            response.set_cookie('userID', str(query.userid))
+            response.set_cookie('userid', str(query.userid))
 
             return response
         except Exception as e:
