@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template
-from src.db import db, UserTable
+from flask import Flask, request, render_template, url_for
+from src.db import db
+from src.db.UserTable import UserTable
 from flask_heroku import Heroku
 
 from datetime import datetime
@@ -12,8 +13,8 @@ heroku = Heroku(app)
 db.init_app(app)
 
 @app.route("/")
-def index():
-    return render_template("index.html")
+def index(msg=None):
+    return render_template("index.html", msg)
 
 
 # APIs
@@ -39,8 +40,14 @@ def signup():
 
 @app.route("/api/0.1/signin", methods=["POST"])
 def signin():
+    if request.form["email"] or request.form["password"]:
+        query = UserTable.query.filter_by(
+            email == request.form['email'] and password == request.form["password"]
+        ).first()
 
+        return str(query)
 
+    return url_for('index', msg="Please enter a username and password")
 
 if __name__ == "main":
     app.run(threaded=True, port=5000)
