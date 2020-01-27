@@ -3,8 +3,7 @@ Group 9 Project for CS1813 Assignment 1
 
 Hosted at: https://file-rep0.herokuapp.com
 
-======
-
+---
 ### Database Examples
 #### Querying a database table
 To query a db table for an API endpoint simply do the following:
@@ -34,8 +33,7 @@ To query a db table for an API endpoint simply do the following:
 - After the insert you could return that it was successful or something like that
 - Be sure to read the fields required for a table before you insert into it
 
-======
-
+---
 ### Helpful Links
 How to connect to Postgres with Python:
 https://dev.to/paultopia/the-easiest-possible-way-to-throw-a-webapp-online-flask--heroku--postgres-185o
