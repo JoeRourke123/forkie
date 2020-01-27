@@ -68,7 +68,7 @@ def webSignup():
 def apiSignup():
     return json.dumps(signup(request.json))
 
-@app.route("/api/0.1/signin", methods=["POST"])
+@app.route("/api/cli/signin", methods=["POST"])
 def apiSignin():
     return json.dumps(signin(request.json))
 
