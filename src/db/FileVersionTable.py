@@ -7,7 +7,7 @@ class FileVersionTable(db.Model):
     extension = db.Column(db.String(16), nullable=False)
     versionhash = db.Column(db.String(8), nullable=False)
 
-    file = db.relationship(FileTable, foreign_keys=fileid, backref=db.backref('file', 'joined'))
+    file = db.relationship(FileTable, foreign_keys=fileid, backref=db.backref('file', lazy='joined'))
 
     def __init__(self, data):
         self.versionid = "" # hash the time and user attempting to upload the version
