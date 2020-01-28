@@ -1,8 +1,9 @@
 from src.db import db, FileTable
+import uuid
 
 
 class FileVersionTable(db.Model):
-    versionid = db.Column(db.String(128), primary_key=True)
+    versionid = db.Column(db.String(128), primary_key=True, default=uuid.uuid4())
     fileid = db.Column(db.String(128), db.ForeignKey('filetable.fileid'), nullable=False)
     extension = db.Column(db.String(16), nullable=False)
     versionhash = db.Column(db.String(8), nullable=False)

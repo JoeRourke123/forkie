@@ -1,8 +1,9 @@
 from src.db import db, FileVersionTable
+import uuid
 
 
 class MetadataTable(db.Model):
-    metadataid = db.Column(db.String(128), primary_key=True)
+    metadataid = db.Column(db.String(128), primary_key=True, default=uuid.uuid4())
     versionid = db.Column(db.String(128), db.ForeignKey('fileversiontable.versionid'), nullable=False)
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)

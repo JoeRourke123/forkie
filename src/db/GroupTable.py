@@ -1,7 +1,8 @@
 from src.db import db, UserTable
+import uuid
 
 class GroupTable(db.Model):
-    groupid = db.Column(db.String(128), primary_key=True)
+    groupid = db.Column(db.String(128), primary_key=True, default=uuid.uuid4())
     groupname = db.Column(db.String(64), nullable=False)
     groupleaderID = db.Column('groupleader', db.String(128), db.ForeignKey('usertable.userid'), nullable=False)
 

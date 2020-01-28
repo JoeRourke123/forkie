@@ -70,8 +70,8 @@ def apiSignup():
 
 @app.route("/api/cli/signin", methods=["POST"])
 def apiSignin():
-    return json.dumps(signin(request.json))
-
+    return json.dumps(signin(request.json))         # Always use json.dumps when returning JSON values
+                                                    # Routes must return strings
 
 # Sign in/up functions
 def signin(data):
