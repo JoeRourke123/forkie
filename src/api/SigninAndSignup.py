@@ -1,11 +1,13 @@
 from src.db.UserTable import UserTable
+from src.utils import hashPassword
+
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 import sys
 
 # Sign in/up functions
 def signin(db, data):
-    if data["email"] or data["password"]:       # Server side check for user email and password entry
+    if data["email"] and data["password"]:       # Server side check for user email and password entry
         try:
             query = UserTable.query.filter_by(email=data['email']).filter_by(password=data['password']).first()
             # Query the database with the entered email and password combination
@@ -20,7 +22,7 @@ def signin(db, data):
 
             return {
                 "result": 200,
-                "userid": str(query.userid)
+                "data": query.serialise()
             }
         except Exception as e:
             print(e)
@@ -28,13 +30,17 @@ def signin(db, data):
             return {
                 "result": 500
             }
+    else:
+        return {
+            "result": 401
+        }
 
 
 def signup(db, data):
     userdata = UserTable({  # Define an instance of the UserTable class with the entered data
         "username": data["username"],
         "email": data["email"],
-        "password": data["password"],  # Replace with hashed password eventually
+        "password": hashPassword(data["password"]),  # Replace with hashed password eventually
         "lastlogin": datetime.now()
     })
 

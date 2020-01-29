@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, url_for, make_response, redirect
+from flask import Flask, request, render_template, url_for, make_response, redirect, session
 from flask_heroku import Heroku
 
 import json
@@ -28,7 +28,7 @@ def dashboard():
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", user=session['user'])
 
 
 @app.route("/new/file")
@@ -55,8 +55,9 @@ def webSignin():
     req = signin(db, request.form)
 
     if req['result'] == 200:
+        session['user'] = req.data
         resp = make_response(redirect(url_for('dashboard')))
-        resp.set_cookie('userid', req['userid'])
+        resp.set_cookie('userid', str(req.data.userid))
         return resp
     elif req['result'] == 400:
         return redirect(url_for('index', msg="Sorry, we don't recognise that email/password combination"))
@@ -86,8 +87,8 @@ def apiSignup():
 
 @app.route("/api/cli/signin", methods=["POST"])
 def apiSignin():
-    return json.dumps(signin(request.json))         # Always use json.dumps when returning JSON values
-                                                    # Routes must return strings
+    return signin(db, request.form)
+
 
 if __name__ == "main":
     app.run(threaded=True, port=5000)
