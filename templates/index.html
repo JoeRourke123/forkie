@@ -1,0 +1,70 @@
+<html>
+<head>
+    <title>
+        file-rep0
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <style>
+    </style>
+</head>
+<body>
+<div class="container-fluid d-flex h-100 flex-column justify-content-center orange-grad">
+    <div class="row">
+        <div class="col-md-3 col-lg-4"></div>
+        <div class="col-md-6 col-lg-4" style="height: 100%;">
+            <h1>file-rep0</h1>
+            <div class="card">
+                <div class="card-body">
+                    <p class="card-text">
+                    <form class="signin" method="POST" action="/api/web/signin">
+                        <div class="d-flex p-2">
+                            <a href="#" class="btn btn-link disabled"><span class="oi oi-envelope-closed" title="envelope-closed" aria-hidden="true"></span></a>
+                            <input type="email" class="form-control" name="email" placeholder="Your Email..." id="signinEmail">
+                        </div>
+                        <div class="d-flex p-2">
+                            <a href="#" class="btn btn-link disabled"><span class="oi oi-key" title="key" aria-hidden="true"></span></a>
+                            <input type="password" class="form-control" placeholder="Your Password..." name="password">
+                        </div>
+                         <div class="col text-center p-2">
+                            <button href="#" class="btn btn-warning mb-2">
+                                Sign In
+                            </button>
+                            <br />
+                            <a class="text-dark switch" href="#">Want to create an account?</a>
+                        </div>
+                    </form>
+                    <form class="signup" style="display: none;" method="POST" action="/api/web/signup">
+                        <div class="d-flex p-2">
+                            <a href="#" class="btn btn-link disabled"><span class="oi oi-person" title="person" aria-hidden="true"></span></a>
+                            <input type="text" class="form-control" name="username" placeholder="Your Name..." id="signupName">
+                        </div>
+                        <div class="d-flex p-2">
+                            <a href="#" class="btn btn-link disabled"><span class="oi oi-envelope-closed" title="envelope-closed" aria-hidden="true"></span></a>
+                            <input type="email" class="form-control" name="email" placeholder="Your Email..." id="signupEmail">
+                        </div>
+                        <div class="d-flex p-2">
+                            <a href="#" class="btn btn-link disabled"><span class="oi oi-key" title="key" aria-hidden="true"></span></a>
+                            <input type="password" class="form-control" placeholder="Your Password..." name="password">
+                        </div>
+                        <div class="col text-center p-2">
+                            <button href="#" class="btn btn-warning mb-2">
+                                Sign Up
+                            </button>
+                            <br />
+                            <a class="text-dark switch" href="#">Already have an account?</a>
+                        </div>
+                    </form>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-4"></div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+</html>
