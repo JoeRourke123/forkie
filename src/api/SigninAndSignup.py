@@ -9,7 +9,8 @@ import sys
 def signin(db, data):
     if data["email"] and data["password"]:       # Server side check for user email and password entry
         try:
-            query = UserTable.query.filter_by(email=data['email']).filter_by(password=data['password']).first()
+            query = UserTable.query.filter_by(email=data['email'])\
+                .filter_by(password=hashPassword(data['password'])).first()
             # Query the database with the entered email and password combination
 
             if not query:                   # If no results are returned, the email/password are incorrect, return forbidden code

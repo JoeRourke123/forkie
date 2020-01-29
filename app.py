@@ -9,6 +9,7 @@ from src.api.SigninAndSignup import signin, signup
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = "bananas"
 
 heroku = Heroku(app)
 db.init_app(app)
@@ -56,9 +57,9 @@ def webSignin():
     req = signin(db, request.form)
 
     if req['result'] == 200:
-        session['user'] = req.data
+        session['user'] = req['data']
         resp = make_response(redirect(url_for('dashboard')))
-        resp.set_cookie('userid', str(req.data.userid))
+        resp.set_cookie('userid', str(req['data']['userid']))
         return resp
     elif req['result'] == 400:
         return redirect(url_for('index', msg="Sorry, we don't recognise that email/password combination"))
@@ -68,7 +69,7 @@ def webSignin():
 
 @app.route("/api/web/signup", methods=["POST"])
 def webSignup():
-    req = signup(db, request.form)
+    req = signup(db, request.json)
 
     if req['result'] == 200:
         return redirect(url_for('index', msg="Account created. You can now signin!"))
