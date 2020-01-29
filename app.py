@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from src.db import db
 from src.db.UserTable import UserTable
+from src.db.GroupTable import GroupTable
 
 
 app = Flask(__name__)
@@ -34,6 +35,7 @@ def dashboard():
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
     return render_template("dashboard.html")
+
 
 
 # Web Endpoints

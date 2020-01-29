@@ -1,0 +1,48 @@
+<html>
+<head>
+    <title>
+        file-rep0
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <style>
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">file-rep0</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Files</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Groups
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#">Group #1</a>
+          <a class="dropdown-item" href="#">Group #2</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#"><span class="oi oi-plus" title="plus" aria-expanded="true" style="font-size: .8rem;"> </span> New Group</a>
+        </div>
+      </li>
+    </ul>
+    <div class="form-inline my-2 my-lg-0">
+        <a type="button" class="btn btn-outline-success" href="#" role="button">New File</a>
+    </div>
+  </div>
+</nav>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+</html>
