@@ -1,10 +1,10 @@
 from src.db import db
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
 
 class UserTable(db.Model):
     __tablename__ = "usertable"
+
     userid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
     username = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(64), nullable=False)

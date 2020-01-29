@@ -1,10 +1,13 @@
 from src.db import db, FileVersionTable
+from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 
 class MetadataTable(db.Model):
-    metadataid = db.Column(db.String(128), primary_key=True, default=uuid.uuid4())
-    versionid = db.Column(db.String(128), db.ForeignKey('fileversiontable.versionid'), nullable=False)
+    __tablename__ = "metadatatable"
+
+    metadataid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    versionid = db.Column(UUID(as_uuid=True), db.ForeignKey('fileversiontable.versionid'), nullable=False)
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)
 

@@ -1,10 +1,13 @@
 from src.db import db, FileTable
+from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 
 class FileVersionTable(db.Model):
-    versionid = db.Column(db.String(128), primary_key=True, default=uuid.uuid4())
-    fileid = db.Column(db.String(128), db.ForeignKey('filetable.fileid'), nullable=False)
+    __tablename__ = "fileversiontable"
+
+    versionid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    fileid = db.Column(UUID(as_uuid=True), db.ForeignKey('filetable.fileid'), nullable=False)
     extension = db.Column(db.String(16), nullable=False)
     versionhash = db.Column(db.String(8), nullable=False)
 
