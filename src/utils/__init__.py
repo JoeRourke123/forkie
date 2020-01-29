@@ -1,7 +1,5 @@
-import hashlib
+from hashlib import sha256
+
 
 def hashPassword(password):
-    hash = hashlib.sha256
-    hash.update(password)
-
-    return str(hash.hexdigest())
+    return str(sha256(password).hexdigest())
