@@ -1,10 +1,7 @@
-import json
+import hashlib
 
+def hashPassword(password):
+    hash = hashlib.sha256
+    hash.update(password)
 
-def result(type, args={}):
-    returnDict = {
-        "result": type
-    }
-    returnDict.update(args)
-
-    return json.dumps(returnDict)
+    return str(hash.hexdigest())
