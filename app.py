@@ -1,17 +1,11 @@
-from flask import Flask, request, render_template, url_for, make_response, redirect
+from flask import Flask, request, render_template, url_for, make_response, redirect, session
 from flask_heroku import Heroku
 
-from datetime import datetime
-import sys
 import json
 
-from sqlalchemy.exc import IntegrityError
-
-
 from src.db import db
-from src.db.UserTable import UserTable
-from src.db.GroupTable import GroupTable
 
+from src.api.SigninAndSignup import signin, signup
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -34,18 +28,37 @@ def dashboard():
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", user=session['user'])
+
+
+@app.route("/new/file")
+def newFile():
+    return render_template("newfile.html")
+
+
+@app.route("/file/<fileID>")
+def file(fileID):
+    fileData = {
+        "filename": "GET FILENAME FROM DB",
+        "extension": "GET EXTENSION FROM DB",
+        "versions": [
+            "HERE ALL THE VERSIONS WILL BE LISTED"
+        ]
+    }
+
+    return render_template("file.html", data=fileData)
 
 
 
 # Web Endpoints
 @app.route("/api/web/signin", methods=["POST"])
 def webSignin():
-    req = signin(request.form)
+    req = signin(db, request.form)
 
     if req['result'] == 200:
+        session['user'] = req.data
         resp = make_response(redirect(url_for('dashboard')))
-        resp.set_cookie('userid', req['userid'])
+        resp.set_cookie('userid', str(req.data.userid))
         return resp
     elif req['result'] == 400:
         return redirect(url_for('index', msg="Sorry, we don't recognise that email/password combination"))
@@ -55,14 +68,16 @@ def webSignin():
 
 @app.route("/api/web/signup", methods=["POST"])
 def webSignup():
-    req = signup(request.form)
+    req = signup(db, request.form)
 
     if req['result'] == 200:
         return redirect(url_for('index', msg="Account created. You can now signin!"))
-    elif req['result'] == 500:
-        return redirect(url_for('index', msg="Sorry, something went wrong. Please try again!"))
     elif req['result'] == 400:
         return redirect(url_for('index', msg="That email is already in use, do you want to sign in?"))
+    elif req['result'] == 401:
+        return redirect(url_for('index', msg="Please check your email and password meet the requirements!"))
+    else:
+        return redirect(url_for('index', msg="Sorry, something went wrong. Please try again!"))
 
 
 # CLI Endpoints
@@ -70,65 +85,10 @@ def webSignup():
 def apiSignup():
     return json.dumps(signup(request.json))
 
+
 @app.route("/api/cli/signin", methods=["POST"])
 def apiSignin():
-    return json.dumps(signin(request.json))         # Always use json.dumps when returning JSON values
-                                                    # Routes must return strings
-
-# Sign in/up functions
-def signin(data):
-    if data["email"] or data["password"]:       # Server side check for user email and password entry
-        try:
-            query = UserTable.query.filter_by(email=data['email']).filter_by(password=data['password']).first()
-            # Query the database with the entered email and password combination
-
-            if not query:                   # If no results are returned, the email/password are incorrect, return forbidden code
-                return {
-                    "result": 400
-                }
-
-            query.lastlogin = datetime.now()        # If it is found, update the lastlogin field
-            db.session.commit()
-
-            return {
-                "result": 200,
-                "userid": str(query.userid)
-            }
-        except Exception as e:
-            print(e)
-            sys.stdout.flush()
-            return {
-                "result": 500
-            }
-
-
-def signup(data):
-    userdata = UserTable.UserTable({  # Define an instance of the UserTable class with the entered data
-        "username": data["username"],
-        "email": data["email"],
-        "password": data["password"],  # Replace with hashed password eventually
-        "lastlogin": datetime.now()
-    })
-
-    try:
-        db.session.add(userdata)  # Add the newly instantiated object to the DB
-        db.session.commit()  # Ensure the database transaction properly completes
-    except IntegrityError as e:  # Thrown if the user attempts to use an email that already exists in the table
-        return {
-            "result": 400,
-        }
-    except Exception as e:
-        print("Failed Signup for user... " + data["email"])
-        print(e)
-        sys.stdout.flush()  # Output to Heroku log if an error occurs
-
-        return {
-            "result": 500
-        }  # Return a 500 error code
-
-    return {
-        "result": 200
-    }  # If successful, return a 200 code
+    return signin(db, request.form)
 
 
 if __name__ == "main":
