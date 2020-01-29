@@ -101,7 +101,7 @@ def signin(data):
 
 
 def signup(data):
-    userdata = UserTable.UserTable({  # Define an instance of the UserTable class with the entered data
+    userdata = UserTable({  # Define an instance of the UserTable class with the entered data
         "username": data["username"],
         "email": data["email"],
         "password": data["password"],  # Replace with hashed password eventually
