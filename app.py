@@ -31,6 +31,24 @@ def dashboard():
     return render_template("dashboard.html")
 
 
+@app.route("/new/file")
+def newFile():
+    return render_template("newfile.html")
+
+
+@app.route("/file/<fileID>")
+def file(fileID):
+    fileData = {
+        "filename": "GET FILENAME FROM DB",
+        "extension": "GET EXTENSION FROM DB",
+        "versions": [
+            "HERE ALL THE VERSIONS WILL BE LISTED"
+        ]
+    }
+
+    return render_template("file.html", data=fileData)
+
+
 # Web Endpoints
 @app.route("/api/web/signin", methods=["POST"])
 def webSignin():
@@ -52,11 +70,12 @@ def webSignup():
 
     if req['result'] == 200:
         return redirect(url_for('index', msg="Account created. You can now signin!"))
-    elif req['result'] == 500:
-        return redirect(url_for('index', msg="Sorry, something went wrong. Please try again!"))
     elif req['result'] == 400:
         return redirect(url_for('index', msg="That email is already in use, do you want to sign in?"))
-
+    elif req['result'] == 401:
+        return redirect(url_for('index', msg="Please check your email and password meet the requirements!"))
+    else:
+        return redirect(url_for('index', msg="Sorry, something went wrong. Please try again!"))
 
 
 # CLI Endpoints
