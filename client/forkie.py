@@ -1,7 +1,7 @@
 """forkie CLI
 
 Usage:
-    {0} {1} [-m <message>] [-v | --verbose] (<file>)...
+    {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
     {0} {1} [-m <message>] [-v | --verbose] (<name> [-k <keyword>])...
     {0} {1} (-a | (-n <name> -k <keyword>)) [-p <group>] [-v | --verbose] [-c <comment> [-f | --force]]
     {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
@@ -134,6 +134,7 @@ if __name__ == '__main__':
     arguments = docopt(init_docs(__doc__), version='DEMO 1.0')
     arguments = remove_options(arguments)
     arguments = find_difference(args_commands, arguments)
+    found = False
 
     if len(arguments.keys()) != 0:
         for arg in arguments.keys():
@@ -142,4 +143,5 @@ if __name__ == '__main__':
                 # (sub)command which is stored in the commands dict
                 del arguments[arg]
                 commands[arg](arguments)
+                # found = True
                 break
