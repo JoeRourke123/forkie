@@ -2,8 +2,8 @@
 
 Usage:
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
-    {0} {1} [-m <message>] [-v | --verbose] (<name> [-k <keyword>])...
-    {0} {1} (-a | (-n <name> -k <keyword>)) [-p <group>] [-v | --verbose] [-c <comment> [-f | --force]]
+    {0} {1} [-v | --verbose] [(-m <message>)] [(-k <keyword>)] (<file>)...
+    {0} {1} (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-v | --verbose] [(-c <comment>) [-f | --force]]
     {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
     {0} {1} (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
     {0} {1} (-V (-a | <report>) | --gen [(-p <group> | <email>)]) [-v | --verbose]
@@ -38,7 +38,7 @@ Options:
 """
 
 from docopt import docopt
-from cli import command_handler
+from client.cli import command_handler
 import sys
 
 python_interpreter = sys.executable
@@ -56,17 +56,17 @@ commands = {
 # Template of all commands, options and arguments
 args_commands = {
     'make': False, 
+    '--verbose': 0, 
     '--message': 0, 
     '<message>': None, 
-    '--verbose': 0, 
     '<file>': [], 
-    '--name': 0, 
-    '<name>': [], 
     'update': False, 
     '--keyword': 0, 
-    '<keyword>': [], 
+    '<keyword>': None, 
     'find': False, 
     '-a': False, 
+    '--name': 0, 
+    '<name>': None, 
     '-p': False, 
     '<group>': None, 
     '--comment': 0, 
@@ -133,6 +133,7 @@ def find_difference(dict1: dict, dict2: dict) -> dict:
 if __name__ == '__main__':
     arguments = docopt(init_docs(__doc__), version='DEMO 1.0')
     arguments = remove_options(arguments)
+    print(arguments, "\n")
     arguments = find_difference(args_commands, arguments)
     found = False
 

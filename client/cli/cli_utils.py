@@ -8,11 +8,10 @@ class UndefinedSystem(Exception):
         super().__init__(message)
 
 def create_file_incwd(filename: str, body: str):
-    """ Creates a file with the given body using echo
+    """ Creates a file with the given body in current working dir
     """
     file_path = path.join(getcwd(), filename)
-    # Echo command is same on linux, windows and mac os. Hurray!
-    subprocess.call(["echo", body, ">", file_path])
+    tmp_f = open(filename, "w+").write(body)
 
 def open_default_editor(filename: str) -> subprocess.Popen:
     """ Opens a given filename inside the default editor of the os. Returns
@@ -32,7 +31,7 @@ def open_default_editor(filename: str) -> subprocess.Popen:
     if path.exists(filename) and path.isfile(filename):
         try:
             msg_input = subprocess.Popen(args[sys])
-            msg_input.wait()
+            return msg_input
         except TypeError:
             # If there's no system which matches the user's system in the args dict
             raise UndefinedSystem("Sorry your system is not supported yet")
