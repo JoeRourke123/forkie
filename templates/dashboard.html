@@ -37,13 +37,41 @@
       </li>
     </ul>
     <div class="form-inline my-2 my-lg-0">
-        <a type="button" class="btn btn-outline-success" href="#" role="button">New File</a>
+        <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
+            <span class="oi oi-document" title="document"></span>
+        </a>
+        <a type="button" class="btn btn-outline-danger" href="#" role="button">
+            <span class="oi oi-account-logout" title="account-logout"></span>
+        </a>
     </div>
   </div>
 </nav>
-<div class="container-fluid">
+<div class="container">
+    <div class="row mt-4 mb-4">
+        <h2>Welcome back {{ user['username'] }}</h2>
+    </div>
     <div class="row">
-        <h1>Welcome back {{ user['username'] }}</h1>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">Recent Comments</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">Frequently Used Files</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">Your Groups</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
