@@ -17,11 +17,11 @@ db.init_app(app)
 
 # Routes
 @app.route("/")
-def index(msg=None):
+def index(msg=None, code=200):
     if request.cookies.get('userid'):
         return redirect(url_for('dashboard'))
 
-    return render_template("index.html", msg=msg)
+    return render_template("index.html", code=code, msg=msg)
 
 
 @app.route("/dash")
@@ -62,9 +62,9 @@ def webSignin():
         resp.set_cookie('userid', str(req['data']['userid']))
         return resp
     elif req['result'] == 400:
-        return redirect(url_for('index', msg="Sorry, we don't recognise that email/password combination"))
+        return redirect(url_for('index', code=req['result'], msg="Sorry, we don't recognise that email/password combination"))
     elif req['result'] == 500:
-        return redirect(url_for('index', msg="It appears an error has occured. Please try again"))
+        return redirect(url_for('index', code=req['result'], msg="It appears an error has occured. Please try again"))
 
 
 @app.route("/api/web/signup", methods=["POST"])
@@ -72,13 +72,13 @@ def webSignup():
     req = signup(db, request.json)
 
     if req['result'] == 200:
-        return redirect(url_for('index', msg="Account created. You can now signin!"))
+        return redirect(url_for('index', code=req['result'], msg="Account created. You can now signin!"))
     elif req['result'] == 400:
-        return redirect(url_for('index', msg="That email is already in use, do you want to sign in?"))
+        return redirect(url_for('index', code=req['result'], msg="That email is already in use, do you want to sign in?"))
     elif req['result'] == 401:
-        return redirect(url_for('index', msg="Please check your email and password meet the requirements!"))
+        return redirect(url_for('index', code=req['result'], msg="Please check your email and password meet the requirements!"))
     else:
-        return redirect(url_for('index', msg="Sorry, something went wrong. Please try again!"))
+        return redirect(url_for('index', code=req['result'], msg="Sorry, something went wrong. Please try again!"))
 
 
 # CLI Endpoints
