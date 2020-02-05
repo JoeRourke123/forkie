@@ -44,7 +44,7 @@ def signin():
 
             return resp
         except Exception as e:
-            print(e)
+            print(e.with_traceback())
 
             if isBrowser:
                 return redirect(url_for("errors.error", code=500, url="signin.signin"))
