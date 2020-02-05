@@ -13,7 +13,7 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 
 @signinBP.route("/signin", methods=["POST"])
 def signin():
-    isBrowser = request.form.get("client") == "browser"
+    isBrowser = request.form is not None
 
     data = request.form if isBrowser else request.json
 
