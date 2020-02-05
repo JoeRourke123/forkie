@@ -1,4 +1,5 @@
-from src.db import db, UserTable
+from src.db import db
+from src.db.UserTable import UserTable
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

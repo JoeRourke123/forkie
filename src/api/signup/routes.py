@@ -3,7 +3,7 @@ from flask import render_template, Blueprint, request, make_response, redirect, 
 
 from src.db.UserTable import UserTable
 from src.utils import hashPassword
-from app import db
+from src.db import db
 
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
