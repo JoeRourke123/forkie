@@ -6,6 +6,7 @@ from src.db import db
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
 from src.api.groups.routes import groupsBP
+from src.api.errors.routes import errorsBP
 
 from src.api.user.func import getUserData
 
@@ -19,6 +20,7 @@ db.init_app(app)
 app.register_blueprint(signinBP)
 app.register_blueprint(signupBP)
 app.register_blueprint(groupsBP)
+app.register_blueprint(errorsBP)
 
 
 # Routes
