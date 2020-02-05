@@ -39,7 +39,7 @@ def signin():
             else:
                 resp = make_response(json.dumps({"code": 200, "msg": "You have been signed in"}))
 
-            resp.set_cookie("userid", query.userid)
+            resp.set_cookie("userid", str(query.userid))
             resp.set_cookie("client", "browser" if isBrowser else "cli")
 
             return resp
