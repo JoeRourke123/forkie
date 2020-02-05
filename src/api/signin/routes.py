@@ -11,7 +11,7 @@ import json
 signinBP = Blueprint('signin', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
 
-@signinBP.route("/api/signin/")
+@signinBP.route("/signin")
 def signin():
     isBrowser = request.form.get("client") == "browser"
 
