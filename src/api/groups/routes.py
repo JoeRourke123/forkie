@@ -7,12 +7,13 @@ from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
 from app import db
 
-groupsBP = Blueprint('groups',
-                   template_folder='../../templates',
-                   static_folder='../../static')
+groupsBP = Blueprint('groups', __name__,
+                    template_folder='../../templates',
+                    static_folder='../../static',
+                    url_prefix='/api/groups')
 
 
-groupsBP.route("/api/groups/new", methods=["POST"])
+@groupsBP.route("/new", methods=["POST"])
 def newGroup():
     isBrowser = request.cookies.get("client") == "browser"
     data = request.form if isBrowser else request.json

@@ -9,13 +9,10 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import json
 
-signupBP = Blueprint(
-    'signup',
-    template_folder='../../templates',
-    static_folder='../../static'
-)
+signupBP = Blueprint('signup', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
-signupBP.route("/api/signup/", methods=["POST"])
+
+@signupBP.route("/signup/", methods=["POST"])
 def signup():
     isBrowser = request.form.get("client") is not None
     data = request.form if isBrowser else request.data
