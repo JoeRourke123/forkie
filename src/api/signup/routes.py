@@ -14,8 +14,8 @@ signupBP = Blueprint('signup', __name__, template_folder='../../templates', stat
 
 @signupBP.route("/signup", methods=["POST"])
 def signup():
-    isBrowser = request.form is not None
-    data = request.form if isBrowser else request.data
+    isBrowser = bool(request.form is not None)
+    data = request.form if isBrowser else request.json
 
     userdata = UserTable({  # Define an instance of the UserTable class with the entered data
         "username": data["username"],

@@ -31,7 +31,7 @@ def index(msg=None, code=200):
 
 
 @app.route("/dash")
-def dashboard():
+def dash():
 
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
