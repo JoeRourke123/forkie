@@ -8,11 +8,10 @@ class GroupTable(db.Model):
 
     groupid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
     groupname = db.Column(db.String(64), nullable=False)
-    groupleaderID = db.Column('groupleader', UUID(as_uuid=True), db.ForeignKey('usertable.userid'), nullable=False)
+    groupleaderid = db.Column('groupleader', UUID(as_uuid=True), db.ForeignKey('usertable.userid'), nullable=False)
 
-    groupleader = db.relationship(UserTable, foreign_keys=groupleaderID, backref=db.backref('leader', lazy='joined'))
+    groupleader = db.relationship(UserTable, foreign_keys=groupleaderid, backref=db.backref('leader', lazy='joined'))
 
     def __init__(self, data):
-        self.groupid = data["groupid"]
         self.groupname = data["groupname"]
         self.groupleaderID = data["groupleaderID"]
