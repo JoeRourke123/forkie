@@ -13,11 +13,8 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 
 @signinBP.route("/signin", methods=["POST"])
 def signin():
-    print("First line")
-    isBrowser = bool(request.form is not None)
-    print("Gets here")
-    data = request.form if isBrowser else request.json
-    print("Gets here too")
+    isBrowser = bool("email" in request.form)
+    data = request.form if isBrowser else request.data
 
     if data.get("email") and data.get("password"):       # Server side check for user email and password entry
         try:
@@ -57,11 +54,6 @@ def signin():
                     "msg": "Something went wrong when signing in"
                 }), 500
     else:
-        print(isBrowser)
-        print(request.data)
-        print(request.form)
-        print(request.args)
-
         if isBrowser:
             return redirect(url_for("errors.error", code=400, url="signin.signin"))
         else:
