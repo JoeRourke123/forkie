@@ -3,7 +3,7 @@ from flask import render_template, Blueprint, request, make_response, redirect, 
 
 from src.db.UserTable import UserTable
 from src.utils import hashPassword
-from app import db
+from src.db import db
 
 from datetime import datetime
 import json
@@ -13,8 +13,7 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 
 @signinBP.route("/signin", methods=["POST"])
 def signin():
-    isBrowser = request.form is not None
-
+    isBrowser = bool(request.form is not None)
     data = request.form if isBrowser else request.json
 
     if data["email"] and data["password"]:       # Server side check for user email and password entry
@@ -25,7 +24,7 @@ def signin():
 
             if not query:                           # If no results are returned, the email/password are incorrect, return forbidden code
                 if isBrowser:
-                    return redirect(url_for("signin.signin", code=403, msg="Sorry, we can't find those details in the database! Check them and try again."))
+                    return redirect(url_for("index", code=403, msg="Sorry, we can't find those details in the database! Check them and try again."))
                 else:
                     return json.dumps({
                         "code": 403,
@@ -36,17 +35,19 @@ def signin():
             db.session.commit()
 
             if isBrowser:
-                resp = make_response(redirect(url_for('dash.dash')))
+                resp = make_response(redirect(url_for('dash')))
             else:
                 resp = make_response(json.dumps({"code": 200, "msg": "You have been signed in"}))
 
-            resp.set_cookie("userid", query.userid)
+            resp.set_cookie("userid", str(query.userid))
             resp.set_cookie("client", "browser" if isBrowser else "cli")
 
             return resp
         except Exception as e:
+            print(e.with_traceback())
+
             if isBrowser:
-                return redirect(url_for("error.error", code=500, url="signin.signin"))
+                return redirect(url_for("errors.error", code=500, url="signin.signin"))
             else:
                 return json.dumps({
                     "code": 500,
@@ -54,7 +55,7 @@ def signin():
                 }), 500
     else:
         if isBrowser:
-            return redirect(url_for("error.error", code=400, url="signin.signin"))
+            return redirect(url_for("errors.error", code=400, url="signin.signin"))
         else:
             return json.dumps({
                 "code": 400,

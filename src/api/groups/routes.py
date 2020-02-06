@@ -5,7 +5,7 @@ import json
 
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
-from app import db
+from src.db import db
 
 groupsBP = Blueprint('groups', __name__,
                     template_folder='../../templates',
