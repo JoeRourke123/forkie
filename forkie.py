@@ -6,8 +6,8 @@ Usage:
     {0} {1} (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-v | --verbose] [(-c <comment>) [-f | --force]]
     {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
     {0} {1} (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
-    {0} {1} (-V (-a | <report>) | --gen [(-p <group> | <email>)]) [-v | --verbose]
-    {0} {1} [-v | --verbose]
+    {0} {1} (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]
+    {0} {1} (<repo>) [-v | --verbose]
     {0} -h | --help | --version
 Options:
     -n --name     The name the file should have in the repository
@@ -20,12 +20,12 @@ Options:
     -c --comment  Add comment
     -f --force    Force/Don't ask for permission first
     -h --help     Show help
+    -o --output   The filename to output to (If ommited then current directory)            
     --version     Show version
-    --peeps       View people
+    --peeps       People flag
     --add         Add person/people to a group
     --rm          Remove person/people from a group
     --change      Move person/people to another group
-    --gen         Generates a report
     <file>        File name argument (path to file)
     <name>        Name argument.
     <message>     Description of file
@@ -34,7 +34,7 @@ Options:
     <group>       One of the available permission groups
     <username>    Username of a user
     <email>       The email of a user
-    <report>      The report name of an existing report
+    <repo>        The URL of a forkie repository
 """
 
 from docopt import docopt
@@ -55,9 +55,9 @@ commands = {
 
 # Template of all commands, options and arguments
 args_commands = {
-    'make': False, 
-    '--verbose': 0, 
-    '--message': 0, 
+    'make': False,
+    '--verbose': 0,
+    '--message': 0,
     '<message>': None, 
     '<file>': [], 
     'update': False, 
@@ -80,12 +80,12 @@ args_commands = {
     '--add': False, 
     '--rm': False, 
     '--change': False, 
-    'report': 0, 
-    '<report>': None, 
-    '--gen': False, 
+    'report': False, 
+    '--output': 0, 
     'login': False, 
     '--help': 0, 
-    '--version': 0
+    '--version': 0,
+    '<repo>': None
 }
 # commands = ["make", "update", "find", "archive", "group", "report", "login"]
 
@@ -133,15 +133,15 @@ def find_difference(dict1: dict, dict2: dict) -> dict:
 if __name__ == '__main__':
     arguments = docopt(init_docs(__doc__), version='DEMO 1.0')
     arguments = remove_options(arguments)
-    print(arguments, "\n")
+    # print(arguments)
     arguments = find_difference(args_commands, arguments)
     found = False
 
     if len(arguments.keys()) != 0:
         for arg in arguments.keys():
             if arg in commands.keys():
-                # Deletes (sub)command key from dictionary then calls the function associated to that
-                # (sub)command which is stored in the commands dict
+                # Deletes (sub)command key from dictionary then calls that (sub)command's handler
+                # which is stored in the commands dict
                 del arguments[arg]
                 commands[arg](arguments)
                 # found = True

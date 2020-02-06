@@ -1,4 +1,6 @@
 from os import system, getenv, getcwd, path
+from urllib.parse import urlparse
+import requests
 import platform
 import subprocess
 
@@ -37,3 +39,31 @@ def open_default_editor(filename: str) -> subprocess.Popen:
             raise UndefinedSystem("Sorry your system is not supported yet")
     else:
         raise FileNotFoundError("Filename specified does not exist")
+
+def ask_for(question: str, answers: list):
+    """ Given a question and a list of answers it will return the answer. If the list of answers has only 2 elements then
+        if the answer is equal to the first element it will return True and False otherwise
+    """
+    answer = input(question + str(list) + ": ")
+    while answer not in answers:
+        print("Don't understand that input")
+        answer = input(question + str(list))
+    return answer if len(list) > 2 else answers[0] == answer
+
+def check_if_404(url: str) -> bool:
+    """ Checks if URL returns a 404
+        - url: URL to check
+        - returns: true if 404 found, false otherwise
+    """
+    check = requests.get(url)
+    return check.status_code == 404
+
+def find_hostname(url: str) -> str:
+    """ Finds the hostname of the given URL
+    """
+    if not check_if_404(url):
+        urlname = urlparse(url)
+        print(urlname.hostname)
+        return urlname.hostname
+    else:
+        return None
