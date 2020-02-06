@@ -58,7 +58,6 @@ def signin():
                 }), 500
     else:
         print(isBrowser)
-        print(request.json)
         print(request.data)
         print(request.form)
         print(request.args)
