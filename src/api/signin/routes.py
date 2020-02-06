@@ -19,7 +19,7 @@ def signin():
     data = request.form if isBrowser else request.json
     print("Gets here too")
 
-    if data["email"] and data["password"]:       # Server side check for user email and password entry
+    if data.get("email") and data.get("password"):       # Server side check for user email and password entry
         try:
             query = UserTable.query.filter_by(email=data['email'])\
                 .filter_by(password=hashPassword(data['password'])).first()
