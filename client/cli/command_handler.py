@@ -6,6 +6,7 @@ import subprocess
 import os
 import time
 import pickle
+import getpass
 
 
 def check_bool_option(args: dict, option: str) -> bool:
@@ -243,7 +244,7 @@ def login(args: dict):
     args_norm["verbose"] = check_bool_option(args, "--verbose")
     v = args_norm["verbose"]
     repo = args_norm["repo"]
-    if args_norm["verbose"]:
+    if v:
         print("Trying to access " + args_norm["repo"])
         
     # Check if .forkie directory exists
@@ -253,49 +254,67 @@ def login(args: dict):
 
     # Check if the server cookie file exists
     hostname = cli_utils.find_hostname(args_norm["repo"])
+    if v:
+        print("Cookie will be written to:", hostname + ".bin")
+
     if hostname is not None:
         if os.path.exists(hostname) and os.path.isfile(hostname):
             if v:
                 print("Repository cookie already exists in .forkie. No need to login")
         else:
             # Ask user to login
-            signin_path = urljoin(repo, "/signin")
-            signup_path = urljoin(repo, "/signup")
+            signin_path = urljoin(repo, "api/signin")
+            signup_path = urljoin(repo, "api/signup")
             done = False
             cont = False
             login = {
                 "email": "",
-                "password": "",
-                "client": "cli"
+                "password": ""
             }
+            headers = {"Content-Type": "application/json"}
             session = requests.session()
 
             while not done:            
-                login["email"] = str(input("Enter email: "))
-                login["password"] = str(input("Enter password: "))
+                login = get_emailandpass(login)
                 
-                signin = session.get(signin_path)
-                msg = signin.json()["msg"]
+                signin = session.post(signin_path, json=login, headers=headers)
+                # Replace all (signin/signup).json with signup.json["msg"] when everything is all working
+                # Will probably be replaced with a function which checks if the signin.json is of type dict
+                msg = str(signin.json)
+                if v:
+                    print("Signin_path:", signin_path)
+                    print("Signup_path:", signup_path)
+                    print("Status code:", signin.status_code)
+                    print("Response:", msg)
                 # Check for 400
-                if signin.status_code == "400":
+                if signin.status_code == 400:
                     signup_answer = cli_utils.ask_for(msg + ". Do you want to signup?", ["y", "n"])
                     if signup_answer:
+                        # Keep the email and pass from signin
+                        if cli_utils.ask_for("Do you want to enter a new email and password?", ["y", "n"]):
+                            login = get_emailandpass(login)
+                        login["username"] = str(input("Enter a username: "))
                         # Will keep checking if user wants to sign up or if error 401 otherwise break
-                        signup = session.get(signup_path)
-                        while signup.status_code == "401":
-                            # If email already exists
-                            signup_answer = cli_utils.ask_for(msg + " Do you want to try again?", ["y", "n"])
-                            if not signup_answer:
+                        while True:
+                            signup = session.post(signup_path, json=login, headers=headers)
+                            msg = str(signup.json)
+                            if signup.status_code == 401:
+                                # If email already exists
+                                signup_answer = cli_utils.ask_for(msg + " Do you want to try again?", ["y", "n"])
+                                if not signup_answer:
+                                    break
+                            else:
                                 break
-                            signup = session.get(signup_path)
                         cont = True
-                        if signup.status_code == "500":
-                            print(msg + ". Trying again...")
+                        if v:
+                            print("JSON returned:", signup.json)
+                        if signup.status_code in [400, 500]:
+                            print(msg + ". Try again another time.")
                             cont = False
                         done = True
                     else:
                         done = not cli_utils.ask_for("Do you want to try again?", ["y", "n"])
-                elif signin.status_code in ["500", "403"]:
+                elif signin.status_code in [500, 403]:
                     done = not cli_utils.ask_for(msg + " Try again?", ["y", "n"])
                     cont = False
                 else:
@@ -312,3 +331,8 @@ def login(args: dict):
 def print_dict(args: dict):
     for arg in args.keys():
         print(str(arg) + ": " + str(args[arg]))
+        
+def get_emailandpass(login: dict) -> dict:
+    login["email"] = str(input("Enter email: "))
+    login["password"] = str(getpass.getpass(prompt="Enter password: "))
+    return login

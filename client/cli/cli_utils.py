@@ -44,11 +44,11 @@ def ask_for(question: str, answers: list):
     """ Given a question and a list of answers it will return the answer. If the list of answers has only 2 elements then
         if the answer is equal to the first element it will return True and False otherwise
     """
-    answer = input(question + str(list) + ": ")
+    answer = str(input(question + " " + str(answers) + ": ")).lower()
     while answer not in answers:
         print("Don't understand that input")
-        answer = input(question + str(list))
-    return answer if len(list) > 2 else answers[0] == answer
+        answer = str(input(question + " " + str(answers))).lower()
+    return answer if len(answers) > 2 else answers[0] == answer
 
 def check_if_404(url: str) -> bool:
     """ Checks if URL returns a 404
@@ -59,11 +59,14 @@ def check_if_404(url: str) -> bool:
     return check.status_code == 404
 
 def find_hostname(url: str) -> str:
-    """ Finds the hostname of the given URL
+    """ Finds the hostname of the given URL and splits it on the first dot (used to form filename)
     """
     if not check_if_404(url):
         urlname = urlparse(url)
-        print(urlname.hostname)
-        return urlname.hostname
+        urlhost = urlname.hostname
+        # Strips everything after the first dot
+        a = urlname.hostname.split(".")[0]
+        pos = urlhost.find(a)
+        return urlhost[:pos + len(a)]
     else:
         return None
