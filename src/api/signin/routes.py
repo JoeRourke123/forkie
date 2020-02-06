@@ -14,7 +14,7 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 @signinBP.route("/signin", methods=["POST"])
 def signin():
     isBrowser = bool("email" in request.form)
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if data.get("email") and data.get("password"):       # Server side check for user email and password entry
         try:
