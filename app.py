@@ -27,7 +27,7 @@ app.register_blueprint(errorsBP)
 @app.route("/")
 def index(msg=None, code=200):
     if request.cookies.get('userid'):
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dash'))
 
     return render_template("index.html", code=code, msg=msg)
 

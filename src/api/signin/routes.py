@@ -54,6 +54,12 @@ def signin():
                     "msg": "Something went wrong when signing in"
                 }), 500
     else:
+        print(isBrowser)
+        print(request.json)
+        print(request.data)
+        print(request.form)
+        print(request.args)
+
         if isBrowser:
             return redirect(url_for("errors.error", code=400, url="signin.signin"))
         else:
