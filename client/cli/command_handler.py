@@ -254,13 +254,13 @@ def login(args: dict):
 
     # Check if the server cookie file exists
     hostname = cli_utils.find_hostname(args_norm["repo"])
+    forkie_cookies = os.path.join(".forkie", hostname + ".bin")
     if v:
-        print("Cookie will be written to:", hostname + ".bin")
+        print("Cookie will be written to:", forkie_cookies)
 
     if hostname is not None:
-        if os.path.exists(hostname) and os.path.isfile(hostname):
-            if v:
-                print("Repository cookie already exists in .forkie. No need to login")
+        if os.path.exists(forkie_cookies) and os.path.isfile(forkie_cookies):
+        	print("Repository cookie already exists in .forkie. No need to login")
         else:
             # Ask user to login
             signin_path = urljoin(repo, "api/signin")
@@ -274,13 +274,11 @@ def login(args: dict):
             headers = {"Content-Type": "application/json"}
             session = requests.session()
 
-            while not done:            
+            while not done:
                 login = get_emailandpass(login)
-                
+
                 signin = session.post(signin_path, json=login, headers=headers)
-                # Replace all (signin/signup).json with signup.json["msg"] when everything is all working
-                # Will probably be replaced with a function which checks if the signin.json is of type dict
-                msg = str(signin.json)
+                msg = str(signin.json()["msg"])
                 if v:
                     print("Signin_path:", signin_path)
                     print("Signup_path:", signup_path)
@@ -297,7 +295,7 @@ def login(args: dict):
                         # Will keep checking if user wants to sign up or if error 401 otherwise break
                         while True:
                             signup = session.post(signup_path, json=login, headers=headers)
-                            msg = str(signup.json)
+                            msg = str(signup.json()["msg"])
                             if signup.status_code == 401:
                                 # If email already exists
                                 signup_answer = cli_utils.ask_for(msg + " Do you want to try again?", ["y", "n"])
@@ -320,11 +318,16 @@ def login(args: dict):
                 else:
                     if v:
                         print(msg)
+                        done = True
+                        cont = True
                         
             if cont:
                 # Create cookie file
-                with open(hostname + ".bin", 'wb') as f:
+                with open(forkie_cookies, 'wb') as f:
                     pickle.dump(session.cookies, f)
+                f.close()
+                if v:
+                	print("Created " + hostname + " cookie file in .forkie")
     else:
         print("Error 404: That repository does not exist")
     
