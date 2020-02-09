@@ -13,10 +13,10 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 
 @signinBP.route("/signin", methods=["POST"])
 def signin():
-    isBrowser = bool(request.form is not None)
-    data = request.form if isBrowser else request.json
+    isBrowser = bool("email" in request.form)
+    data = request.form if isBrowser else json.loads(request.data)
 
-    if data["email"] and data["password"]:       # Server side check for user email and password entry
+    if data.get("email") and data.get("password"):       # Server side check for user email and password entry
         try:
             query = UserTable.query.filter_by(email=data['email'])\
                 .filter_by(password=hashPassword(data['password'])).first()
