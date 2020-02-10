@@ -29,7 +29,7 @@ def getFilesUserCanAccess(userid: str):
     groupids = [group.groupid for group in groups]
     print(groupids)
     query = FileTable.query.join(FileGroupTable)\
-        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupid)\
+        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
         .filter(FileGroupTable.c.fileid == FileTable.fileid)
     if "admin" not in groupids:
         for groupid in groupids:

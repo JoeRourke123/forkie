@@ -77,9 +77,17 @@ def file_query():
                         query = query.first()
 
             rs = query.all()
-            print(rs)
-            print([(dict(row.items())) for row in rs])
-            resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": [(dict(row.items())) for row in rs]}))
+            rs_list = []
+            for row in rs:
+                print(row)
+                rs_json = {
+                    "fileid": row[1],
+                    "filename": row[2],
+                    "groupname": row[3],
+                    "groupid": row[4]
+                }
+                rs_list.append(rs_json)
+            resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
             
