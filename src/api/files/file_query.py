@@ -59,9 +59,6 @@ def file_query():
             # query = session.query(FileTable)
             # all_rows = query.all()
             query = getFilesUserCanAccess(userid)
-            print(query)
-            print(len(data))
-            # if len(data.keys()) > 0:
             if len(data) > 0:
                 if "filename" in data:
                     query = query.filter(FileTable.filename == data["filename"])
@@ -80,6 +77,8 @@ def file_query():
                         query = query.first()
 
             rs = query.all()
+            print(rs)
+            print([(dict(row.items())) for row in rs])
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": [(dict(row.items())) for row in rs]}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
