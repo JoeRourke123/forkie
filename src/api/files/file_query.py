@@ -87,7 +87,7 @@ def file_query():
             # Construct return rows to be passed to the returned JSON response
             rs_list = []
             for row in rs:
-                print(row)
+                # print(row)
                 rs_json = {
                     "fileid": row[1].hex,
                     "filename": row[2],
