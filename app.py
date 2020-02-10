@@ -59,7 +59,9 @@ def group(id=None):
     elif id not in list(map(lambda x: str(x.groupid), groupData)):
         return redirect(url_for('dash', msg="You do not have permissions to view this group"))
 
-    return render_template("group.html", groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
+    return render_template("group.html",
+                           user=getUserData(request.cookies.get("userid")),
+                           groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader)
 
 
