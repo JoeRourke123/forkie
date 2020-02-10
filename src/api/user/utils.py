@@ -45,6 +45,7 @@ def getFilesUserCanAccessAlt(userid: str):
         .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupid)\
         .filter(FileGroupTable.c.fileid == FileTable.fileid)
     if "admin" not in groupids:
-        query = query.filter(FileGroupTable.c.groupid in groupids)
+        for groupid in groupids:
+            query = query.filter(FileGroupTable.c.groupid == groupid)
     return query
     # if "admin" not in groupids else True
