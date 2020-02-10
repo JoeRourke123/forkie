@@ -23,14 +23,15 @@ def getUserGroupsID(userid: str) -> list:
 def getFilesUserCanAccess(userid: str):
     """ Returns the Query of the files that the user (userid) can access. This is the join of
         FileTable, UserTable and FileGroupTable: where FileTable.fileid = FileGroupTable.fileid AND
-        FileGroupTable.groupid in groupids AND
+        (if the user is not part of the admin group then) WHERE FileGroupTable.groupid in groupids. THIS
+        ASSUMES THAT EVERY FILE HAS A GROUP RELATION IN FileGroupTable
     """
     groups = getUserGroupsID(userid)
     groupids = [group.groupid for group in groups]
     groupnames = [group.groupname for group in groups]
     print(groupids)
     query = FileTable.query.join(FileGroupTable)\
-        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
+        .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.c.groupname, FileGroupTable.c.groupid)\
         .filter(FileGroupTable.c.fileid == FileTable.fileid)
     if "admin" not in groupnames:
         for groupid in groupids:
