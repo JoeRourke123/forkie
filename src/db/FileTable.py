@@ -9,5 +9,5 @@ class FileTable(db.Model):
     filename = db.Column(db.String(64), nullable=False)
 
     def __init__(self, data):
-        fileid = "" # for when key generation method created - will be made from first file version time and filename
+        fileid = ""  # for when key generation method created - will be made from first file version time and filename
         filename = data["filename"]

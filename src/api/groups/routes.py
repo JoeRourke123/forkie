@@ -16,7 +16,7 @@ groupsBP = Blueprint('groups', __name__,
 @groupsBP.route("/new", methods=["POST"])
 def newGroup():
     isBrowser = request.cookies.get("client") == "browser"
-    data = request.form if isBrowser else request.json
+    data = request.form if isBrowser else request.data
 
     if request.cookies.get("userid"):
         group = GroupTable({

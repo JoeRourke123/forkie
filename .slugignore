@@ -1,0 +1,5 @@
+# Ignore client folder and README
+/client
+.forkie
+forkie.py
+README.md

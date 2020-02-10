@@ -89,7 +89,7 @@ def get_file_bytearray(filename: str) -> bytearray:
     return filebytes
 
 
-def check_if_equal(old_file: bytearray, new_file: bytearray, crc32: CRC32) -> bool:
+def check_if_equal(old_file: bytearray, new_file: bytearray, crc32: CRC32 = None) -> bool:
     """ Checks if two files are equal using a 3 stage method. 
         1. Checks if the two files are of the same size. Continue if so...
         2. Checks if the two files have the same hash. Continue if so...
@@ -107,6 +107,9 @@ def check_if_equal(old_file: bytearray, new_file: bytearray, crc32: CRC32) -> bo
     
     # First check if sizes are equal
     if old_file_size == new_file_size:
+        if crc32 is None:
+            # If crc32 isn't instantiated instantiate it with this poly
+            crc32 = CRC32(uint32(0xEDB88320))
         old_file_hash = crc32.get_crc32(old_file)
         new_file_hash = crc32.get_crc32(new_file)
         # Then check if hashes are equal
