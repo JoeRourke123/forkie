@@ -8,7 +8,8 @@ from src.api.signup.routes import signupBP
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 
-from src.api.user.func import getUserData
+from src.api.groups.utils import getUserGroups, getGroupUsers
+from src.api.user.utils import getUserData
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -39,11 +40,26 @@ def dash():
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
     userData = getUserData(request.cookies.get("userid"))
+    groupData = getUserGroups(request.cookies.get("userid"))
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData)
+    return render_template("dashboard.html", user=userData, groups=groupData)
+
+
+@app.route("/group/<id>")
+def group(id=None):
+    groupData = getUserGroups(request.cookies.get("userid"))
+    groupUsers = getGroupUsers(id)
+
+    if not request.cookies.get('userid'):
+        return redirect(url_for('index', msg="Please sign in to see your dashboard"))
+    elif id not in map(lambda x: x.groupid, groupData):
+        return redirect(url_for('dash', msg="You do not have permissions to view this group"))
+
+    return render_template("group.html", groupData=filter(lambda x: x.groupid == id, groupData), )
+
 
 
 if __name__ == "main":
