@@ -83,6 +83,8 @@ def file_query():
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": [(dict(row.items())) for row in rs]}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
+            
+            return resp
         except Exception as e:
             # print(e.with_traceback())
             print(e)
