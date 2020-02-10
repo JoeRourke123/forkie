@@ -59,7 +59,10 @@ def file_query():
             # query = session.query(FileTable)
             # all_rows = query.all()
             query = getFilesUserCanAccess(userid)
-            if len(data.keys()) > 0:
+            print(query)
+            print(len(data))
+            # if len(data.keys()) > 0:
+            if len(data) > 0:
                 if "filename" in data:
                     query = query.filter(FileTable.filename == data["filename"])
                 if "fileid" in data:
