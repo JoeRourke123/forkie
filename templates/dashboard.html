@@ -3,48 +3,54 @@
     <title>
         file-rep0
     </title>
-    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet" />
-    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
     <style>
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="#">file-rep0</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Files</a>
-      </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Groups
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#">Group #1</a>
-          <a class="dropdown-item" href="#">Group #2</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#"><span class="oi oi-plus" title="plus" aria-expanded="true" style="font-size: .8rem;"> </span> New Group</a>
+    <a class="navbar-brand" href="#">file-rep0</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Files</a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Groups
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    {% if groups|length < 1 %}
+                        <a class="dropdown-item disabled" href="#">You're not in any groups</a>
+                    {% endif %}
+                    {% for group in groups %}
+                        <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group.groupname }}</a>
+                    {% endfor %}
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="/new/group"><span class="oi oi-plus" title="plus" aria-expanded="true"
+                                                            style="font-size: .8rem;"> </span> New Group</a>
+                </div>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
+                <span class="oi oi-document" title="document"></span>
+            </a>
+            <a type="button" class="btn btn-outline-danger" href="#" role="button">
+                <span class="oi oi-account-logout" title="account-logout"></span>
+            </a>
         </div>
-      </li>
-    </ul>
-    <div class="form-inline my-2 my-lg-0">
-        <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
-            <span class="oi oi-document" title="document"></span>
-        </a>
-        <a type="button" class="btn btn-outline-danger" href="#" role="button">
-            <span class="oi oi-account-logout" title="account-logout"></span>
-        </a>
     </div>
-  </div>
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
