@@ -14,7 +14,7 @@ def getUserGroupsID(userid: str) -> list:
         - userid: the user to retrieve group info about
         - returns: list of groups containing member
     """
-    return UserGroupTable.query.filter_by(userid=userid).all()
+    return db.session.query(UserGroupTable).query.filter(UserGroupTable.userid == userid).all()
 
 def getFilesUserCanAccess(userid: str):
     groupids = getUserGroupsID(userid)

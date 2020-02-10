@@ -81,7 +81,8 @@ def file_query():
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
         except Exception as e:
-            print(e.with_traceback())
+            # print(e.with_traceback())
+            print(e)
 
             if isBrowser:
                 return redirect(url_for("errors.error", code=500, url="file_query.file_query"))
