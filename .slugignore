@@ -1,0 +1,3 @@
+# Ignore client folder and README
+/client
+README.md
