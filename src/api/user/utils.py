@@ -1,6 +1,7 @@
 from app import db
 
 from src.db.UserTable import UserTable
+from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
@@ -16,9 +17,8 @@ def getUserGroupsID(userid: str) -> list:
     """
     print("Reached getUserGroupsID")
     # return db.session.query(UserGroupTable).filter(UserGroupTable.userid == userid).all()
-    return UserGroupTable.query.join(UserTable, UserGroupTable.userid == UserTable.userid)\
-        .add_columns(UserTable.userid, UserGroupTable.groupid)\
-        .filter(UserGroupTable.userid == UserTable.userid).all()
+    return GroupTable.query.join(UserGroupTable).join(UserTable)\
+        .filter((UserGroupTable.c.userid == UserTable.userid) & (UserGroupTable.c.groupid == GroupTable.groupid)).all()
 
 def getFilesUserCanAccess(userid: str):
     groups = getUserGroupsID(userid)
