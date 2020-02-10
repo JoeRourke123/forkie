@@ -15,11 +15,12 @@ def getUserGroupsID(userid: str) -> list:
         - returns: list of groups containing member
     """
     print("Reached getUserGroupsID")
-    return db.session.query(UserGroupTable).query.filter(UserGroupTable.userid == userid).all()
+    return db.session.query(UserGroupTable).filter(UserGroupTable.userid == userid).all()
 
 def getFilesUserCanAccess(userid: str):
     groups = getUserGroupsID(userid)
-    print([group.groupid for group in groups])
+    groupids = [group.groupid for group in groups]
+    print(groupids)
     return FileTable.query.join(FileGroupTable, FileTable.fileid == FileGroupTable.fileid)\
         .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.groupid)\
         .filter(FileTable.fileid == FileGroupTable.fileid)\
