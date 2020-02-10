@@ -10,6 +10,7 @@ from src.api.user.utils import getFilesUserCanAccess
 
 from datetime import datetime
 import json
+from uuid import UUID
 from jsonschema import validate, ValidationError
 # from sqlalchemy.orm import sessionmaker
 # Session = sessionmaker(bind=engine)
@@ -81,10 +82,10 @@ def file_query():
             for row in rs:
                 print(row)
                 rs_json = {
-                    "fileid": row[1],
+                    "fileid": row[1].hex,
                     "filename": row[2],
                     "groupname": row[3],
-                    "groupid": row[4]
+                    "groupid": row[4].hex
                 }
                 rs_list.append(rs_json)
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
