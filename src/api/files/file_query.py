@@ -6,7 +6,7 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
 from src.utils import hashPassword
 from src.db import db
-from src.api.user.utils import getFilesUserCanAccess
+from src.api.user.utils import getFilesUserCanAccess, getFilesUserCanAccessAlt
 
 from datetime import datetime
 import json
@@ -59,6 +59,7 @@ def file_query():
             # query = session.query(FileTable)
             # all_rows = query.all()
             query = getFilesUserCanAccess(userid)
+            query_alt = getFilesUserCanAccessAlt(userid)
             if len(data) > 0:
                 if "filename" in data:
                     query = query.filter(FileTable.filename == data["filename"])
@@ -77,8 +78,11 @@ def file_query():
                         query = query.first()
 
             rs = query.all()
+            rs_alt = query_alt.all()
             print(rs)
+            print(rs_alt)
             print([(dict(row.items())) for row in rs])
+            print([(dict(row.items())) for row in rs_alt])
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": [(dict(row.items())) for row in rs]}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")

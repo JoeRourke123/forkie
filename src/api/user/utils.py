@@ -28,11 +28,23 @@ def getFilesUserCanAccess(userid: str):
     groups = getUserGroupsID(userid)
     groupids = [group.groupid for group in groups]
     print(groupids)
-    # return FileTable.query.join(FileGroupTable, FileTable.fileid == FileGroupTable.c.fileid)\
-    #     .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.c.groupid)\
-    #     .filter(FileTable.fileid == FileGroupTable.c.fileid)\
+    return FileTable.query.join(FileGroupTable, FileTable.fileid == FileGroupTable.c.fileid)\
+        .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.c.groupid)\
+        .filter(FileTable.fileid == FileGroupTable.c.fileid)\
+        .filter(FileGroupTable.c.groupid in groupids)
+    # return FileTable.query.join(FileGroupTable)\
+    #     .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupid)\
+    #     .filter(FileGroupTable.c.fileid == FileTable.fileid)\
     #     .filter(FileGroupTable.c.groupid in groupids if "admin" not in groupids else True)
-    return FileTable.query.join(FileGroupTable)\
+    
+def getFilesUserCanAccessAlt(userid: str):
+    groups = getUserGroupsID(userid)
+    groupids = [group.groupid for group in groups]
+    print(groupids)
+    query = FileTable.query.join(FileGroupTable)\
         .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupid)\
-        .filter(FileGroupTable.c.fileid == FileTable.fileid)\
-        .filter(FileGroupTable.c.groupid in groupids if "admin" not in groupids else True)
+        .filter(FileGroupTable.c.fileid == FileTable.fileid)
+    if "admin" not in groupids:
+        query = query.filter(FileGroupTable.c.groupid in groupids)
+    return query
+    # if "admin" not in groupids else True
