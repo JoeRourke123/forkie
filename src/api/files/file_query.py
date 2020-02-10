@@ -6,7 +6,7 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
 from src.utils import hashPassword
 from src.db import db
-from src.api.user.utils import getFilesUserCanAccess, getFilesUserCanAccessAlt
+from src.api.user.utils import getFilesUserCanAccess
 
 from datetime import datetime
 import json
