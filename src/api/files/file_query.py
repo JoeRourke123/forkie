@@ -25,6 +25,7 @@ query_schema = {
         "fileid": {"type": "number"},
         "extension": {"type": "string"},
         "groupid": {"type": "number"},
+        "groupname": {"type": "string"},
         "versionhash": {"type": "number"},
         "first": {"type": "boolean"}
     }
@@ -37,6 +38,7 @@ query_schema = {
     - by extension (file version table)
     - by versionhash (file version table)
     - by groupid (file group table)
+    - by groupname (file group table)
     - by file ID (all file tables)
     - by first query result (boolean)
 """
@@ -62,22 +64,27 @@ def file_query():
             query = getFilesUserCanAccess(userid)
             if len(data) > 0:
                 if "filename" in data:
-                    query = query.filter(FileTable.filename == data["filename"])
+                    # Searches by wildcard
+                    query = query.filter(FileTable.filename.like("%" + str(data["filename"]) + "%"))
                 if "fileid" in data:
                     query = query.filter(FileTable.fileid == data["fileid"])
                 if "versionid" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionid"])
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["extension"])
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionhash"])
                 if "groupid" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
+                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupid == data["groupid"])
+                if "groupname" in data:
+                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupname == data["groupname"])
                 if "first" in data:
                     if data["first"]:
                         query = query.first()
 
             rs = query.all()
+            
+            # Construct return rows to be passed to the returned JSON response
             rs_list = []
             for row in rs:
                 print(row)
@@ -88,6 +95,7 @@ def file_query():
                     "groupid": row[4].hex
                 }
                 rs_list.append(rs_json)
+
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
