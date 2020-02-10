@@ -8,7 +8,7 @@ from src.api.signup.routes import signupBP
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 
-from src.api.groups.utils import getUserGroups, getGroupUsers
+from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
 from src.api.user.utils import getUserData
 
 app = Flask(__name__)
@@ -52,14 +52,15 @@ def dash():
 def group(id=None):
     groupData = getUserGroups(request.cookies.get("userid"))
     groupUsers = getGroupUsers(id)
+    isLeader = isGroupLeader(request.cookies.get("userid"), id)
 
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
-    elif id not in map(lambda x: x.groupid, groupData):
+    elif id not in list(map(lambda x: str(x.groupid), groupData)):
         return redirect(url_for('dash', msg="You do not have permissions to view this group"))
 
-    return render_template("group.html", groupData=filter(lambda x: x.groupid == id, groupData), )
-
+    return render_template("group.html", groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
+                           groupUsers=groupUsers, isLeader=isLeader)
 
 
 if __name__ == "main":
