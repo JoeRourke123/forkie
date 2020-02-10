@@ -21,10 +21,18 @@ def getUserGroupsID(userid: str) -> list:
         .filter((UserGroupTable.c.userid == UserTable.userid) & (UserGroupTable.c.groupid == GroupTable.groupid)).all()
 
 def getFilesUserCanAccess(userid: str):
+    """ Returns the Query of the files that the user (userid) can access. This is the join of
+        FileTable, UserTable and FileGroupTable: where FileTable.fileid = FileGroupTable.fileid AND
+        FileGroupTable.groupid in groupids AND
+    """
     groups = getUserGroupsID(userid)
     groupids = [group.groupid for group in groups]
     print(groupids)
-    return FileTable.query.join(FileGroupTable, FileTable.fileid == FileGroupTable.fileid)\
-        .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.groupid)\
-        .filter(FileTable.fileid == FileGroupTable.fileid)\
-        .filter(FileGroupTable.groupid in groupids if "admin" not in groupids else True)
+    # return FileTable.query.join(FileGroupTable, FileTable.fileid == FileGroupTable.c.fileid)\
+    #     .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.c.groupid)\
+    #     .filter(FileTable.fileid == FileGroupTable.c.fileid)\
+    #     .filter(FileGroupTable.c.groupid in groupids if "admin" not in groupids else True)
+    return FileTable.query.join(FileGroupTable)\
+        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupid)\
+        .filter(FileGroupTable.c.fileid == FileTable.fileid)\
+        .filter(FileGroupTable.c.groupid in groupids if "admin" not in groupids else True)
