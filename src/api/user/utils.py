@@ -15,8 +15,6 @@ def getUserGroupsID(userid: str) -> list:
         - userid: the user to retrieve group info about
         - returns: list of groups containing member
     """
-    print("Reached getUserGroupsID")
-    # return db.session.query(UserGroupTable).filter(UserGroupTable.userid == userid).all()
     return GroupTable.query.join(UserGroupTable).join(UserTable)\
         .filter((UserGroupTable.c.userid == UserTable.userid) & (UserGroupTable.c.groupid == GroupTable.groupid)).all()
 
@@ -30,9 +28,9 @@ def getFilesUserCanAccess(userid: str):
     groupids = [group.groupid for group in groups]
     groupnames = [group.groupname for group in groups]
     print(groupids)
-    query = FileTable.query.join(FileGroupTable)\
+    query = FileTable.query.join(FileGroupTable).join(GroupTable)\
         .add_columns(FileTable.fileid, FileTable.filename, FileGroupTable.c.groupname, FileGroupTable.c.groupid)\
-        .filter((FileGroupTable.c.groupid == GroupTable.groupid) & (FileGroupTable.c.fileid == FileTable.fileid))
+        .filter((FileGroupTable.c.fileid == FileTable.fileid) & (FileGroupTable.c.groupid == GroupTable.groupid))
     if "admin" not in groupnames:
         for groupid in groupids:
             query = query.filter(FileGroupTable.c.groupid == groupid)
