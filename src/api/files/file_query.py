@@ -75,19 +75,19 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.fileid == UUID(str(data["fileid"])))
                 # No worky (not tested)
                 if "versionid" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == UUID(str(data["versionid"])))
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
                 # No worky (not tested)
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["extension"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
                 # No worky (not tested)
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionhash"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
                 # Works (not tested)
                 if "groupid" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupid == data["groupid"])
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 # Works (not tested)
                 if "groupname" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupname == data["groupname"])
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
                 # Works (tested)
                 if "first" in data:
                     get_first = data['first']
