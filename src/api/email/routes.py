@@ -31,8 +31,8 @@ def emailGroup():
 
         try:
             for user in groupUsers:
-                mail = sendgrid.Mail("forkie@example.com", str(data["subject"] + " - from " + userData.email),
-                                     str(user.email), str(data["content"]))
+                mail = sendgrid.Mail("forkie@example.com",
+                                     str(user.email), str(data["subject"] + " - from " + userData.email), str(data["content"]))
                 response = sg.send(mail)
                 print(response.status_code)
                 print(response.body)
