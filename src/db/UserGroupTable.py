@@ -12,3 +12,4 @@ class UserGroupTable(db.Model):
     def __init__(self, data):
         self.groupid = data["groupid"]
         self.userid = data["userid"]
+
