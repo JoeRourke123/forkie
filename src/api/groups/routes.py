@@ -1,7 +1,8 @@
-from flask import current_app as app
-from flask import render_template, Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for
 
 import json
+from traceback import print_exc
+import uuid
 
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
@@ -15,24 +16,29 @@ groupsBP = Blueprint('groups', __name__,
 
 @groupsBP.route("/new", methods=["POST"])
 def newGroup():
-    isBrowser = request.cookies.get("client") == "browser"
+    isBrowser = "groupName" in request.form
     data = request.form if isBrowser else request.data
 
     if request.cookies.get("userid"):
         group = GroupTable({
-            "groupName": data.get("name"),
-            "groupLeader": request.cookies.get("userid")
+            "groupname": data.get("groupName"),
+            "groupleaderid": request.cookies.get("userid")
         })
 
-        usergroup = UserGroupTable(group.groupid, request.cookies.get("user"))
+        usergroup = UserGroupTable({
+            "groupid": str(group.groupid),
+            "userid": request.cookies.get("userid")
+        })
 
         try:
             db.session.add(group)
             db.session.add(usergroup)
             db.session.commit()
         except Exception as e:
+            return str(e)
+
             if isBrowser:
-                return redirect(url_for('errors.error', code=500))
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
             else:
                 return json.dumps({
                     "code": 500,
@@ -40,15 +46,16 @@ def newGroup():
                 }), 500
     else:
         if isBrowser:
-            return redirect(url_for('errors.error', code=403))
+            return redirect(url_for('errors.error', code=403, msg=print_exc()))
         else:
             return json.dumps({
                 "code": 403,
-                "msg": "You must be signed in to do this"
+                "msg": "You must be signed in to do this",
+                "exc": print_exc()
             }), 403
 
     if isBrowser:
-        return redirect(url_for('groups.viewGroup'))
+        return redirect(url_for('group', id=group.groupid))
     else:
         return json.dumps({
             "code": 200,

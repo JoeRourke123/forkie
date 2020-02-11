@@ -47,7 +47,6 @@ def dash():
 
     return render_template("dashboard.html", user=userData, groups=groupData)
 
-
 @app.route("/group/<id>")
 def group(id=None):
     groupData = getUserGroups(request.cookies.get("userid"))
@@ -63,6 +62,16 @@ def group(id=None):
                            user=getUserData(request.cookies.get("userid")),
                            groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader)
+
+
+@app.route("/group/new")
+def newGroup():
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
+
+    return render_template("newgroup.html")
+
+
 
 
 if __name__ == "main":
