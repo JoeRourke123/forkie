@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>
-        New Group - forkie
+        Email {{ group.groupname }} - forkie
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -49,10 +49,10 @@
                       </div>
                         <div class="form-group">
                         <label for="content">Email Content</label>
-                            <textarea name="content" id="content" class="form-control-plaintext" cols="30" rows="10"></textarea>
+                            <textarea name="content" id="content" class="form-control" cols="30" rows="10"></textarea>
                       </div>
-                        <button class="btn btn-outline-success">
-                            <span class="oi oi-check" title="check"></span>
+                        <button class="btn btn-outline-info">
+                            <span class="oi oi-" title="check"></span>
                         </button>
                     </form>
                 </div>

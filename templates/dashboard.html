@@ -37,7 +37,7 @@
                         <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group.groupname }}</a>
                     {% endfor %}
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="/new/group"><span class="oi oi-plus" title="plus" aria-expanded="true"
+                    <a class="dropdown-item" href="{{ url_for('newGroup') }}"><span class="oi oi-plus" title="plus" aria-expanded="true"
                                                             style="font-size: .8rem;"> </span> New Group</a>
                 </div>
             </li>
