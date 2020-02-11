@@ -30,3 +30,7 @@ def getGroupUsers(groupID):
     except Exception as e:
         print(print_exc())
         return []
+
+
+def getGroupData(groupID):
+    return GroupTable.query.filter_by(groupid=groupID).first()
