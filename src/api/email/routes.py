@@ -34,6 +34,9 @@ def emailGroup():
                 mail = sendgrid.Mail("forkie@example.com", str(data["subject"] + " - from " + userData.email),
                                      str(user.email), str(data["content"]))
                 response = sg.send(mail)
+                print(response.status_code)
+                print(response.body)
+                print(response.headers)
         except Exception as e:
             print(print_exc())
             return redirect(url_for('errors.error', code=500, msg=print_exc()))
