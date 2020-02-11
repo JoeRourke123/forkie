@@ -84,5 +84,10 @@ def emailGroup(id):
     return render_template("emailgroup.html", group=getGroupData(id))
 
 
+@app.route("/group/email/success/<id>")
+def emailSuccess(id):
+    return render_template("emailsuccess.html", groupID=id)
+
+
 if __name__ == "main":
     app.run(threaded=True, port=5000)
