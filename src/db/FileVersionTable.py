@@ -1,4 +1,5 @@
-from src.db import db, FileTable
+from src.db import db
+from src.db.FileTable import FileTable
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
