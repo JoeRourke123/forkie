@@ -13,7 +13,7 @@ signinBP = Blueprint('signin', __name__, template_folder='../../templates', stat
 
 @signinBP.route("/signout", methods=["GET"])
 def signout():
-    resp = make_response(redirect(url_for('signin', code=200, msg="You have been signed out!")))
+    resp = make_response(redirect(url_for('index', code=200, msg="You have been signed out!")))
     resp.set_cookie("userid", "")
 
     return resp
@@ -48,7 +48,6 @@ def signin():
                 resp = make_response(json.dumps({"code": 200, "msg": "You have been signed in"}))
 
             resp.set_cookie("userid", str(query.userid))
-            resp.set_cookie("client", "browser" if isBrowser else "cli")
 
             return resp
         except Exception as e:

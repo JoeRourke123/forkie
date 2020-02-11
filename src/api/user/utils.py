@@ -25,6 +25,7 @@ def getFilesUserCanAccess(userid: str):
     query = FileTable.query.join(FileGroupTable).join(GroupTable)\
         .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
         .filter((FileGroupTable.fileid == FileTable.fileid) & (FileGroupTable.groupid == GroupTable.groupid))
+
     if "admin" not in groupnames:
         for groupid in groupids:
             query = query.filter(FileGroupTable.groupid == groupid)

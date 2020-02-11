@@ -50,7 +50,7 @@ def dash():
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=getFilesUserCanAccess(str(userData.userid)))
+    return render_template("dashboard.html", user=userData, groups=groupData, files=[])
 
 
 @app.route("/group/<id>")
