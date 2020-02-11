@@ -8,7 +8,7 @@ from traceback import print_exc
 
 def getUserGroups(userID):
     try:
-        res = GroupTable.query.join(UserGroupTable, UserGroupTable.c.userid == userID).all()
+        res = GroupTable.query.join(UserGroupTable, UserGroupTable.userid == userID).all()
         return res
     except Exception as e:
         return print_exc()
@@ -16,17 +16,21 @@ def getUserGroups(userID):
 
 def isGroupLeader(userID, groupID):
     try:
-        res = GroupTable.query.filter(and_(groupleader=userID, groupid=groupID)).first()
-        return len(res) > 0
-    except:
+        res = GroupTable.query.filter(and_(GroupTable.groupleaderid==userID, GroupTable.groupid==groupID))
+        return res.count() > 0
+    except Exception as e:
         print(print_exc())
         return False
 
 
 def getGroupUsers(groupID):
     try:
-        res = UserTable.query.join(UserGroupTable, and_(UserGroupTable.c.userid == UserTable.userid, UserGroupTable.c.groupid == groupID)).all()
+        res = UserTable.query.join(UserGroupTable, and_(UserGroupTable.userid == UserTable.userid, UserGroupTable.groupid == groupID)).all()
         return res
     except Exception as e:
         print(print_exc())
         return []
+
+
+def getGroupData(groupID):
+    return GroupTable.query.filter_by(groupid=groupID).first()

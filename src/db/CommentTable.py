@@ -7,7 +7,7 @@ import uuid
 
 class CommentTable(db.Model):
     __tablename__ = "commenttable"
-    commentid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    commentid = db.Column(UUID(as_uuid=True), primary_key=True)
     versionid = db.Column(UUID(as_uuid=True), db.ForeignKey('fileversiontable.versionid'), nullable=False)
     userid = db.Column(UUID(as_uuid=True), db.ForeignKey('usertable.userid'), nullable=False)
     comment = db.Column(db.String(256), nullable=False)
@@ -17,6 +17,7 @@ class CommentTable(db.Model):
     file = db.relationship(FileVersionTable, foreign_keys=versionid, backref=db.backref('file', lazy='joined'), lazy='joined')
 
     def __init__(self, data):
+        self.commentid = str(uuid.uuid1())
         self.versionid = data['versionid']
         self.userid = data['userid']
         self.comment = data['comment']

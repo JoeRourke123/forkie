@@ -6,7 +6,7 @@ import uuid
 class MetadataTable(db.Model):
     __tablename__ = "metadatatable"
 
-    metadataid = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4())
+    metadataid = db.Column(UUID(as_uuid=True), primary_key=True)
     versionid = db.Column(UUID(as_uuid=True), db.ForeignKey('fileversiontable.versionid'), nullable=False)
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)
@@ -15,7 +15,7 @@ class MetadataTable(db.Model):
 
 
     def __init__(self, data):
-        self.metadataid = ""
+        self.metadataid = str(uuid.uuid1())
         self.versionid = data["versionid"]
         self.title = data["title"]
         self.value = data["value"]

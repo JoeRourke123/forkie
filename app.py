@@ -8,8 +8,9 @@ from src.api.signup.routes import signupBP
 from src.api.files.file_query import fQueryBP
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
+from src.api.email.routes import emailBP
 
-from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
+from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
 
 app = Flask(__name__)
@@ -24,6 +25,7 @@ app.register_blueprint(signupBP)
 app.register_blueprint(fQueryBP)
 app.register_blueprint(groupsBP)
 app.register_blueprint(errorsBP)
+app.register_blueprint(emailBP)
 
 
 # Routes
@@ -49,9 +51,8 @@ def dash():
 
     return render_template("dashboard.html", user=userData, groups=groupData)
 
-
 @app.route("/group/<id>")
-def group(id=None):
+def group(id):
     groupData = getUserGroups(request.cookies.get("userid"))
     groupUsers = getGroupUsers(id)
     isLeader = isGroupLeader(request.cookies.get("userid"), id)
@@ -65,6 +66,29 @@ def group(id=None):
                            user=getUserData(request.cookies.get("userid")),
                            groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader)
+
+
+@app.route("/group/new")
+def newGroup():
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
+
+    return render_template("newgroup.html")
+
+
+@app.route("/group/email/<id>")
+def emailGroup(id):
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
+    elif getUserData(request.cookies.get("userid")) not in getGroupUsers(id):
+        return redirect(url_for('dash', msg="You aren't in this group so can't see this page"))
+
+    return render_template("emailgroup.html", group=getGroupData(id))
+
+
+@app.route("/group/email/success/<id>")
+def emailSuccess(id):
+    return render_template("emailsuccess.html", groupID=id)
 
 
 if __name__ == "main":
