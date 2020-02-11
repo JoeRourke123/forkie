@@ -1,14 +1,10 @@
-from flask import current_app as app
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
-from src.utils import hashPassword
-from src.db import db
 from src.api.user.utils import getFilesUserCanAccess
 
-from datetime import datetime
 import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
@@ -46,16 +42,15 @@ query_schema = {
 """
 
 @fQueryBP.route("/file_query", methods=["POST"])
-def file_query():
-    isBrowser = bool("email" in request.form)
-    data = request.form if isBrowser else json.loads(request.data)
+def file_query(browserQuery=None):
+    data = browserQuery if browserQuery is not None else json.loads(request.data)
 
     # Validate data
     try:
         validate(instance=data, schema=query_schema)
         try:
             # Return unauthorized access code if the userid is not found in the cookies
-            if "userid" not in request.cookies and not isBrowser:
+            if "userid" not in request.cookies and browserQuery is not None:
                 return json.dumps({
                     "code": 401,
                     "msg": "Unauthorized. Make sure you sure you have logged in."
@@ -80,19 +75,19 @@ def file_query():
                     query = query.filter(FileTable.fileid == UUID(str(data["fileid"])))
                 # No worky (not tested)
                 if "versionid" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == UUID(str(data["versionid"])))
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
                 # No worky (not tested)
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["extension"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
                 # No worky (not tested)
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionhash"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
                 # Works (not tested)
                 if "groupid" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupid == UUID(str(data["groupid"])))
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 # Works (not tested)
                 if "groupname" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupname == data["groupname"])
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
                 # Works (tested)
                 if "first" in data:
                     get_first = data['first']
@@ -116,14 +111,13 @@ def file_query():
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
-            resp.set_cookie("client", "browser" if isBrowser else "cli")
 
             return resp
         except Exception as e:
             # print(e.with_traceback())
             print(e)
 
-            if isBrowser:
+            if browserQuery:
                 return redirect(url_for("errors.error", code=500, url="file_query.file_query"))
             else:
                 return json.dumps({
@@ -131,7 +125,7 @@ def file_query():
                     "msg": "Something went wrong when querying files"
                 }), 500
     except ValidationError:
-        if isBrowser:
+        if browserQuery is not None:
             return redirect(url_for("errors.error", code=400, url="file_query.file_query"))
         else:
             return json.dumps({

@@ -5,7 +5,8 @@ from src.db import db
 
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
-from src.api.files.file_query import fQueryBP
+from src.api.files.file_query import fQueryBP, file_query
+from src.api.user.utils import getFilesUserCanAccess
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
@@ -49,7 +50,8 @@ def dash():
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData)
+    return render_template("dashboard.html", user=userData, groups=groupData, files=[])
+
 
 @app.route("/group/<id>")
 def group(id):
@@ -65,7 +67,8 @@ def group(id):
     return render_template("group.html",
                            user=getUserData(request.cookies.get("userid")),
                            groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
-                           groupUsers=groupUsers, isLeader=isLeader)
+                           groupUsers=groupUsers, isLeader=isLeader,
+                           groupFiles=file_query({"groupid": id}))
 
 
 @app.route("/group/new")

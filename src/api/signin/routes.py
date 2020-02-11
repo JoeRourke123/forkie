@@ -11,6 +11,14 @@ import json
 signinBP = Blueprint('signin', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
 
+@signinBP.route("/signout", methods=["GET"])
+def signout():
+    resp = make_response(redirect(url_for('index', code=200, msg="You have been signed out!")))
+    resp.set_cookie("userid", "")
+
+    return resp
+
+
 @signinBP.route("/signin", methods=["POST"])
 def signin():
     isBrowser = bool("email" in request.form)
@@ -40,7 +48,6 @@ def signin():
                 resp = make_response(json.dumps({"code": 200, "msg": "You have been signed in"}))
 
             resp.set_cookie("userid", str(query.userid))
-            resp.set_cookie("client", "browser" if isBrowser else "cli")
 
             return resp
         except Exception as e:
