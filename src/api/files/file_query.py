@@ -12,9 +12,6 @@ from datetime import datetime
 import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
-# from sqlalchemy.orm import sessionmaker
-# Session = sessionmaker(bind=engine)
-# session = Session()
 
 fQueryBP = Blueprint('file_query', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 query_schema = {
@@ -22,9 +19,9 @@ query_schema = {
     "properties": {
         "filename": {"type": "string"},
         "versionid": {"type": "string"},
-        "fileid": {"type": "number"},
+        "fileid": {"type": "string"},
         "extension": {"type": "string"},
-        "groupid": {"type": "number"},
+        "groupid": {"type": "string"},
         "groupname": {"type": "string"},
         "versionhash": {"type": "number"},
         "first": {"type": "boolean"}
@@ -41,13 +38,18 @@ query_schema = {
     - by groupname (file group table)
     - by file ID (all file tables)
     - by first query result (boolean)
+    The query JSON data will first be validated against the query_schema. If the JSON is invalid an error 500
+    is returned. Then will check for userid inside cookie. If userid is not found or userid is None then error 401 or error 400
+    is returned. All the files the user can access are then queried using getFilesUserCanAccess. If the JSON query data is empty
+    then all the files the user can access are returned (cols: fileid, filename, groupname, groupid). Otherwise the query is
+    shortlisted by the criteria inside the JSON query. Rows from query obj are then converted to a JSON to be returned
 """
 
 @fQueryBP.route("/file_query", methods=["POST"])
 def file_query():
-    isBrowser = bool(request.form is not None)
-    data = request.form if isBrowser else request.json
-    
+    isBrowser = bool("email" in request.form)
+    data = request.form if isBrowser else json.loads(request.data)
+
     # Validate data
     try:
         validate(instance=data, schema=query_schema)
@@ -58,48 +60,64 @@ def file_query():
                     "code": 401,
                     "msg": "Unauthorized. Make sure you sure you have logged in."
                 })
+
             userid = request.cookies.get("userid")
-            # query = session.query(FileTable)
-            # all_rows = query.all()
+            
+            # Return bad request if the user id is None
+            if userid is None:
+                raise Exception
+
             query = getFilesUserCanAccess(userid)
+            get_first = False
+            print(data)
             if len(data) > 0:
+                # Works (tested)
                 if "filename" in data:
-                    # Searches by wildcard
+                    # Searches by wildcard so any filename containing that string will be included
                     query = query.filter(FileTable.filename.like("%" + str(data["filename"]) + "%"))
+                # Works (tested)
                 if "fileid" in data:
-                    query = query.filter(FileTable.fileid == data["fileid"])
+                    query = query.filter(FileTable.fileid == UUID(str(data["fileid"])))
+                # No worky (not tested)
                 if "versionid" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionid"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == UUID(str(data["versionid"])))
+                # No worky (not tested)
                 if "extension" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["extension"])
+                # No worky (not tested)
                 if "versionhash" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.c.fileid, FileVersionTable.c.versionid == data["versionhash"])
+                # Works (not tested)
                 if "groupid" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupid == data["groupid"])
+                    query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupid == UUID(str(data["groupid"])))
+                # Works (not tested)
                 if "groupname" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.c.fileid, FileGroupTable.c.groupname == data["groupname"])
+                # Works (tested)
                 if "first" in data:
-                    if data["first"]:
-                        query = query.first()
-
-            rs = query.all()
-            
+                    get_first = data['first']
+                    
+            # Queries all even when first flag is true as it needs all columns from query object 
+            # and first() method strips other columns for some reason
+            query = query.all()
             # Construct return rows to be passed to the returned JSON response
             rs_list = []
-            for row in rs:
-                # print(row)
-                rs_json = {
-                    "fileid": row[1].hex,
-                    "filename": row[2],
-                    "groupname": row[3],
-                    "groupid": row[4].hex
-                }
-                rs_list.append(rs_json)
+            for r in range(0, len(query) if not get_first else 1):
+                row = query[r]
+                if row is not None:
+                    print(row)
+                    rs_json = {
+                        "fileid": row[1].hex,
+                        "filename": row[2],
+                        "groupname": row[3],
+                        "groupid": row[4].hex
+                    }
+                    rs_list.append(rs_json)
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
             resp.set_cookie("client", "browser" if isBrowser else "cli")
-            
+
             return resp
         except Exception as e:
             # print(e.with_traceback())
