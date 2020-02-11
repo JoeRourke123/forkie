@@ -16,9 +16,9 @@ def getUserGroups(userID):
 
 def isGroupLeader(userID, groupID):
     try:
-        res = GroupTable.query.filter(and_(groupleader=userID, groupid=groupID)).first()
-        return len(res) > 0
-    except:
+        res = GroupTable.query.filter(and_(GroupTable.groupleaderid==userID, GroupTable.groupid==groupID))
+        return res.count() > 0
+    except Exception as e:
         print(print_exc())
         return False
 
