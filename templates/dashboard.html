@@ -37,15 +37,15 @@
                         <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group.groupname }}</a>
                     {% endfor %}
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{{ url_for('newGroup') }}"><span class="oi oi-plus" title="plus"
-                                                                                    aria-expanded="true"
-                                                                                    style="font-size: .8rem;"> </span>
+                    <a class="dropdown-item" href="{{ url_for('newGroupPage') }}"><span class="oi oi-plus" title="plus"
+                                                                                        aria-expanded="true"
+                                                                                        style="font-size: .8rem;"> </span>
                         New Group</a>
                 </div>
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
-            <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
+            <a type="button" class="btn btn-outline-success mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
             <a type="button" class="btn btn-outline-danger" href="{{ url_for('signin.signout') }}" role="button">
