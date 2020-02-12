@@ -1,0 +1,61 @@
+<html>
+<head>
+    <title>
+        New File - forkie
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <style>
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">forkie</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
+                <span class="oi oi-document" title="document"></span>
+            </a>
+            <a type="button" class="btn btn-outline-danger" href="#" role="button">
+                <span class="oi oi-account-logout" title="account-logout"></span>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid h-75 d-flex flex-column justify-content-center">
+    <div class="row mt-4 mb-4 d-flex justify-content-center align-content-center">
+        <h2>New File</h2>
+    </div>
+    <div class="row d-flex justify-content-center align-content-center">
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{ url_for('files.newFile') }}" method="post">
+                      <div class="form-group">
+                        <label for="groupName">Group Name</label>
+                        <input type="text" class="form-control" id="groupName" name="groupName">
+                      </div>
+                        <button class="btn btn-outline-success">
+                            <span class="oi oi-check" title="check"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+</html>

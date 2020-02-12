@@ -60,6 +60,7 @@ def dash():
 def group(id):
     groupData = getUserGroups(request.cookies.get("userid"))
     groupUsers = getGroupUsers(id)
+    groupFiles = json.loads(file_query({"groupid": id}).data)['rows']
     isLeader = isGroupLeader(request.cookies.get("userid"), id)
 
     if not request.cookies.get('userid'):
@@ -71,7 +72,7 @@ def group(id):
                            user=getUserData(request.cookies.get("userid")),
                            groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader,
-                           groupFiles=file_query({"groupid": id}))
+                           groupFiles=groupFiles)
 
 
 @app.route("/group/new")
@@ -95,6 +96,20 @@ def emailGroup(id):
 @app.route("/group/email/success/<id>")
 def emailSuccess(id):
     return render_template("emailsuccess.html", groupID=id)
+
+
+
+
+@app.route("/file/new")
+def newFile():
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
+
+    print(request.referrer)
+    userGroups = getUserGroups(request.cookies.get("userid"))
+    userData = getUserData(request.cookies.get("userid"))
+
+    return render_template("newfile.html", userGroups=userGroups, user=userData)
 
 
 if __name__ == "main":
