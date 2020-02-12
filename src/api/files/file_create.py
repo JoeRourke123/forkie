@@ -1,10 +1,7 @@
-from flask import current_app as app
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from flask import Blueprint, request, redirect, url_for
 
 from src.db.FileTable import FileTable
-from src.db.FileVersionTable import FileVersionTable
 from src.db.FileGroupTable import FileGroupTable
-from src.db.MetadataTable import MetadataTable
 from src.db import db
 
 from datetime import datetime
@@ -41,8 +38,6 @@ def newFile():
     upload = request.files["file"]
 
     try:
-        # DO BACKBLAZE STUFF
-
         file = FileTable({
             "filename": upload.filename,
             "extension": upload.filename.split(".")[-1],
@@ -56,32 +51,10 @@ def newFile():
             "groupid": data["groupid"]
         })
 
-        fileversion = FileVersionTable({
-            "fileid": str(file.fileid),
-            "versionhash": ""
-        })
-
-        db.session.add(fileversion)
         db.session.add(filegroup)
         db.session.commit()
 
-        userMetadata = MetadataTable({
-            "versionid": str(fileversion.versionid),
-            "title": "userid",
-            "value": request.cookies.get("userid")
-        })
-
-        timeMetadata = MetadataTable({
-            "versionid": str(fileversion.versionid),
-            "title": "uploaded",
-            "value": str(datetime.now())
-        })
-
-        db.session.add(userMetadata)
-        db.session.add(timeMetadata)
-        db.session.commit()
-
-        # This is so gross, I'll modularise it at some point
+        # newVersion(file, upload) - function when called will create a new file version for the initial upload
 
     except Exception as e:
         print(e)
