@@ -57,7 +57,8 @@ def file_query(browserQuery=None):
                 })
 
             userid = request.cookies.get("userid")
-            
+            print(userid)
+
             # Return bad request if the user id is None
             if userid is None:
                 raise Exception
@@ -72,7 +73,7 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.filename.like("%" + str(data["filename"]) + "%"))
                 # Works (tested)
                 if "fileid" in data:
-                    query = query.filter(FileTable.fileid == UUID(str(data["fileid"])))
+                    query = query.filter(FileTable.fileid == str(data["fileid"]))
                 # No worky (not tested)
                 if "versionid" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])

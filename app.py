@@ -14,6 +14,8 @@ from src.api.email.routes import emailBP
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
 
+import json
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = "bananas"
@@ -46,11 +48,12 @@ def dash():
 
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
+    files = json.loads(file_query({}).data)
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=[])
+    return render_template("dashboard.html", user=userData, groups=groupData, files=files)
 
 
 @app.route("/group/<id>")

@@ -37,8 +37,10 @@
                         <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group.groupname }}</a>
                     {% endfor %}
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{{ url_for('newGroup') }}"><span class="oi oi-plus" title="plus" aria-expanded="true"
-                                                            style="font-size: .8rem;"> </span> New Group</a>
+                    <a class="dropdown-item" href="{{ url_for('newGroup') }}"><span class="oi oi-plus" title="plus"
+                                                                                    aria-expanded="true"
+                                                                                    style="font-size: .8rem;"> </span>
+                        New Group</a>
                 </div>
             </li>
         </ul>
@@ -68,6 +70,17 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">Frequently Used Files</div>
+                    <div class="list-group">
+                        {% for file in files['rows'] %}
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                  <h5 class="mb-1">{{ file.filename }}</h5>
+                                    <small><time class="" datetime="">5 mins ago</time></small>
+                                </div>
+                                <small class="text-muted">{{ file.groupname }}</small>
+                              </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
