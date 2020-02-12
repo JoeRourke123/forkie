@@ -23,7 +23,7 @@
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
-            <a type="button" class="btn btn-outline-success mr-2" href="#" role="button">
+            <a type="button" class="btn btn-outline-success mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
             <a type="button" class="btn btn-outline-danger" href="#" role="button">
@@ -41,12 +41,24 @@
             <div class="card">
                 <div class="card-body">
                     <form action="{{ url_for('files.newFile') }}" method="post">
-                      <div class="form-group">
-                        <label for="groupName">Group Name</label>
-                        <input type="text" class="form-control" id="groupName" name="groupName">
-                      </div>
+                        <div class="form-group">
+                            <input type="file" class="form-control-file" id="file" name="file">
+                        </div>
+                        <div class="form-group">
+                            <label for="gropu">Select Group</label>
+                            <select class="form-control" id="group" name="groupid">
+                                {% for group in userGroups %}
+                                    <option value="{{ group.groupid }}">{{ group.groupname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="comment">Comment</label>
+                            <input type="text" class="form-control" id="comment" name="comment"
+                                   placeholder="Initial file upload..." value="Initial file upload...">
+                        </div>
                         <button class="btn btn-outline-success">
-                            <span class="oi oi-check" title="check"></span>
+                            <span class="oi oi-cloud-upload" title="cloud upload"></span>
                         </button>
                     </form>
                 </div>
