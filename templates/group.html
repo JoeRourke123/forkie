@@ -59,6 +59,15 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">Group Files</div>
+                    {% for file in groupFiles %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                              <h5 class="mb-1">{{ file.filename }}</h5>
+                                <small><time class="" datetime="">5 mins ago</time></small>
+                            </div>
+                            <small class="text-muted">{{ file.groupname }}</small>
+                          </a>
+                    {% endfor %}
                 </div>
             </div>
         </div>
