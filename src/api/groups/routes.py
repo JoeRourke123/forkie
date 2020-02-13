@@ -14,6 +14,33 @@ groupsBP = Blueprint('groups', __name__,
                     url_prefix='/api/groups')
 
 
+@groupsBP.route("/addMember", methods=["POST"])
+def addMember():
+    isBrowser = "email" in request.form
+    data = request.form if isBrowser else request.data
+
+    if request.cookies.get("userid"):
+        try:
+            group = GroupTable.query.filter_by(groupleaderid=request.cookies.get("userid")).first()
+
+            usergroup = UserGroupTable({
+                "groupid": group.groupid,
+                "userid": request.cookies.get("userid")
+            })
+            db.session.add(group)
+            db.session.commit()
+        except Exception as e:
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when creating your group"
+                }), 500
+
+
 @groupsBP.route("/new", methods=["POST"])
 def newGroup():
     isBrowser = "groupName" in request.form
