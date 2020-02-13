@@ -13,7 +13,7 @@ filesBP = Blueprint("files", __name__,
 
 
 @filesBP.route("/metadata", methods = ["POST"])
-def getMetadata():
+def getMetadataRoute():
     isBrowser = "versionID" in request.form
 
     if isBrowser:
