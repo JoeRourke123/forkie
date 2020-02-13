@@ -20,18 +20,18 @@ def newGroup():
     data = request.form if isBrowser else request.data
 
     if request.cookies.get("userid"):
-        group = GroupTable({
-            "groupname": data.get("groupName"),
-            "groupleaderid": request.cookies.get("userid")
-        })
-
-        usergroup = UserGroupTable({
-            "groupid": str(group.groupid),
-            "userid": request.cookies.get("userid")
-        })
-
         try:
+            group = GroupTable({
+                "groupname": data.get("groupName"),
+                "groupleaderid": request.cookies.get("userid")
+            })
             db.session.add(group)
+            db.session.commit()
+
+            usergroup = UserGroupTable({
+                "groupid": str(group.groupid),
+                "userid": request.cookies.get("userid")
+            })
             db.session.add(usergroup)
             db.session.commit()
         except Exception as e:

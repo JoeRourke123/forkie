@@ -2,6 +2,9 @@ from src.db.UserTable import UserTable
 from src.db.GroupTable import GroupTable
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
+from src.db.UserGroupTable import UserGroupTable
+
+from sqlalchemy import and_
 
 from src.api.groups.utils import getUserGroups
 
@@ -18,15 +21,20 @@ def getFilesUserCanAccess(userid: str):
         - userid: retrieves all the files that this user can access 
         - returns: the SQLAlchemy query object for the query of all accessible files
     """
-    groups = getUserGroups(userid)
-    groupids = [group.groupid for group in groups]
-    groupnames = [group.groupname for group in groups]
-    # print(groupids)
-    query = FileTable.query.join(FileGroupTable).join(GroupTable)\
-        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
-        .filter((FileGroupTable.fileid == FileTable.fileid) & (FileGroupTable.groupid == GroupTable.groupid))
+    # groups = getUserGroups(userid)
+    # groupids = [group.groupid for group in groups]
+    # groupnames = [group.groupname for group in groups]
+    #
+    # if "admin" in groupnames:
+    #     groupids = []
 
-    if "admin" not in groupnames:
-        for groupid in groupids:
-            query = query.filter(FileGroupTable.groupid == groupid)
+    userData = getUserData(userid)
+
+    query = FileTable.query.join(FileGroupTable).join(GroupTable).join(UserGroupTable)\
+        .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
+        .filter(and_(FileGroupTable.fileid == FileTable.fileid, FileGroupTable.groupid == GroupTable.groupid, FileGroupTable.groupid == UserGroupTable.groupid, UserGroupTable.userid == userid))\
+
+    if userData.admin:
+        query = FileTable.query
+
     return query

@@ -6,13 +6,14 @@ from src.db import db
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
 from src.api.files.file_query import fQueryBP, file_query
-from src.api.user.utils import getFilesUserCanAccess
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
 
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
+
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -46,17 +47,19 @@ def dash():
 
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
+    files = json.loads(file_query({}).data)
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=[])
+    return render_template("dashboard.html", user=userData, groups=groupData, files=files)
 
 
 @app.route("/group/<id>")
 def group(id):
     groupData = getUserGroups(request.cookies.get("userid"))
     groupUsers = getGroupUsers(id)
+    groupFiles = json.loads(file_query({"groupid": id}).data)['rows']
     isLeader = isGroupLeader(request.cookies.get("userid"), id)
 
     if not request.cookies.get('userid'):
@@ -68,11 +71,11 @@ def group(id):
                            user=getUserData(request.cookies.get("userid")),
                            groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader,
-                           groupFiles=file_query({"groupid": id}))
+                           groupFiles=groupFiles)
 
 
 @app.route("/group/new")
-def newGroup():
+def newGroupPage():
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
 
@@ -92,6 +95,20 @@ def emailGroup(id):
 @app.route("/group/email/success/<id>")
 def emailSuccess(id):
     return render_template("emailsuccess.html", groupID=id)
+
+
+
+
+@app.route("/file/new")
+def newFilePage():
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
+
+    print(request.referrer)
+    userGroups = getUserGroups(request.cookies.get("userid"))
+    userData = getUserData(request.cookies.get("userid"))
+
+    return render_template("newfile.html", userGroups=userGroups, user=userData)
 
 
 if __name__ == "main":

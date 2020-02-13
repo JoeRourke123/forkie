@@ -1,44 +1,60 @@
-from flask import current_app as app
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from flask import Blueprint, request, redirect, url_for
 
-from src.api.user.func import getUserGroups
 from src.db.FileTable import FileTable
-from src.db.FileVersionTable import FileVersionTable
 from src.db.FileGroupTable import FileGroupTable
-from src.utils import hashPassword
 from src.db import db
 
-from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import json
 
-### IGNORE THIS FILE I'M NOT FINISHED
-
-### Create JSON SCHEMA FOR CREATING FILES
-
-fCreateBP = Blueprint('signup', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
+filesBP = Blueprint('files', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api/files')
 
 
-@fCreateBP.route("/signup", methods=["POST"])
-def signup():
-    isBrowser = bool(request.form is not None)
-    data = request.form if isBrowser else request.json
+@filesBP.route("/new", methods=["POST"])
+def newFile():
+    isBrowser = "filename" in request.form
+    data = request.form if isBrowser else request.data
     
     # If there is no userid inside the cookie from a cli user then return 401 (unauthorized error)
-    if "userid" not in request.cookies and not isBrowser:
-        return json.dumps({
-            "code": 401,
-            "msg": "Unauthorized. Make sure you sure you have logged in."
+    if "userid" not in request.cookies:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=401))
+        else:
+            return json.dumps({
+                "code": 401,
+                "msg": "You must be signed in to do this",
+            }), 401
+
+
+    if "file" not in request.files:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=406, msg="No files were included in the request"))
+        else:
+            return json.dumps({
+                "code": 406,
+                "msg": "No files were included in the request",
+            }), 406
+
+    upload = request.files["file"]
+
+    try:
+        file = FileTable({
+            "filename": upload.filename,
+            "extension": upload.filename.split(".")[-1],
         })
-    
-    # Create data inside filetable
-    filedata = FileTable({
-        "filename": data["username"]
-    })
-    
-    # Create
-    fileversiondata = FileVersionTable({
-        "fileid": data["fileid"],
-        "extension": data["extension"],
-        "versionhash": data["versionhash"]
-    })
+
+        db.session.add(file)
+        db.session.commit()
+
+        filegroup = FileGroupTable({
+            "fileid": str(file.fileid),
+            "groupid": data["groupid"]
+        })
+
+        db.session.add(filegroup)
+        db.session.commit()
+
+        # newVersion(file, upload) - function when called will create a new file version for the initial upload
+
+    except Exception as e:
+        print(e)

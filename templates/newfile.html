@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>
-        Email {{ group.groupname }} - forkie
+        New File - forkie
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -19,7 +19,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('group', id=group.groupid) }}">Back to Group</a>
+                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
@@ -34,25 +34,31 @@
 </nav>
 <div class="container-fluid h-75 d-flex flex-column justify-content-center">
     <div class="row mt-4 mb-4 d-flex justify-content-center align-content-center">
-        <h2>Send Email to {{ group.groupname }}</h2>
+        <h2>New File</h2>
     </div>
     <div class="row d-flex justify-content-center align-content-center">
         <div class="col-lg-3 col-md-4 col-6">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ url_for('email.emailGroup') }}" method="post">
-                        <input type="hidden" value="{{ group.groupid }}" name="groupID" />
-
-                      <div class="form-group">
-                        <label for="subject">Email Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject">
-                      </div>
+                    <form action="{{ url_for('files.newFile') }}" method="post">
                         <div class="form-group">
-                        <label for="content">Email Content</label>
-                            <textarea name="content" id="content" class="form-control" cols="30" rows="10"></textarea>
-                      </div>
-                        <button class="btn btn-outline-info">
-                            <span class="oi oi-check" title="check"></span>
+                            <input type="file" class="form-control-file" id="file" name="file">
+                        </div>
+                        <div class="form-group">
+                            <label for="gropu">Select Group</label>
+                            <select class="form-control" id="group" name="groupid">
+                                {% for group in userGroups %}
+                                    <option value="{{ group.groupid }}">{{ group.groupname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="comment">Comment</label>
+                            <input type="text" class="form-control" id="comment" name="comment"
+                                   placeholder="Initial file upload..." value="Initial file upload...">
+                        </div>
+                        <button class="btn btn-outline-success">
+                            <span class="oi oi-cloud-upload" title="cloud upload"></span>
                         </button>
                     </form>
                 </div>

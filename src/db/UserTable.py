@@ -9,6 +9,7 @@ class UserTable(db.Model):
     username = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(355), unique=True, nullable=False)
+    admin = db.Column(db.Boolean(), unique=False, nullable=False, default=False)
     lastlogin = db.Column(db.DateTime)
 
     def __init__(self, data):
@@ -17,11 +18,13 @@ class UserTable(db.Model):
         self.password = data["password"]
         self.email = data["email"]
         self.lastlogin = data["lastlogin"]
+        self.admin = False
 
     def serialise(self):
         return {
             "userid": str(self.userid),
             "username": self.username,
             "email": self.email,
-            "lastlogin": str(self.lastlogin)
+            "lastlogin": str(self.lastlogin),
+            "admin": False
         }
