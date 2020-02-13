@@ -13,7 +13,7 @@ groupsBP = Blueprint('groups', __name__,
                     static_folder='../../static',
                     url_prefix='/api/groups')
 
-
+#test
 @groupsBP.route("/addMember", methods=["POST"])
 def addMember():
     isBrowser = "email" in request.form
