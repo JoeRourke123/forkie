@@ -37,7 +37,7 @@ def addMember():
             else:
                 return json.dumps({
                     "code": 500,
-                    "msg": "Something went wrong when creating your group"
+                    "msg": "Something went wrong when adding the user."
                 }), 500
 
 
