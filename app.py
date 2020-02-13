@@ -6,7 +6,6 @@ from src.db import db
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
 from src.api.files.file_query import fQueryBP, file_query
-from src.api.user.utils import getFilesUserCanAccess
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
@@ -76,7 +75,7 @@ def group(id):
 
 
 @app.route("/group/new")
-def newGroup():
+def newGroupPage():
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
 
@@ -101,7 +100,7 @@ def emailSuccess(id):
 
 
 @app.route("/file/new")
-def newFile():
+def newFilePage():
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
 
