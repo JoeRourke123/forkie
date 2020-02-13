@@ -21,7 +21,7 @@ def getMetadataRoute():
     else:
         data = request.data
 
-    result = getMetadata
+    result = getMetadata(data["versionid"])
 
     result_json = {"title": result[0][2],
                    "value": result[0][3]}
