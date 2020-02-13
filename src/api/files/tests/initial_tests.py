@@ -1,4 +1,4 @@
-from src.files import file_compare
+from src.api.files import file_compare
 from os.path import dirname, abspath, join, isfile, basename
 from os import listdir
 from numpy import uint32
