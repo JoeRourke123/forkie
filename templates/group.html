@@ -92,14 +92,16 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="card-title">Admin Actions</div>
-                        <a class="btn btn-warning mb-2" href="#" role="button"><span class="oi oi-pencil pr-1"
+                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
+                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
+                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
+                                                                                    title="minus"> </span> Remove Member</a>
+                        <br><a class="btn btn-warning mb-2" href="#" role="button"><span class="oi oi-pencil pr-1"
                                                                                      title="pencil"> </span> Rename
                             Group</a>
                         <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
                                                                                       title="clipboard"> </span>
                         Generate Report</a>
-                        <br><a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
-                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
                         <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
                         Group</a>
@@ -119,17 +121,46 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.newGroup') }}" method="POST">
+                <form action="{{ url_for('groups.addMember') }}" method="POST">
+                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+
                     <div class="form-group">
                         <label for="group">User Email</label>
                         <input type="email" class="form-control" name="email" id="email"/>
                     </div>
+                    <button class="btn btn-outline-success">
+                        <span class="oi oi-plus" title="plus"></span>
+                    </button>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal"><span class="oi oi-x"
-                                                                                        title="x"></span></button>
-                <button type="button" class="btn btn-success"><span class="oi oi-check" title="check"></span></button>
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="removeMember" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Remove Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('groups.removeMember') }}" method="POST">
+                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+
+                    <div class="form-group">
+                        <label for="group">Select Group</label>
+                        <select class="form-control" id="group" name="groupid">
+                            {% for member in groupUsers %}
+                                <option value="{{ member.memberid }}">{{ member.username }} - {{ member.email }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn btn-outline-danger">
+                        <span class="oi oi-plus" title="plus"></span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -145,7 +176,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('email.emailGroup') }}" method="post">
-                    <input type="hidden" value="{{ group.groupid }}" name="groupID"/>
+                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="subject">Email Subject</label>
@@ -159,11 +190,6 @@
                         <span class="oi oi-check" title="check"></span>
                     </button>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal"><span class="oi oi-x"
-                                                                                        title="x"></span></button>
-                <button type="button" class="btn btn-success"><span class="oi oi-check" title="check"></span></button>
             </div>
         </div>
     </div>
