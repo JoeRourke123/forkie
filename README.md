@@ -80,7 +80,7 @@ To query a db table for an API endpoint simply do the following:
           'lifecycleRules': [],
           'revision': 3}
         ```
-  2. Downloading a file
+  2. Downloading files (can also download by file name)
   ```
     local_file_path = '/home/user1/b2_example/new2.pdf'
     file_id = '4_z5485a1682662eb3e60980d10_f1195145f42952533_d20190403_m130258_c002_v0001111_t0002'
@@ -95,7 +95,7 @@ To query a db table for an API endpoint simply do the following:
     'contentSha1': 'd821849a70922e87c2b0786c0be7266b89d87df0',
     'fileInfo': {'src_last_modified_millis': '1550988084299'}}
   ```
-  3. Downloading files (uses large file API automatically)
+  3. Uploading files (uses large file API automatically)
     ```
       local_file_path = '/home/user1/b2_example/new.pdf'
       b2_file_name = 'dummy_new.pdf'

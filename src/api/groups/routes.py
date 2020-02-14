@@ -15,6 +15,58 @@ groupsBP = Blueprint('groups', __name__,
                     static_folder='../../static',
                     url_prefix='/api/groups')
 
+#test
+@groupsBP.route("/addMember", methods=["POST"])
+def addMember():
+    isBrowser = "email" in request.form
+    data = request.form if isBrowser else request.data
+
+    if request.cookies.get("userid"):
+        try:
+            group = GroupTable.query.filter_by(groupleaderid=request.cookies.get("userid")).first()
+
+            usergroup = UserGroupTable({
+                "groupid": group.groupid,
+                "userid": request.cookies.get("userid")
+            })
+            db.session.add(group)
+            db.session.commit()
+        except Exception as e:
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when adding the user."
+                }), 500
+
+@groupsBP.route("/removeMember", methods=["POST"])
+def removeMember():
+    isBrowser = "userID" in request.form
+    data = request.form if isBrowser else request.data
+
+    if request.cookies.get("userid"):
+        try:
+            group = GroupTable.query.filter_by(groupleaderid=request.cookies.get("userid")).first()
+
+            usergroup = UserGroupTable({
+                "groupid": group.groupid,
+                "userid": request.cookies.get("userid")
+            })
+            db.session.delete(userid)
+            db.session.commit()
+        except Exception as e:
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when removing the user."
+                }), 500
 
 @groupsBP.route("/new", methods=["POST"])
 def newGroup():

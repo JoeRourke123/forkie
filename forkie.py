@@ -3,38 +3,39 @@
 Usage:
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
     {0} {1} [-v | --verbose] [(-m <message>)] [(-k <keyword>)] (<file>)...
-    {0} {1} (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-v | --verbose] [(-c <comment>) [-f | --force]]
+    {0} {1} (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-vd] [(-c <comment>) [-f | --force]]
     {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
     {0} {1} (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
     {0} {1} (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]
     {0} {1} (<repo>) [-v | --verbose]
     {0} -h | --help | --version
 Options:
-    -n --name     The name the file should have in the repository
-    -m --message  The message/description of the file. This is needed.    
-    -a            All files
-    -k --keyword  Keyword to search for
-    -p            Permission group
-    -v --verbose  Verbose
-    -V --view     Outputs element
-    -c --comment  Add comment
-    -f --force    Force/Don't ask for permission first
-    -h --help     Show help
-    -o --output   The filename to output to (If ommited then current directory)            
-    --version     Show version
-    --peeps       People flag
-    --add         Add person/people to a group
-    --rm          Remove person/people from a group
-    --change      Move person/people to another group
-    <file>        File name argument (path to file)
-    <name>        Name argument.
-    <message>     Description of file
-    <keyword>     Substring inside description
-    <comment>     Comment argument
-    <group>       One of the available permission groups
-    <username>    Username of a user
-    <email>       The email of a user
-    <repo>        The URL of a forkie repository
+    -n --name      The name the file should have in the repository
+    -m --message   The message/description of the file. This is needed.    
+    -a             All files
+    -d --download  Show download context
+    -k --keyword   Keyword to search for
+    -p             Permission group
+    -v --verbose   Verbose
+    -V --view      Outputs element
+    -c --comment   Add comment
+    -f --force     Force/Don't ask for permission first
+    -h --help      Show help
+    -o --output    The filename to output to (If ommited then current directory)            
+    --version      Show version
+    --peeps        People flag
+    --add          Add person/people to a group
+    --rm           Remove person/people from a group
+    --change       Move person/people to another group
+    <file>         File name argument (path to file)
+    <name>         Name argument.
+    <message>      Description of file
+    <keyword>      Substring inside description
+    <comment>      Comment argument
+    <group>        One of the available permission groups
+    <username>     Username of a user
+    <email>        The email of a user
+    <repo>         The URL of a forkie repository
 """
 
 from docopt import docopt
@@ -46,8 +47,8 @@ main_exec = "forkie.py"
 commands = {
     "make": command_handler.make, 
     "update": command_handler.update,
-    "find": command_handler.find, 
-    "archive": command_handler.archive, 
+    "find": command_handler.find,
+    "archive": command_handler.archive,
     "group": command_handler.group, 
     "report": command_handler.report, 
     "login": command_handler.login
@@ -56,8 +57,8 @@ commands = {
 # Template of all commands, options and arguments
 args_commands = {
     'make': False,
-    '--verbose': 0,
-    '--message': 0,
+    '--verbose': 0, 
+    '--message': 0, 
     '<message>': None, 
     '<file>': [], 
     'update': False, 
@@ -67,8 +68,9 @@ args_commands = {
     '-a': False, 
     '--name': 0, 
     '<name>': None, 
-    '-p': False, 
+    '-p': False,
     '<group>': None, 
+    '--download': 0, 
     '--comment': 0, 
     '<comment>': None, 
     '--force': 0, 
@@ -83,9 +85,9 @@ args_commands = {
     'report': False, 
     '--output': 0, 
     'login': False, 
+    '<repo>': None, 
     '--help': 0, 
-    '--version': 0,
-    '<repo>': None
+    '--version': 0
 }
 # commands = ["make", "update", "find", "archive", "group", "report", "login"]
 

@@ -1,4 +1,4 @@
-from b2sdk.v1 import InMemoryAccountInfo, B2Api, UploadSourceBytes, DownloadDestBytes
+from b2sdk.v1 import InMemoryAccountInfo, B2Api, UploadSourceBytes, DownloadDestBytes, FileVersionInfo
 from src.api.files.utils import getFileExtension
 from uuid import uuid1
 from os.path import join, dirname, abspath
@@ -49,7 +49,7 @@ class B2Interface:
             }
         )
 
-    def downloadFile(self, versionid: str, filename: str = None, fileid: str = None) -> dict:
+    def downloadFileByVersionId(self, versionid: str, filename: str = None, fileid: str = None) -> dict:
         # Creates a space in memory for the downloaded file
         memory_location = DownloadDestBytes()
         self.bucket.download_file_by_name(
@@ -79,6 +79,26 @@ class B2Interface:
         print(return_data)
         return return_data
     
+    def downloadFileByFileId(self, fileid: str, filename: str = None, versionid: str = None) -> dict:
+        """ Downloads a file by fileid. This is the fileid inside the database (not backblaze's fileid) which is
+            stored inside the file_info. Gets a list of all files inside the bucket and finds the file with that fileid inside
+        """
+        bucket_gen = self.bucket.ls(
+            folder_to_list='',
+            show_versions=False,
+            recursive=False,
+            fetch_count=None
+        )
+        
+        for f in bucket_gen:
+            # Gets the fileid from the FileVersionInfo object
+            file_data: FileVersionInfo = f[0]
+            if file_data.file_info['fileid'] == fileid:
+                break
+        print(file_data.file_name)
+        return self.downloadFileByVersionId(file_data.file_name)
+        
+        
 
 # Create B2Interface object
 interface = B2Interface(application_key_id, application_key, file_rep_bucket)
@@ -88,8 +108,10 @@ resource_location = join(dirname(dirname(dirname(dirname(abspath(__file__))))), 
 test_filename = 'asyoulik.txt'
 print(resource_location)
 filebytes = open(join(resource_location, test_filename), "rb").read()
-interface.uploadFile(filebytes, str(uuid1().hex), test_filename, str(uuid1().hex))
+# interface.uploadFile(filebytes, str(uuid1().hex), test_filename, str(uuid1().hex))
 
 # Testing downloading
 version_id = '825ffa8e4dec11eaac99d5d125025aed'
-file_data = interface.downloadFile(version_id)
+# file_data = interface.downloadFileByVersionId(version_id)
+
+file_data = interface.downloadFileByFileId('57ce10114de911eaac99d5d125025aed')

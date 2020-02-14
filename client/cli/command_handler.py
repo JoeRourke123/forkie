@@ -1,5 +1,5 @@
 from client.cli import cli_utils
-from src.files.file_compare import check_if_equal
+from src.api.files.file_compare import check_if_equal
 from urllib.parse import urljoin
 import requests
 import subprocess
@@ -7,6 +7,7 @@ import os
 import time
 import pickle
 import getpass
+import json
 
 
 def check_bool_option(args: dict, option: str) -> bool:
@@ -150,39 +151,88 @@ def update(args: dict):
     # where they select the files to update. This needs API functions. Remeber to update metadata
 
 def find(args: dict):
-    """ Queries the database for all files or a certain file with a name and a keyword
+    """ Queries the every repo registered in the .forkie folder in the current directory for all files 
+        or a certain file with a name and a keyword
     """
     # (-a | (-n <name> -k <keyword>)) [-p <group>] [-v | --verbose] [-c <comment> [-f | --force]]
     args_norm = {
         "verbose": False,
         "force": False,
         "all_files": False,
+        "name": None,
         "keyword": None,
         "group": None,
+        "download": False,
         "comment": None
     }
+    # print(args)
 
     # Check if there's verbose
     args_norm["verbose"] = check_bool_option(args, "--verbose")
+    v = args_norm['verbose']
     # Check if there's a force
     args_norm["force"] = check_bool_option(args, "--force")
     # Check for group
     args_norm["group"] = check_string_option(args, "-p", "group")
+    # Check for download flag
+    args_norm["download"] = check_bool_option(args, "--download")
     # All
     args_norm["all_files"] = check_bool_option(args, "-a")
     # Get comment
     args_norm["comment"] = check_string_option(args, "--comment", "comment")
+    # Get name
+    args_norm["name"] = check_string_option(args, "--name", "name")
     # Get keyword
     args_norm["keyword"] = check_string_option(args, "--keyword", "keyword")
     if args_norm["verbose"]:
-        if args_norm["group"] is not None:
-            print("group:", args_norm["group"])
-        if args_norm["comment"] is not None:
-            print("comment: \"" + args_norm["comment"] + "\" (force: " + str(args_norm["force"]) + ")")
-        if args_norm["keyword"] is not None:
-            print("keyword: \"" + args_norm["keyword"] + "\"")
+        for arg in args_norm.keys():
+            print(str(arg) + ": " + str(args_norm[arg]))
             
-    # Return the files with the given criteria using the database API
+    # Return the files with the given criteria using the file_query API
+    query_json = {}
+    if not args_norm['all_files']:
+        if args_norm['group'] is not None:
+            query_json['groupname'] = args_norm['group']
+        if args_norm['name'] is not None:
+            query_json['filename'] = args_norm['name']
+    
+    # Get query
+    found_rows = True
+    session = requests.session()
+    repos: list = get_repo_details()
+    
+    if len(repos) != 0:
+        # Iterate through all repos and query and display them
+        offset = 0
+        for repo in repos:
+            print('\nRepo:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
+            session.cookies.update(repo['cookie'])
+            returned = session.post('https://' + repo['url'] + '/api/file_query', json=query_json)
+            code = returned.json()['code']
+            msg = returned.json()['msg']
+            if v:
+                print('Query JSON:', query_json)
+                print('Returned JSON:', returned.json())
+            if code == 200:
+                if 'rows' in returned.json():
+                    rows = returned.json()['rows']
+                    if len(rows) != 0:
+                        found_rows = True
+                        for row in range(len(rows)):
+                            print(str(offset + row) + ':', rows[row])
+                        offset += len(rows)
+                    else:
+                        print('No files found')
+                else:
+                    print('Something went wrong with querying your files')
+            else:
+                print(msg)
+    else:
+        print("No cookie files found in .forkie")
+
+    # If download then display a custom context to select the file to download from the query
+    if args_norm['download'] and found_rows:
+        print('Download time')
 
 def archive(args: dict):
     """ Queries database for archived files or manually archives files not accessed in the past year
@@ -254,13 +304,14 @@ def login(args: dict):
 
     # Check if the server cookie file exists
     hostname = cli_utils.find_hostname(args_norm["repo"])
-    forkie_cookies = os.path.join(".forkie", hostname + ".bin")
+    forkie_cookies = os.path.join(".forkie/" + hostname, hostname + ".bin")
+    forkie_info = os.path.join('.forkie/' + hostname, hostname + '.json')
     if v:
         print("Cookie will be written to:", forkie_cookies)
 
     if hostname is not None:
         if os.path.exists(forkie_cookies) and os.path.isfile(forkie_cookies):
-        	print("Repository cookie already exists in .forkie. No need to login")
+            print("Repository cookie already exists in .forkie. No need to login")
         else:
             # Ask user to login
             signin_path = urljoin(repo, "api/signin")
@@ -322,12 +373,13 @@ def login(args: dict):
                         cont = True
                         
             if cont:
-                # Create cookie file
+                # Create cookie file folder 
+                os.makedirs(os.path.dirname(forkie_cookies))
                 with open(forkie_cookies, 'wb') as f:
                     pickle.dump(session.cookies, f)
                 f.close()
                 if v:
-                	print("Created " + hostname + " cookie file in .forkie")
+                    print("Created " + hostname + " cookie file in .forkie/" + hostname)
     else:
         print("Error 404: That repository does not exist")
     
@@ -339,3 +391,27 @@ def get_emailandpass(login: dict) -> dict:
     login["email"] = str(input("Enter email: "))
     login["password"] = str(getpass.getpass(prompt="Enter password: "))
     return login
+
+def get_repo_details() -> list:
+    """ Gets the list of repositories in the .forkie folder and returns a dict with the binary cookies
+        and url for all available repos
+    """
+    repos = []
+    if not os.path.exists(".forkie"):
+        print(".forkie directory does not exist try logging in")
+    else:
+        directories = [name for name in os.listdir('./.forkie') if os.path.isdir(os.path.join('.forkie', name))]
+        for directory in directories:
+            # Read the cookie bin
+            current_repo = {}
+            current_dir = os.path.join('.forkie', directory)
+            cookie_file_path = os.path.join(current_dir, directory + '.bin')
+            current_repo['repo_name'] = directory
+            with open(cookie_file_path, 'rb') as f:
+                current_repo['cookie'] = pickle.load(f)
+            f.close()
+            # Get the url from the list of domains inside the cookie
+            current_repo['url'] = current_repo['cookie'].list_domains()[0]
+            repos.append(current_repo)
+
+    return repos
