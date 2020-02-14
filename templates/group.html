@@ -45,11 +45,13 @@
                         {% for member in groupUsers %}
                             <a href="#" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
-                                  <h5 class="mb-1">{{ member.username }}</h5>
-                                    <small><time class="timeago" datetime="{{ member.lastlogin }}">5 mins ago</time></small>
+                                    <h5 class="mb-1">{{ member.username }}</h5>
+                                    <small>
+                                        <time class="timeago" datetime="{{ member.lastlogin }}">5 mins ago</time>
+                                    </small>
                                 </div>
                                 <p class="mb-1">{{ member.email }}</p>
-                              </a>
+                            </a>
                         {% endfor %}
                     </div>
                 </div>
@@ -62,11 +64,13 @@
                     {% for file in groupFiles %}
                         <a href="#" class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                              <h5 class="mb-1">{{ file.filename }}</h5>
-                                <small><time class="" datetime="">5 mins ago</time></small>
+                                <h5 class="mb-1">{{ file.filename }}</h5>
+                                <small>
+                                    <time class="" datetime="">5 mins ago</time>
+                                </small>
                             </div>
                             <small class="text-muted">{{ file.groupname }}</small>
-                          </a>
+                        </a>
                     {% endfor %}
                 </div>
             </div>
@@ -75,23 +79,92 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="card-title">Group Actions</div>
-                    <a class="btn btn-success mb-2" href="{{ url_for('newFilePage') }}" role="button"><span class="oi oi-document pr-1" title="document"> </span>  New File</a>
-                    <br><a class="btn btn-info mb-2" href="{{ url_for('emailGroup', id=groupData.groupid) }}" role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span>  Email Group</a>
-                    <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-ban pr-1" title="ban"> </span>  Leave Group</a>
+                    <a class="btn btn-success mb-2" href="{{ url_for('newFilePage') }}" role="button"><span
+                            class="oi oi-document pr-1" title="document"> </span> New File</a>
+                    <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
+                           role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
+                    Group</a>
+                    <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-ban pr-1"
+                                                                                    title="ban"> </span> Leave Group</a>
                 </div>
             </div>
-        {% if isLeader %}
-            <div class="card">
+            {% if isLeader %}
+                <div class="card">
                     <div class="card-body">
                         <div class="card-title">Admin Actions</div>
-                        <a class="btn btn-warning mb-2" href="#" role="button"><span class="oi oi-pencil pr-1" title="pencil"> </span>  Rename Group</a>
-                        <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1" title="clipboard"> </span>  Generate Report</a>
-                        <br><a class="btn btn-success mb-2" href="#" role="button"><span class="oi oi-plus pr-1" title="plus"> </span>  Add Member</a>
-                        <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-trash pr-1" title="trash"> </span>  Delete Group</a>
+                        <a class="btn btn-warning mb-2" href="#" role="button"><span class="oi oi-pencil pr-1"
+                                                                                     title="pencil"> </span> Rename
+                            Group</a>
+                        <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
+                                                                                      title="clipboard"> </span>
+                        Generate Report</a>
+                        <br><a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
+                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
+                        <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-trash pr-1"
+                                                                                        title="trash"> </span> Delete
+                        Group</a>
                     </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="addMember" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-        {% endif %}
+            <div class="modal-body">
+                <form action="{{ url_for('groups.newGroup') }}" method="POST">
+                    <div class="form-group">
+                        <label for="group">User Email</label>
+                        <input type="email" class="form-control" name="email" id="email"/>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal"><span class="oi oi-x"
+                                                                                        title="x"></span></button>
+                <button type="button" class="btn btn-success"><span class="oi oi-check" title="check"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="emailGroup" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('email.emailGroup') }}" method="post">
+                    <input type="hidden" value="{{ group.groupid }}" name="groupID"/>
 
+                    <div class="form-group">
+                        <label for="subject">Email Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Email Content</label>
+                        <textarea name="content" id="content" class="form-control" cols="30" rows="10"></textarea>
+                    </div>
+                    <button class="btn btn-outline-info">
+                        <span class="oi oi-check" title="check"></span>
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal"><span class="oi oi-x"
+                                                                                        title="x"></span></button>
+                <button type="button" class="btn btn-success"><span class="oi oi-check" title="check"></span></button>
+            </div>
         </div>
     </div>
 </div>
@@ -102,7 +175,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
 <script>
     $(document).ready((e) => {
-       $("time.timeago").timeago();
+        $("time.timeago").timeago();
     });
 </script>
 </html>

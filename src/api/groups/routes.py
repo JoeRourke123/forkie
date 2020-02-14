@@ -2,11 +2,13 @@ from flask import Blueprint, request, redirect, url_for
 
 import json
 from traceback import print_exc
-import uuid
 
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
 from src.db import db
+
+from src.api.user.utils import getUserData
+from src.db.UserTable import UserTable
 
 groupsBP = Blueprint('groups', __name__,
                     template_folder='../../templates',
