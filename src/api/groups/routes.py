@@ -28,7 +28,14 @@ def addMember():
             group = GroupTable.query.filter(and_(GroupTable.groupleaderid==request.cookies.get("userid"), GroupTable.groupid==data["groupid"])).first()
 
             if not group:
-                return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
 
             newUserData = UserTable.query.filter_by(email=data["email"]).first()
 
@@ -77,7 +84,14 @@ def removeMember():
             group = GroupTable.query.filter_by(groupid=data["groupid"]).first()
 
             if not group or not (str(group.groupleaderid) is not request.cookies.get("userid") and request.cookies.get("userid") is not data["userid"]):
-                return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
 
             usergroup = UserGroupTable.query.filter(and_(UserGroupTable.userid==data["userid"], UserGroupTable.groupid==data["groupid"])).first()
             db.session.delete(usergroup)
@@ -162,19 +176,22 @@ def renameGroup():
 
     if request.cookies.get("userid"):
         try:
-            group = GroupTable({
-                "groupname": data.get("groupName"),
-                "groupleaderid": request.cookies.get("userid")
-            })
-            db.session.add(group)
+            group = GroupTable.query.filter(and_(GroupTable.groupleaderid==request.cookies.get("userid"),
+                                                 GroupTable.groupid==data["groupid"])).first()
+
+            if not group and not getUserData(request.cookies.get("userid")).admin:
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
+            group.groupname = data["newname"]
+
             db.session.commit()
 
-            usergroup = UserGroupTable({
-                "groupid": str(group.groupid),
-                "userid": request.cookies.get("userid")
-            })
-            db.session.add(usergroup)
-            db.session.commit()
         except Exception as e:
             return str(e)
 
@@ -196,9 +213,9 @@ def renameGroup():
             }), 403
 
     if isBrowser:
-        return redirect(url_for('group', id=group.groupid))
+        return redirect(url_for('group', id=group.groupid, msg="Group successfully renamed"))
     else:
         return json.dumps({
             "code": 200,
-            "msg": "Your group has been created"
+            "msg": "Your group has been renamed"
         })
