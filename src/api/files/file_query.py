@@ -5,6 +5,8 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
 from src.api.user.utils import getFilesUserCanAccess
 
+from src.api.files.utils import getFileGroups, getFileVersions
+
 import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
@@ -103,12 +105,15 @@ def file_query(browserQuery=None):
                 if row is not None:
                     print(row)
                     rs_json = {
-                        "fileid": row[1].hex,
+                        "fileid": str(row[1]),
                         "filename": row[2],
-                        "groupname": row[3],
-                        "groupid": row[4].hex
+                        "groups": getFileGroups(str(row[1])),
+                        "versions": getFileVersions(str(row[1]))
                     }
                     rs_list.append(rs_json)
+
+            if browserQuery:
+                return rs_list
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
