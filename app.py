@@ -13,6 +13,7 @@ from src.api.files.file_create import filesBP
 
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
+from src.api.files.utils import getFileVersions, getFileGroups
 
 import json
 
@@ -49,7 +50,7 @@ def dash():
 
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
-    files = json.loads(file_query({}).data)
+    files = file_query({})
 
     if not userData:
         return redirect(url_for('error.error', code=401))
@@ -61,7 +62,7 @@ def dash():
 def group(id):
     groupData = getUserGroups(request.cookies.get("userid"))
     groupUsers = getGroupUsers(id)
-    groupFiles = json.loads(file_query({"groupid": id}).data)['rows']
+    groupFiles = file_query({"groupid": id})
     isLeader = isGroupLeader(request.cookies.get("userid"), id)
 
     if not request.cookies.get('userid'):
@@ -84,7 +85,6 @@ def newGroupPage():
     return render_template("newgroup.html")
 
 
-
 @app.route("/file/new")
 def newFilePage():
     if not request.cookies.get("userid"):
@@ -95,6 +95,19 @@ def newFilePage():
     userData = getUserData(request.cookies.get("userid"))
 
     return render_template("newfile.html", userGroups=userGroups, user=userData)
+
+
+@app.route("/file/<id>")
+def file(id):
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
+
+    fileData = file_query({"fileid": id})
+
+    if not file:
+        return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
+
+    return render_template("file.html", file=fileData)
 
 
 if __name__ == "main":
