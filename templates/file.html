@@ -57,15 +57,15 @@
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">File Versions</div>
-                    {% for versions in file.versions %}
+                    {% for version in file.versions %}
                         <a href="#" class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
                                 <small>
-                                    <time class="" datetime="">5 mins ago</time>
+                                    <time class="timeago" datetime="{{ version.uploaded }}">5 mins ago</time>
                                 </small>
                             </div>
-                            <small class="text-muted">Joe Rourke</small>
+                            <small class="text-muted">from {{ version.author.username }}</small>
                         </a>
                     {% endfor %}
                 </div>
