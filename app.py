@@ -82,22 +82,6 @@ def newGroupPage():
     return render_template("newgroup.html")
 
 
-@app.route("/group/email/<id>")
-def emailGroup(id):
-    if not request.cookies.get("userid"):
-        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
-    elif getUserData(request.cookies.get("userid")) not in getGroupUsers(id):
-        return redirect(url_for('dash', msg="You aren't in this group so can't see this page"))
-
-    return render_template("emailgroup.html", group=getGroupData(id))
-
-
-@app.route("/group/email/success/<id>")
-def emailSuccess(id):
-    return render_template("emailsuccess.html", groupID=id)
-
-
-
 
 @app.route("/file/new")
 def newFilePage():
