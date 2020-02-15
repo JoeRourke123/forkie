@@ -59,7 +59,7 @@ def newFile():
         db.session.add(filegroup)
         db.session.commit()
 
-        newFileVersion(file, upload, getUserData(request.cookies.get("userid")))
+        newFileVersion(file, upload, request.cookies.get("userid"))
 
         return redirect(url_for('file', id=str(file.fileid)))
 
