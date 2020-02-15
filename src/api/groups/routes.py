@@ -49,8 +49,14 @@ def addMember():
             db.session.add(usergroup)
             db.session.commit()
 
-            return redirect(url_for('group', id=group.groupid, msg=newUserData.username + " has been added to " + group.groupname))
 
+            if isBrowser:
+                return redirect(url_for('group', id=group.groupid, msg=newUserData.username + " has been added to " + group.groupname))
+            else:
+                return json.dumps({
+                    "code": 200,
+                    "msg": "User has been added!",
+                })
         except Exception as e:
             print(print_exc())
             return str(e)
@@ -97,7 +103,22 @@ def removeMember():
             db.session.delete(usergroup)
             db.session.commit()
 
-            return redirect(url_for('group', id=group.groupid, msg="User has been removed from " + group.groupname))
+            if data["userid"] == request.cookies.get("userid"):
+                if isBrowser:
+                    return redirect(url_for('dash', msg="You have left " + group.groupname))
+                else:
+                    return json.dumps({
+                        "code": 200,
+                        "msg": "You have left " + group.groupname,
+                    })
+            else:
+                if isBrowser:
+                    return redirect(url_for('group', id=group.groupid, msg="User has been removed from " + group.groupname))
+                else:
+                    return json.dumps({
+                        "code": 200,
+                        "msg": "Your group has been renamed"
+                    })
         except Exception as e:
             print(print_exc())
             return str(e)
@@ -219,3 +240,48 @@ def renameGroup():
             "code": 200,
             "msg": "Your group has been renamed"
         })
+
+
+@groupsBP.route("/delete", methods=["POST"])
+def deleteGroup():
+    isBrowser = "groupid" in request.form
+    data = request.form if isBrowser else request.data
+
+    if request.cookies.get("userid"):
+        try:
+            group = GroupTable.query.filter(and_(GroupTable.groupid==data["groupid"],
+                                                 GroupTable.groupleaderid==request.cookies.get("userid"))).first()
+
+            if not group and not getUserData(request.cookies.get("userid")).admin:
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
+            db.session.delete(group)
+            db.session.commit()
+
+            return redirect(url_for('dash', msg=group.groupname + " has been deleted"))
+        except Exception as e:
+            print(print_exc())
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when removing the user."
+                }), 500
+    else:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=403, msg=print_exc()))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this",
+                "exc": print_exc()
+            }), 403
