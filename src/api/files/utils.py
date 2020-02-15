@@ -2,10 +2,14 @@
 """
 import os
 
+from sqlalchemy import and_
+
 from src.api.files.backblaze import B2Interface
 
 from src.db import db
 from src.db.FileVersionTable import FileVersionTable
+from src.db.GroupTable import GroupTable
+from src.db.FileGroupTable import FileGroupTable
 
 from src.api.files.backblaze import application_key
 from src.api.files.backblaze import application_key_id
@@ -14,6 +18,13 @@ from src.api.files.backblaze import file_rep_bucket
 
 def getFileExtension(filename: str) -> str:
     return os.path.splitext(filename)[1]
+
+
+def getFileVersions(fileID):
+    return FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all()
+
+def getFileGroups(fileID):
+    return GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()
 
 
 def newFileVersion(fileData, uploadData, userData):
