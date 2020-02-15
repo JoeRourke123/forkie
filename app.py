@@ -102,7 +102,8 @@ def file(id):
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
-    fileData = file_query({"fileid": id})
+    fileData = file_query({"fileid": id})[0]
+    print(fileData)
 
     if not file:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))

@@ -1,10 +1,192 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>{{ file.filename }} - file-rep0</title>
+    <title>
+        {{ file.filename }} - forkie
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <style>
+    </style>
 </head>
 <body>
-{{ file }}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">forkie</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <a type="button" class="btn btn-outline-success mr-2" href="{{ url_for('newFilePage') }}" role="button">
+                <span class="oi oi-document" title="document"></span>
+            </a>
+            <a type="button" class="btn btn-outline-danger" href="#" role="button">
+                <span class="oi oi-account-logout" title="account-logout"></span>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row mt-4 mb-4">
+        <h2>{{ file.filename }}</h2>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">Groups with Access</div>
+                    <div class="list-group">
+                        {% for group in file.groups %}
+                            <a href="{{ url_for('group', id=group.groupid) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ group.groupname }}</h5>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">File Versions</div>
+                    {% for versions in file.versions %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
+                                <small>
+                                    <time class="" datetime="">5 mins ago</time>
+                                </small>
+                            </div>
+                            <small class="text-muted">Joe Rourke</small>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="card-title">Group Actions</div>
+                    <a class="btn btn-success mb-2" href="{{ url_for('newFilePage') }}" role="button"><span
+                            class="oi oi-document pr-1" title="document"> </span> New File</a>
+                    <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
+                           role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
+                    Group</a>
+                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup" role="button"><span class="oi oi-ban pr-1"
+                                                                                    title="ban"> </span> Leave Group</a>
+                </div>
+            </div>
+            {% if isLeader %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-title">Admin Actions</div>
+                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
+                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
+                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
+                                                                                    title="minus"> </span> Remove Member</a>
+                        <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
+                                                                                     title="pencil"> </span> Rename
+                            Group</a>
+                        <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
+                                                                                      title="clipboard"> </span>
+                        Generate Report</a>
+                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
+                                                                                        title="trash"> </span> Delete
+                        Group</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="addMember" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Member</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('groups.addMember') }}" method="POST">
+                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+
+                    <div class="form-group">
+                        <label for="group">User Email</label>
+                        <input type="email" class="form-control" name="email" id="email"/>
+                    </div>
+                    <button class="btn btn-outline-success">
+                        <span class="oi oi-plus" title="plus"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="renameGroup" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rename Group</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('groups.renameGroup') }}" method="post">
+                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+
+                    <div class="form-group">
+                        <label for="newname">New Group Name</label>
+                        <input type="text" class="form-control" id="newname" name="newname">
+                    </div>
+                    <button class="btn btn-outline-success">
+                        <span class="oi oi-check" title="check"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="deleteGroup" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>This action cannot be undone!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
+            <input type="hidden" name="groupid" value="{{ file.fileid }}" />
+            <button class="btn btn-outline-danger">Delete Group</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.timeago.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+<script>
+    $(document).ready((e) => {
+        $("time.timeago").timeago();
+    });
+</script>
 </html>
