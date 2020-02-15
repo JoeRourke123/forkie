@@ -162,6 +162,7 @@ def newGroup():
             db.session.add(usergroup)
             db.session.commit()
         except Exception as e:
+            print(print_exc())
             return str(e)
 
             if isBrowser:
