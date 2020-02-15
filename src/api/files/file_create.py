@@ -1,8 +1,13 @@
+from traceback import print_exc
+
 from flask import Blueprint, request, redirect, url_for
 
+from src.api.user.utils import getUserData
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db import db
+
+from src.api.files.utils import newFileVersion
 
 from datetime import datetime
 import json
@@ -12,7 +17,7 @@ filesBP = Blueprint('files', __name__, template_folder='../../templates', static
 
 @filesBP.route("/new", methods=["POST"])
 def newFile():
-    isBrowser = "filename" in request.form
+    isBrowser = "groupid" in request.form
     data = request.form if isBrowser else request.data
     
     # If there is no userid inside the cookie from a cli user then return 401 (unauthorized error)
@@ -54,7 +59,8 @@ def newFile():
         db.session.add(filegroup)
         db.session.commit()
 
-        # newVersion(file, upload) - function when called will create a new file version for the initial upload
+        return newFileVersion(file, upload, getUserData(request.cookies.get("userid")))
 
     except Exception as e:
-        print(e)
+        print(print_exc())
+        return str(e)
