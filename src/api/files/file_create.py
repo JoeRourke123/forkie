@@ -59,7 +59,9 @@ def newFile():
         db.session.add(filegroup)
         db.session.commit()
 
-        return newFileVersion(file, upload, getUserData(request.cookies.get("userid")))
+        newFileVersion(file, upload, getUserData(request.cookies.get("userid")))
+
+        return redirect(url_for('file', id=str(file.fileid)))
 
     except Exception as e:
         print(print_exc())
