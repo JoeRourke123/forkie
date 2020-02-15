@@ -10,6 +10,7 @@ from src.db import db
 from src.db.FileVersionTable import FileVersionTable
 from src.db.GroupTable import GroupTable
 from src.db.FileGroupTable import FileGroupTable
+from src.db.MetadataTable import MetadataTable
 
 from src.api.files.backblaze import application_key
 from src.api.files.backblaze import application_key_id
@@ -21,7 +22,24 @@ def getFileExtension(filename: str) -> str:
 
 
 def getFileVersions(fileID):
-    return FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all()
+    versions = list(FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all())
+    results = []
+
+    for version in versions:
+        metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
+
+        versionData = {
+            "versionid": version.versionid,
+            "versionhash": version.versionhash,
+        }
+
+        for data in metadata:
+            versionData[data.title] = data.value
+
+        results.append(versionData)
+
+    return results
+
 
 def getFileGroups(fileID):
     return GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()
