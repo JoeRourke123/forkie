@@ -84,7 +84,7 @@
                     <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
                            role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
                     Group</a>
-                    <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-ban pr-1"
+                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup" role="button"><span class="oi oi-ban pr-1"
                                                                                     title="ban"> </span> Leave Group</a>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                         <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
                                                                                       title="clipboard"> </span>
                         Generate Report</a>
-                        <br><a class="btn btn-danger mb-2" href="#" role="button"><span class="oi oi-trash pr-1"
+                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
                         Group</a>
                     </div>
@@ -220,6 +220,51 @@
             </div>
         </div>
     </div>
+</div>
+<div class="modal hide" id="deleteGroup" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>This action cannot be undone!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
+            <input type="hidden" name="groupid" value="{{ groupData.groupid }}" />
+            <button class="btn btn-outline-danger">Delete Group</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal hide" id="leaveGroup" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>To see this group's files you will have to be re-added by the group leader.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('groups.removeMember') }}" method="POST">
+            <input type="hidden" name="userid" value="{{ request.cookies.get('userid') }}" />
+            <input type="hidden" name="groupid" value="{{ groupData.groupid }}" />
+            <button class="btn btn-outline-danger">Leave Group</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
