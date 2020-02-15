@@ -5,10 +5,11 @@ from src.db import db
 
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
-from src.api.files.file_query import fQueryBP, file_query
+from src.api.files.file_query import fQueryBP as queryBP, file_query
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
+from src.api.files.file_create import filesBP
 
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
@@ -24,7 +25,8 @@ db.init_app(app)
 
 app.register_blueprint(signinBP)
 app.register_blueprint(signupBP)
-app.register_blueprint(fQueryBP)
+app.register_blueprint(queryBP)
+app.register_blueprint(filesBP)
 app.register_blueprint(groupsBP)
 app.register_blueprint(errorsBP)
 app.register_blueprint(emailBP)
