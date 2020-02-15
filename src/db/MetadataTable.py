@@ -1,4 +1,5 @@
-from src.db import db, FileVersionTable
+from src.db import db
+from src.db.FileVersionTable import FileVersionTable
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -11,7 +12,7 @@ class MetadataTable(db.Model):
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)
 
-    version = db.relationship(FileVersionTable, foreign_keys=versionid, backref=db.backref('file', lazy='joined'), lazy='joined')
+    version = db.relationship(FileVersionTable, foreign_keys=versionid, backref=db.backref('version', lazy='joined'))
 
 
     def __init__(self, data):
