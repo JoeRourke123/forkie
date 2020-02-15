@@ -6,9 +6,6 @@ from src.db.UserGroupTable import UserGroupTable
 
 from sqlalchemy import and_
 
-from src.api.groups.utils import getUserGroups
-
-
 def getUserData(userid):
     return UserTable.query.filter(UserTable.userid == userid).first()
 
@@ -21,12 +18,6 @@ def getFilesUserCanAccess(userid: str):
         - userid: retrieves all the files that this user can access 
         - returns: the SQLAlchemy query object for the query of all accessible files
     """
-    # groups = getUserGroups(userid)
-    # groupids = [group.groupid for group in groups]
-    # groupnames = [group.groupname for group in groups]
-    #
-    # if "admin" in groupnames:
-    #     groupids = []
 
     userData = getUserData(userid)
 
