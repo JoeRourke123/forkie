@@ -1,10 +1,12 @@
 """ General utils for files API
 """
 import os
+from datetime import datetime
 
 from sqlalchemy import and_
 
 from src.api.files.backblaze import B2Interface
+from src.api.user.utils import getUserData
 
 from src.db import db
 from src.db.FileVersionTable import FileVersionTable
@@ -34,7 +36,10 @@ def getFileVersions(fileID):
         }
 
         for data in metadata:
-            versionData[data.title] = data.value
+            if data.title == "userid":
+                versionData["author"] = getUserData(data.value)
+            else:
+                versionData[data.title] = data.value
 
         results.append(versionData)
 
@@ -45,7 +50,7 @@ def getFileGroups(fileID):
     return GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()
 
 
-def newFileVersion(fileData, uploadData, userData):
+def newFileVersion(fileData, uploadData, userid):
     b2 = B2Interface(application_key_id, application_key, file_rep_bucket)
 
     fileversion = FileVersionTable({
@@ -62,6 +67,21 @@ def newFileVersion(fileData, uploadData, userData):
     fileversion.versionhash = upload.get_content_sha1()
 
     db.session.add(fileversion)
+    db.session.commit()
+
+    userMetadata = MetadataTable({
+        "versionid": fileversion.versionid,
+        "title": "userid",
+        "value": userid
+    })
+    timeMetadata = MetadataTable({
+        "versionid": fileversion.versionid,
+        "title": "uploaded",
+        "value": str(datetime.now())
+    })
+
+    db.session.add(userMetadata)
+    db.session.add(timeMetadata)
     db.session.commit()
 
     return "File Uploaded"
