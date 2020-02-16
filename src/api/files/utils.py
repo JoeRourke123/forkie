@@ -43,7 +43,7 @@ def getFileVersions(fileID):
 
         results.append(versionData)
 
-    return results
+    return sorted(results, key=lambda x: x["uploaded"])
 
 
 def getFileGroups(fileID):
