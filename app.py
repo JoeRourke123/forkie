@@ -103,12 +103,15 @@ def file(id):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
     fileData = file_query({"fileid": id})[0]
-    print(fileData)
 
     if not file:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
-    return render_template("file.html", file=fileData)
+    userData = getUserData(request.cookies.get("userid"))
+    isLeader = (True in [isGroupLeader(request.cookies.get("userid"),
+                                       str(group.groupid)) for group in fileData["groups"]]) or userData.admin
+
+    return render_template("file.html", file=fileData, isLeader=isLeader)
 
 
 if __name__ == "main":
