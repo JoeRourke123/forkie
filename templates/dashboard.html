@@ -69,15 +69,15 @@
         <div class="col">
             <div class="card">
                 <div class="card-body">
-                    <div class="card-title">Frequently Used Files</div>
+                    <div class="card-title">Files</div>
                     <div class="list-group">
                         {% for file in files %}
-                            <a href="#" class="list-group-item list-group-item-action">
+                            <a href="/file/{{ file.fileid }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                   <h5 class="mb-1">{{ file.filename }}</h5>
-                                    <small><time class="" datetime="">5 mins ago</time></small>
+                                    <small>Updated <time class="timeago" datetime="{{ file.versions[0].uploaded }}">5 mins ago</time></small>
                                 </div>
-                                <small class="text-muted">{{ file.groupname }}</small>
+                                <small class="text-muted">Latest version from {{ file.versions[0].author.username }}</small>
                               </a>
                         {% endfor %}
                     </div>
