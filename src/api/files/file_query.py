@@ -1,3 +1,5 @@
+from traceback import print_exc
+
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
 
 from src.db.FileTable import FileTable
@@ -112,7 +114,9 @@ def file_query(browserQuery=None):
                     }
                     rs_list.append(rs_json)
 
-            if browserQuery:
+            rs_list = sorted(rs_list, key=lambda x: x["versions"][0]["uploaded"], reverse=True)
+
+            if browserQuery is not None:
                 return rs_list
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
@@ -120,8 +124,7 @@ def file_query(browserQuery=None):
 
             return resp
         except Exception as e:
-            # print(e.with_traceback())
-            print(e)
+            print(print_exc())
 
             if browserQuery:
                 return redirect(url_for("errors.error", code=500, url="file_query.file_query"))
