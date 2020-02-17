@@ -38,12 +38,14 @@ def getFileVersions(fileID):
         for data in metadata:
             if data.title == "userid":
                 versionData["author"] = getUserData(data.value)
+            # elif data.title == "uploaded":
+            #     versionData["uploaded"] = datetime.fromisoformat(data.value)
             else:
                 versionData[data.title] = data.value
 
         results.append(versionData)
 
-    return sorted(results, key=lambda x: x["uploaded"])
+    return sorted(results, key=lambda x: x["uploaded"], reverse=True)
 
 
 def getFileGroups(fileID):
