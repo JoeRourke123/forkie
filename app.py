@@ -114,5 +114,23 @@ def file(id):
     return render_template("file.html", file=fileData, isLeader=isLeader)
 
 
+@app.route("/version/<id>")
+def version(id):
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
+
+    versionData = file_query({"versionid": id})[0]
+
+    if not versionData:
+        return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
+
+    userData = getUserData(request.cookies.get("userid"))
+    isLeader = (versionData['versions'][0]['author'] == userData)\
+               or (True in [isGroupLeader(request.cookies.get("userid"), str(group.groupid)) for group in versionData.groups])\
+               or userData.admin
+
+    return render_template("version.html", version=versionData, isLeader=isLeader)
+
+
 if __name__ == "main":
     app.run(threaded=True, port=5000)

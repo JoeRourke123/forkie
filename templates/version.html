@@ -1,7 +1,11 @@
 <html>
 <head>
     <title>
-        {{ file.filename }} - forkie
+        {% if version.versions[0].title %}
+            {{ version.versions[0].title }} - file-rep0
+        {% else %}
+            {{ version.filename }}  - file-rep0
+        {% endif %}
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -34,21 +38,41 @@
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
-        <h2>{{ file.filename }}</h2>
+        <h2>{{ version.filename }} version</h2>
     </div>
     <div class="row">
         <div class="col">
             <div class="card">
                 <div class="card-body">
-                    <div class="card-title">Groups with Access</div>
+                    <div class="card-title">Version Metadata</div>
                     <div class="list-group">
-                        {% for group in file.groups %}
-                            <a href="{{ url_for('group', id=group.groupid) }}" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ group.groupname }}</h5>
-                                </div>
-                            </a>
-                        {% endfor %}
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th scope="col">Name</th>
+                              <th scope="col">Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                                <td>Author</td>
+                                <td>{{ version.versions[0]['author'].username }}</td>
+                            </tr>
+                            <tr>
+                                <td>Version Created</td>
+                                <td>{{ version.versions[0].uploaded }}</td>
+                            </tr>
+                            {% for key, value in version.versions[0].items() %}
+                                {% if key not in ["author", "uploaded"] %}
+                                    <tr>
+                                      <td>{{ key }}</td>
+                                      <td style="max-width: 18ch;">{{ value }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                          </tbody>
+                        </table>
+
                     </div>
                 </div>
             </div>
@@ -56,38 +80,22 @@
         <div class="col">
             <div class="card">
                 <div class="card-body">
-                    <div class="card-title">File Versions</div>
-                    {% for version in file.versions %}
-                        <a href="/version/{{ version.versionid }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
-                                <small>
-                                    <time class="timeago" datetime="{{ version.uploaded }}">5 mins ago</time>
-                                </small>
-                            </div>
-                            <small class="text-muted">from {{ version.author.username }}</small>
-                        </a>
-                    {% endfor %}
+                    <div class="card-title">Comments</div>
                 </div>
             </div>
         </div>
         <div class="col">
             <div class="card mb-4">
                 <div class="card-body">
-                    <div class="card-title">Group Actions</div>
-                    <a class="btn btn-success mb-2" href="{{ url_for('newFilePage') }}" role="button"><span
-                            class="oi oi-document pr-1" title="document"> </span> New File</a>
-                    <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
-                           role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
-                    Group</a>
-                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup" role="button"><span class="oi oi-ban pr-1"
-                                                                                    title="ban"> </span> Leave Group</a>
+                    <a class="btn btn-success" href="{{ url_for('newFilePage') }}" role="button"><span
+                            class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download File
+                    </a>
                 </div>
             </div>
             {% if isLeader %}
                 <div class="card">
                     <div class="card-body">
-                        <div class="card-title">Admin Actions</div>
+                        <div class="card-title">Version Actions</div>
                         <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
                                role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
                         <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
@@ -118,7 +126,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                    <input type="hidden" value="{{ version.fileid }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="group">User Email</label>
@@ -143,7 +151,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.renameGroup') }}" method="post">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                    <input type="hidden" value="{{ version.fileid }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="newname">New Group Name</label>
@@ -172,7 +180,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
         <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-            <input type="hidden" name="groupid" value="{{ file.fileid }}" />
+            <input type="hidden" name="groupid" value="{{ version.fileid }}" />
             <button class="btn btn-outline-danger">Delete Group</button>
         </form>
       </div>
