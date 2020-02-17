@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, make_response
 
 import json
 from traceback import print_exc
@@ -276,6 +276,64 @@ def deleteGroup():
                 return json.dumps({
                     "code": 500,
                     "msg": "Something went wrong when removing the user."
+                }), 500
+    else:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=403, msg=print_exc()))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this",
+                "exc": print_exc()
+            }), 403
+
+
+@groupsBP.route("/getGroups", methods=["POST"])
+def getGroups():
+    """ Returns the groups that the user is a part of
+    """
+    isBrowser = "groupid" in request.form
+    data = request.form if isBrowser else request.data
+
+    if request.cookies.get("userid"):
+        userid = request.cookies.get('userid')
+        try:
+            # Query all groups that the user belongs to in psql
+            groups = GroupTable.query.filter(and_(GroupTable.groupid == data["groupid"],
+                                                  GroupTable.groupleaderid == userid)).all()
+
+            if not groups and not getUserData(request.cookies.get("userid")).admin:
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
+            rs = []
+            for group in groups:
+                rs_json = {
+                    'groupid': group[0],
+                    'groupname': group[1],
+                    'groupleaderid': group[2]
+                }
+                rs.append(rs_json)
+
+            resp = make_response(json.dumps({"code": 200, "msg": "Here are the groups you are a member of", "rows": rs}))
+            resp.set_cookie("userid", userid)
+
+            return resp
+        except Exception as e:
+            print(print_exc())
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when querying the groups."
                 }), 500
     else:
         if isBrowser:

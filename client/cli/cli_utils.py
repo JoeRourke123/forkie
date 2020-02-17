@@ -50,6 +50,20 @@ def ask_for(question: str, answers: list):
         answer = str(input(question + " " + str(answers))).lower()
     return answer if len(answers) > 2 else answers[0] == answer
 
+def ask_for_list(input_ls: list) -> int:
+    """ Handles the logic for a list select """
+    while True:
+        try:
+            line_no = int(input(('Enter a number: ')))
+            if line_no > len(input_ls) or line_no - 1 < 0:
+                print('Input number is out of range. Try again.')
+            else:
+                if ask_for('Are you sure?', ['y', 'n']):
+                    break
+        except ValueError:
+            print('Line number is not a integer. Try again.')
+    return line_no
+
 def check_if_404(url: str) -> bool:
     """ Checks if URL returns a 404
         - url: URL to check

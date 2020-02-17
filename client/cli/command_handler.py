@@ -1,5 +1,7 @@
 from client.cli import cli_utils
 from src.api.files.file_compare import check_if_equal
+from src.api.files.backblaze import B2Interface, application_key, application_key_id, file_rep_bucket
+from b2sdk.v1 import UploadSourceBytes
 from urllib.parse import urljoin
 import requests
 import subprocess
@@ -108,6 +110,7 @@ def make(args: dict):
 
     # Check if theres verbose
     args_norm["verbose"] = check_bool_option(args, "--verbose")
+    v = args_norm['verbose']
         
     # If message is not present then open the default editor
     args_norm["message"] = handle_message(args, args_norm["verbose"])
@@ -115,10 +118,91 @@ def make(args: dict):
         print_dict(args_norm["message"])
         print("files:", args_norm["files"])
     
-    # Check all files to see if theres another one that is identical. If there is prompt
-    # the user if they want to use the 'update' subcommand instead. Call API functions 
-    # to add this file/files to the database remember to also add metadata and generate 
-    # the hash for the fileVersionTable.
+    # Opens all files into files_loaded
+    files_loaded = [open(filename, 'rb') for filename in args_norm['files']]
+    session = requests.session()
+    repos: list = get_repo_details()
+    
+    if len(repos) > 0:
+        if len(repos) != 1:
+            print('Which repo do you want to add to:')
+            for r in range(len(repos)):
+                repo = repos[r]
+                print('\nRepo no. ' + str(r + 1) + ':', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
+            line_no = cli_utils.ask_for_list(repos)
+            chosen_repo = repos[line_no]
+        else:
+            chosen_repo = repos[0]
+        
+        session.cookies.update(chosen_repo['cookie'])
+        
+        # Gets all groups that the user is a member of
+        # This is to choose which group the file should be uploaded to
+        groups = session.post('https://' + chosen_repo['url'] + '/api/groups/getGroups')
+        if type(groups) != requests.Response:
+            code = groups.json()['code']
+            msg = groups.json()['msg']
+            if v:
+                print('Returned code:', code)
+                print('Returned message:', msg)
+            if code != 200:
+                groups_returned = groups.json()['rows']
+                print('Please choose a group to upload to:')
+                if len(groups_returned) != 1:
+                    for r in range(len(groups_returned)):
+                        row = groups_returned[r]
+                        print(str(r + 1) + '\'s group info:', row)
+                    chosen_group = groups_returned[cli_utils.ask_for_list(groups_returned)]
+                else:
+                    chosen_group = groups_returned[0]
+            else:
+                print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                return
+        else:
+            print("Woops something went wrong while querying groups")
+            return
+        
+        # Use B2Interface to find if there are equal files
+        b2_key = chosen_repo['b2']
+        interface = B2Interface(b2_key['application_key_id'],
+                                b2_key['application_key'],
+                                b2_key['bucket_name'])
+        # interface = B2Interface(application_key_id, application_key, file_rep_bucket)
+        for file_open in files_loaded:
+            cont_upload = False
+            filename = os.path.basename(file_open.name)
+            file_bytes = UploadSourceBytes(file_open.read())
+            if v:
+                print('Searching for files identical to ' + filename)
+            identical_files = interface.checkForEqualFiles(file_bytes.get_content_sha1, file_bytes.get_content_length, filename)
+            if len(identical_files) > 0:
+                print('Found file(s) identical to ' + filename + ':')
+                for x in range(len(identical_files)):
+                    identical_file = identical_files[x]
+                    print(str(x + 1) + '\'s file info:', identical_file.file_info)
+                cont_upload = cli_utils.ask_for('Do you still want to start tracking a new file?', ['y', 'n'])
+                if not cont_upload:
+                    print('Please use "forkie update" to create a new version of the file')
+            else:
+                cont_upload = True
+        
+            if cont_upload:
+                files = {'file': file_open}
+                upload_status = session.post('https://' + chosen_repo['url'] + '/api/files/new', files=files, json={'groupid': chosen_group['groupid']})
+                print('Upload status:', upload_status)
+                if type(upload_status) != requests.Response:
+                    code = upload_status.json()['code']
+                    msg = upload_status.json()['msg']
+                    if v:
+                        print('Returned code:', code)
+                        print('Returned message:', msg)
+                    if code == 401:
+                        print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                        break
+                else:
+                    print("Woops something went wrong while trying to upload a file")
+    else:
+        print("No cookie files found in .forkie")    
     
 def update(args: dict):
     """ Handles the 'update' subcommand. If no message option is found or message is empty then a temp file
@@ -145,16 +229,12 @@ def update(args: dict):
         print("files:", args_norm["files"])
         if args_norm["keyword"] is not None:
             print("keyword:", args_norm["keyword"])
-    
-    # Check all files to see if theres another one that is identical.
-    # Find all files containing keyword if there is one or keyword + name. Output a selection choice for the user
-    # where they select the files to update. This needs API functions. Remeber to update metadata
 
 def find(args: dict):
     """ Queries the every repo registered in the .forkie folder in the current directory for all files 
         or a certain file with a name and a keyword
     """
-    # (-a | (-n <name> -k <keyword>)) [-p <group>] [-v | --verbose] [-c <comment> [-f | --force]]
+    # (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-vd] [(-c <comment>) [-f | --force]]
     args_norm = {
         "verbose": False,
         "force": False,
@@ -305,7 +385,7 @@ def login(args: dict):
     # Check if the server cookie file exists
     hostname = cli_utils.find_hostname(args_norm["repo"])
     forkie_cookies = os.path.join(".forkie/" + hostname, hostname + ".bin")
-    forkie_info = os.path.join('.forkie/' + hostname, hostname + '.json')
+    b2_path = os.path.join('.forkie/' + hostname, 'b2.json')
     if v:
         print("Cookie will be written to:", forkie_cookies)
 
@@ -371,6 +451,10 @@ def login(args: dict):
                         print(msg)
                         done = True
                         cont = True
+                    if 'b2' in signin.json():
+                        b2_app_key = signin.json()['b2']
+                    else:
+                        b2_app_key = None
                         
             if cont:
                 # Create cookie file folder 
@@ -378,6 +462,11 @@ def login(args: dict):
                 with open(forkie_cookies, 'wb') as f:
                     pickle.dump(session.cookies, f)
                 f.close()
+                # Create b2.json file to store application keys
+                if b2_app_key is not None:
+                    with open(b2_path, 'w+') as app_key:
+                        json.dump(b2_app_key, app_key)
+                    app_key.close()
                 if v:
                     print("Created " + hostname + " cookie file in .forkie/" + hostname)
     else:
@@ -406,12 +495,18 @@ def get_repo_details() -> list:
             current_repo = {}
             current_dir = os.path.join('.forkie', directory)
             cookie_file_path = os.path.join(current_dir, directory + '.bin')
+            b2_file_path = os.path.join(current_dir, 'b2.json')
             current_repo['repo_name'] = directory
             with open(cookie_file_path, 'rb') as f:
                 current_repo['cookie'] = pickle.load(f)
             f.close()
             # Get the url from the list of domains inside the cookie
             current_repo['url'] = current_repo['cookie'].list_domains()[0]
+            # Get B2 bucket info from b2.json
+            if os.path.exists(b2_file_path) and os.path.isfile(b2_file_path):
+                with open(b2_file_path) as b2:
+                    current_repo['b2'] = json.loads(b2)
+                b2.close()
             repos.append(current_repo)
 
     return repos

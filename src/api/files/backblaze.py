@@ -96,21 +96,48 @@ class B2Interface:
                 break
         print(file_data.file_name)
         return self.downloadFileByVersionId(file_data.file_name)
-        
-        
+    
+    def checkForEqualFiles(self, sha1: str, size: int, filename: str = None) -> list:
+        """ Checks for files that are equal in the bucket """
+        bucket_gen = self.bucket.ls(
+            folder_to_list='',
+            show_versions=False,
+            recursive=False,
+            fetch_count=None
+        )
+        equal_files: list = []
+
+        for f in bucket_gen:
+            file_data: FileVersionInfo = f[0]
+            # print('\n' + file_data.file_info['filename'])
+            # print(file_data.size)
+            # print(file_data.content_sha1)
+            if file_data.size == size:
+                if file_data.content_sha1 == sha1:
+                    # Checks filename if filename not none
+                    currFName = file_data.file_info['filename']
+                    if currFName == filename if filename is not None else currFName:
+                        print('Equal')
+                        equal_files.append(file_data)
+
+        return equal_files
 
 # # Create B2Interface object
-# interface = B2Interface(application_key_id, application_key, file_rep_bucket)
+interface = B2Interface(application_key_id, application_key, file_rep_bucket)
 #
 # # Testing uploading
 # resource_location = join(dirname(dirname(dirname(dirname(abspath(__file__))))), "res/tests/files")
 # test_filename = 'asyoulik.txt'
 # print(resource_location)
 # filebytes = open(join(resource_location, test_filename), "rb").read()
-# # interface.uploadFile(filebytes, str(uuid1().hex), test_filename, str(uuid1().hex))
+# interface.uploadFile(filebytes, str(uuid1().hex), test_filename, str(uuid1().hex))
 #
 # # Testing downloading
 # version_id = '825ffa8e4dec11eaac99d5d125025aed'
 # # file_data = interface.downloadFileByVersionId(version_id)
 #
 # file_data = interface.downloadFileByFileId('57ce10114de911eaac99d5d125025aed')
+
+# Testing equality
+# sha1 = 'ae1f2eb0965e7bc2d9c12e7c4283e1c96303d585'
+# print([x.file_info for x in interface.checkForEqualFiles(sha1, 3263)])

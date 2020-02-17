@@ -16,6 +16,7 @@ from src.api.user.utils import getUserData
 from src.api.files.utils import getFileVersions, getFileGroups
 
 import json
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -32,6 +33,9 @@ app.register_blueprint(groupsBP)
 app.register_blueprint(errorsBP)
 app.register_blueprint(emailBP)
 
+APPLICATION_KEY_ID = os.environ['APPLICATION_KEY_ID']
+APPLICATION_KEY = os.environ['APPLICATION_KEY']
+BUCKET_NAME = os.environ['BUCKET_NAME']
 
 # Routes
 @app.route("/")

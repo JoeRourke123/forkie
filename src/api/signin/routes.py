@@ -4,6 +4,7 @@ from flask import render_template, Blueprint, request, make_response, redirect, 
 from src.db.UserTable import UserTable
 from src.utils import hashPassword
 from src.db import db
+from app import APPLICATION_KEY, APPLICATION_KEY_ID, BUCKET_NAME
 
 from datetime import datetime
 import json
@@ -45,7 +46,17 @@ def signin():
             if isBrowser:
                 resp = make_response(redirect(url_for('dash')))
             else:
-                resp = make_response(json.dumps({"code": 200, "msg": "You have been signed in"}))
+                # Return the application key, application key id and bucket name for the connected B2
+                # This is needed so that the cli client knows wassup
+                resp = make_response(json.dumps({
+                    "code": 200,
+                    "msg": "You have been signed in",
+                    "b2": {
+                        "application_key_id": APPLICATION_KEY_ID,
+                        "application_key": APPLICATION_KEY,
+                        "bucket_name": BUCKET_NAME
+                    }
+                }))
 
             resp.set_cookie("userid", str(query.userid))
 
