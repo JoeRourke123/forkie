@@ -74,10 +74,9 @@
                         {% for file in files %}
                             <a href="/file/{{ file.fileid }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
-                                  <h5 class="mb-1">{{ file.filename }}</h5>
-                                    <small>Updated <time class="timeago" datetime="{{ file.versions[0].uploaded }}">5 mins ago</time></small>
+                                    <h5 class="mb-1">{{ file.filename }}</h5>
                                 </div>
-                                <small class="text-muted">Latest version from {{ file.versions[0].author.username }}</small>
+                                <small class="text-muted">Updated <time class="timeago" datetime="{{ file.versions[0].uploaded }}">5 mins ago</time> by {{ file.versions[0].author.username }}</small>
                               </a>
                         {% endfor %}
                     </div>
@@ -95,6 +94,12 @@
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.timeago.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+<script>
+    $(document).ready((e) => {
+        $("time.timeago").timeago();
+    });
+</script>
 </html>
