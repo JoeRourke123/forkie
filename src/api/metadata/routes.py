@@ -15,7 +15,10 @@ metadataBP = Blueprint("metadata", __name__,
 
 
 @metadataBP.route("/add", methods=["POST"])
-def addMetadata(browserData=request.form):
+def addMetadata(browserData=None):
+    if browserData is None and request.data is None:
+        browserData = request.form
+
     isBrowser = "versionid" in browserData
     data = browserData if isBrowser else json.loads(request.data)
 
