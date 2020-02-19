@@ -49,7 +49,7 @@ def getFileVersions(fileID):
 
 
 def getFileGroups(fileID):
-    return GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()
+    return [group.serialise() for group in GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()]
 
 
 def newFileVersion(fileData, uploadData, userid):

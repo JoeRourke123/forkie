@@ -87,7 +87,7 @@
         <div class="col">
             <div class="card mb-4">
                 <div class="card-body">
-                    <a class="btn btn-success" href="{{ url_for('newFilePage') }}" role="button"><span
+                    <a class="btn btn-success" href="{{ url_for('download', versionid=version["versions"][0]["versionid"]) }}" role="button"><span
                             class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download File
                     </a>
                 </div>
@@ -195,6 +195,8 @@
 <script>
     $(document).ready((e) => {
         $("time.timeago").timeago();
+
+        window.history.replaceState(window.history.state, {{ version.filename }}, "../{{ version.filename }}")
     });
 </script>
 </html>
