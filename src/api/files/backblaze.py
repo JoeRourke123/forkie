@@ -123,7 +123,7 @@ class B2Interface:
         return equal_files
 
 # # Create B2Interface object
-interface = B2Interface(application_key_id, application_key, file_rep_bucket)
+# interface = B2Interface(application_key_id, application_key, file_rep_bucket)
 #
 # # Testing uploading
 # resource_location = join(dirname(dirname(dirname(dirname(abspath(__file__))))), "res/tests/files")

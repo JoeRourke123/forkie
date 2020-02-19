@@ -1,8 +1,9 @@
 from client.cli import cli_utils
 from src.api.files.file_compare import check_if_equal
-from src.api.files.backblaze import B2Interface, application_key, application_key_id, file_rep_bucket
-from b2sdk.v1 import UploadSourceBytes
+from src.api.files.backblaze import B2Interface, application_key, application_key_id, file_rep_bucket, UploadSourceBytes
 from urllib.parse import urljoin
+from traceback import print_exc
+
 import requests
 import subprocess
 import os
@@ -10,6 +11,14 @@ import time
 import pickle
 import getpass
 import json
+import io
+
+
+file_new_end = '/api/files/new'
+file_query_end = '/api/files/query'
+group_query_end = '/api/groups/getGroups'
+signin_end = '/api/signin'
+signup_end = '/api/signup'
 
 
 def check_bool_option(args: dict, option: str) -> bool:
@@ -121,7 +130,7 @@ def make(args: dict):
     # Opens all files into files_loaded
     files_loaded = [open(filename, 'rb') for filename in args_norm['files']]
     session = requests.session()
-    repos: list = get_repo_details()
+    repos: list = get_repo_details(v)
     
     if len(repos) > 0:
         if len(repos) != 1:
@@ -138,28 +147,36 @@ def make(args: dict):
         
         # Gets all groups that the user is a member of
         # This is to choose which group the file should be uploaded to
-        groups = session.post('https://' + chosen_repo['url'] + '/api/groups/getGroups')
-        if type(groups) != requests.Response:
+        # print("blah")
+        if v:
+            print('Getting: https://' + chosen_repo['url'] + group_query_end)
+        groups = requests.Response()
+        try:
+            groups = session.get('http://' + chosen_repo['url'] + group_query_end)
+        except requests.exceptions.ConnectionError:
+            groups.status_code = "Connection refused"
+        try:
             code = groups.json()['code']
             msg = groups.json()['msg']
             if v:
                 print('Returned code:', code)
                 print('Returned message:', msg)
-            if code != 200:
+            if code == 200:
                 groups_returned = groups.json()['rows']
-                print('Please choose a group to upload to:')
+                print('\n\nPlease choose a group to upload to:')
                 if len(groups_returned) != 1:
                     for r in range(len(groups_returned)):
                         row = groups_returned[r]
-                        print(str(r + 1) + '\'s group info:', row)
+                        print('\n' + str(r + 1) + '\'s group info:', row)
                     chosen_group = groups_returned[cli_utils.ask_for_list(groups_returned)]
                 else:
                     chosen_group = groups_returned[0]
             else:
                 print(msg + '. Use the "forkie login <repo>" command to login to this repo')
                 return
-        else:
+        except Exception as e:
             print("Woops something went wrong while querying groups")
+            print(print_exc())
             return
         
         # Use B2Interface to find if there are equal files
@@ -167,7 +184,6 @@ def make(args: dict):
         interface = B2Interface(b2_key['application_key_id'],
                                 b2_key['application_key'],
                                 b2_key['bucket_name'])
-        # interface = B2Interface(application_key_id, application_key, file_rep_bucket)
         for file_open in files_loaded:
             cont_upload = False
             filename = os.path.basename(file_open.name)
@@ -184,13 +200,18 @@ def make(args: dict):
                 if not cont_upload:
                     print('Please use "forkie update" to create a new version of the file')
             else:
+                if v:
+                    print('No identical files found continuing...')
                 cont_upload = True
         
             if cont_upload:
                 files = {'file': file_open}
-                upload_status = session.post('https://' + chosen_repo['url'] + '/api/files/new', files=files, json={'groupid': chosen_group['groupid']})
-                print('Upload status:', upload_status)
-                if type(upload_status) != requests.Response:
+                if v:
+                    print('Posting to: http://' + chosen_repo['url'] + file_new_end)
+                upload_status = session.post('http://' + chosen_repo['url'] + file_new_end, files=files, json={'groupid': chosen_group['groupid']})
+                if v:
+                    print('Upload status:', upload_status)
+                try:
                     code = upload_status.json()['code']
                     msg = upload_status.json()['msg']
                     if v:
@@ -199,7 +220,7 @@ def make(args: dict):
                     if code == 401:
                         print(msg + '. Use the "forkie login <repo>" command to login to this repo')
                         break
-                else:
+                except Exception:
                     print("Woops something went wrong while trying to upload a file")
     else:
         print("No cookie files found in .forkie")    
@@ -279,15 +300,17 @@ def find(args: dict):
     # Get query
     found_rows = True
     session = requests.session()
-    repos: list = get_repo_details()
+    repos: list = get_repo_details(v)
+    files_queried = []
     
     if len(repos) != 0:
         # Iterate through all repos and query and display them
         offset = 0
-        for repo in repos:
-            print('\nRepo:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
+        for r in range(len(repos)):
+            repo = repos[r]
+            print('\n\n' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
             session.cookies.update(repo['cookie'])
-            returned = session.post('https://' + repo['url'] + '/api/file_query', json=query_json)
+            returned = session.post('http://' + repo['url'] + file_query_end, json=query_json)
             code = returned.json()['code']
             msg = returned.json()['msg']
             if v:
@@ -296,10 +319,11 @@ def find(args: dict):
             if code == 200:
                 if 'rows' in returned.json():
                     rows = returned.json()['rows']
+                    files_queried.extend(rows)
                     if len(rows) != 0:
                         found_rows = True
                         for row in range(len(rows)):
-                            print(str(offset + row) + ':', rows[row])
+                            print('\t' + str(offset + row + 1) + ':', rows[row])
                         offset += len(rows)
                     else:
                         print('No files found')
@@ -312,7 +336,30 @@ def find(args: dict):
 
     # If download then display a custom context to select the file to download from the query
     if args_norm['download'] and found_rows:
-        print('Download time')
+        print('Which repo do you want to download from? ', end='')
+        repo_num = cli_utils.ask_for_list(repos)
+        print('Which file do you want to download? ', end='')
+        row_num = cli_utils.ask_for_list(files_queried)
+        b2_key = repos[repo_num]['b2']
+        interface = B2Interface(b2_key['application_key_id'],
+                                b2_key['application_key'],
+                                b2_key['bucket_name'])
+        chosen_file = files_queried[row_num]
+        print('\n\nHere are all the versions for ' + chosen_file['filename'] + ":")
+        for v in range(len(chosen_file['versions'])):
+            version = chosen_file['versions'][v]
+            print(str(v + 1) + '.', version)
+        print('Which version of the file do you want to download? ', end='')
+        version_num = cli_utils.ask_for_list(chosen_file['versions'])
+        print('\nDownloading...')
+        file_info = interface.downloadFileByVersionId(chosen_file['versions'][version_num]['versionid'])
+        file_data = bytes(file_info['file_body'])
+        filename = file_info['filename']
+        # At this point decode file data and save locally. At some point do something to output
+        with open(filename, 'wb') as f:
+            f.write(file_data)
+        f.close()
+        print('Done!')
 
 def archive(args: dict):
     """ Queries database for archived files or manually archives files not accessed in the past year
@@ -394,8 +441,8 @@ def login(args: dict):
             print("Repository cookie already exists in .forkie. No need to login")
         else:
             # Ask user to login
-            signin_path = urljoin(repo, "api/signin")
-            signup_path = urljoin(repo, "api/signup")
+            signin_path = urljoin(repo, signin_end)
+            signup_path = urljoin(repo, signup_end)
             done = False
             cont = False
             login = {
@@ -481,7 +528,7 @@ def get_emailandpass(login: dict) -> dict:
     login["password"] = str(getpass.getpass(prompt="Enter password: "))
     return login
 
-def get_repo_details() -> list:
+def get_repo_details(v: bool) -> list:
     """ Gets the list of repositories in the .forkie folder and returns a dict with the binary cookies
         and url for all available repos
     """
@@ -501,11 +548,17 @@ def get_repo_details() -> list:
                 current_repo['cookie'] = pickle.load(f)
             f.close()
             # Get the url from the list of domains inside the cookie
-            current_repo['url'] = current_repo['cookie'].list_domains()[0]
+            current_repo_url = current_repo['cookie'].list_domains()[0]
+            if current_repo_url == '0.0.0.0':
+                current_repo_url += ':5000'
+            current_repo['url'] = current_repo_url
             # Get B2 bucket info from b2.json
+            if v:
+                print('Cookies:', cookie_file_path)
+                print('B2 keys:', b2_file_path)
             if os.path.exists(b2_file_path) and os.path.isfile(b2_file_path):
                 with open(b2_file_path) as b2:
-                    current_repo['b2'] = json.loads(b2)
+                    current_repo['b2'] = json.load(b2)
                 b2.close()
             repos.append(current_repo)
 

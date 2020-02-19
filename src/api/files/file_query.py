@@ -62,7 +62,6 @@ def file_query(browserQuery=None):
                 })
 
             userid = request.cookies.get("userid")
-            print(userid)
 
             # Return bad request if the user id is None
             if userid is None:
@@ -70,7 +69,6 @@ def file_query(browserQuery=None):
 
             query = getFilesUserCanAccess(userid)
             get_first = False
-            print(data)
             if len(data) > 0:
                 # Works (tested)
                 if "filename" in data:
@@ -103,10 +101,15 @@ def file_query(browserQuery=None):
             query = query.all()
             # Construct return rows to be passed to the returned JSON response
             rs_list = []
+            print('\n\nGetting files for user: ' + userid + ' query of', data)
             for r in range(0, len(query) if not get_first else 1):
+                print('\nFile ' + str(r) + ':')
                 row = query[r]
                 if row is not None:
-                    print(row)
+                    print("FileID:", str(row[1]))
+                    print("Filename:", row[2])
+                    print("Groups:", getFileGroups(str(row[1])))
+                    print("Versions:", getFileVersions(str(row[1])))
                     rs_json = {
                         "fileid": str(row[1]),
                         "filename": row[2],

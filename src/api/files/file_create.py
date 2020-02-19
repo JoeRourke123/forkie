@@ -14,7 +14,7 @@ from src.api.files.utils import newFileVersion
 @filesBP.route("/new", methods=["POST"])
 def newFile():
     isBrowser = "groupid" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
     
     # If there is no userid inside the cookie from a cli user then return 401 (unauthorized error)
     if "userid" not in request.cookies:

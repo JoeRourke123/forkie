@@ -11,6 +11,7 @@ from src.db.UserTable import UserTable
 from src.db import db
 
 from src.api.user.utils import getUserData
+from src.api.groups.utils import getUserGroups
 
 groupsBP = Blueprint('groups', __name__,
                     template_folder='../../templates',
@@ -288,37 +289,25 @@ def deleteGroup():
             }), 403
 
 
-@groupsBP.route("/getGroups", methods=["POST"])
+@groupsBP.route("/getGroups", methods=["GET"])
 def getGroups():
     """ Returns the groups that the user is a part of
     """
     isBrowser = "groupid" in request.form
-    data = request.form if isBrowser else request.data
+    # data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         userid = request.cookies.get('userid')
         try:
             # Query all groups that the user belongs to in psql
-            groups = GroupTable.query.filter(and_(GroupTable.groupid == data["groupid"],
-                                                  GroupTable.groupleaderid == userid)).all()
-
-            if not groups and not getUserData(request.cookies.get("userid")).admin:
-                if isBrowser:
-                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
-                else:
-                    return json.dumps({
-                        "code": 401,
-                        "msg": "You don't have permission to complete this action!"
-                    }), 401
+            groups = getUserGroups(userid)
 
             rs = []
-            for group in groups:
-                rs_json = {
-                    'groupid': group[0],
-                    'groupname': group[1],
-                    'groupleaderid': group[2]
-                }
-                rs.append(rs_json)
+            print('\n\nGetting files for user: ' + userid + ' query...')
+            for g in range(len(groups)):
+                group = groups[g]
+                print('Group', str(g) + ':', group.serialise())
+                rs.append(group.serialise())
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the groups you are a member of", "rows": rs}))
             resp.set_cookie("userid", userid)
