@@ -17,6 +17,7 @@ from src.db.MetadataTable import MetadataTable
 from src.api.files.backblaze import application_key
 from src.api.files.backblaze import application_key_id
 from src.api.files.backblaze import file_rep_bucket
+from src.api.metadata.routes import addMetadata
 
 
 def getFileExtension(filename: str) -> str:
@@ -71,19 +72,16 @@ def newFileVersion(fileData, uploadData, userid):
     db.session.add(fileversion)
     db.session.commit()
 
-    userMetadata = MetadataTable({
+    addMetadata({
         "versionid": fileversion.versionid,
         "title": "userid",
         "value": userid
     })
-    timeMetadata = MetadataTable({
+
+    addMetadata({
         "versionid": fileversion.versionid,
         "title": "uploaded",
         "value": str(datetime.now())
     })
-
-    db.session.add(userMetadata)
-    db.session.add(timeMetadata)
-    db.session.commit()
 
     return "File Uploaded"
