@@ -1,6 +1,9 @@
-from flask import Flask, request, render_template, url_for, redirect, session
+import os
+
+from flask import Flask, request, render_template, url_for, redirect, session, send_from_directory
 from flask_heroku import Heroku
 
+from src.api.files.backblaze import B2Interface
 from src.db import db
 
 from src.api.signin.routes import signinBP
@@ -90,7 +93,6 @@ def newFilePage():
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page"))
 
-    print(request.referrer)
     userGroups = getUserGroups(request.cookies.get("userid"))
     userData = getUserData(request.cookies.get("userid"))
 
@@ -109,7 +111,7 @@ def file(id):
 
     userData = getUserData(request.cookies.get("userid"))
     isLeader = (True in [isGroupLeader(request.cookies.get("userid"),
-                                       str(group.groupid)) for group in fileData["groups"]]) or userData.admin
+                                       str(group["groupid"])) for group in fileData["groups"]]) or userData.admin
 
     return render_template("file.html", file=fileData, isLeader=isLeader)
 
@@ -130,6 +132,20 @@ def version(id):
                or userData.admin
 
     return render_template("version.html", version=versionData, isLeader=isLeader)
+
+
+@app.route('/download/<versionid>', methods=['GET', 'POST'])
+def download(versionid):
+    versionData = file_query({"versionid": versionid})[0]
+    backblaze = B2Interface(application_key_id=os.environ.get("APPLICATION_KEY_ID"),
+                            application_key=os.environ.get("APPLICATION_KEY"),
+                            bucket_name=os.environ.get("BUCKET_NAME"))
+
+    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][0]["versionid"]),
+                                                   versionData["filename"],
+                                                   str(versionData["fileid"]))
+
+    return str(fileInfo["file_body"])
 
 
 if __name__ == "main":
