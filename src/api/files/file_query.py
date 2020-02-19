@@ -5,15 +5,15 @@ from flask import render_template, Blueprint, request, make_response, redirect, 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
-from src.api.user.utils import getFilesUserCanAccess
 
+from src.api.files import filesBP
+from src.api.user.utils import getFilesUserCanAccess
 from src.api.files.utils import getFileGroups, getFileVersions
 
 import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
 
-fQueryBP = Blueprint('file_query', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 query_schema = {
     "type": "object",
     "properties": {
@@ -45,7 +45,8 @@ query_schema = {
     shortlisted by the criteria inside the JSON query. Rows from query obj are then converted to a JSON to be returned
 """
 
-@fQueryBP.route("/file_query", methods=["POST"])
+
+@filesBP.route("/query", methods=["POST"])
 def file_query(browserQuery=None):
     data = browserQuery if browserQuery is not None else json.loads(request.data)
 

@@ -1,6 +1,6 @@
-import os
+import io
 
-from flask import Flask, request, render_template, url_for, redirect, session, send_from_directory
+from flask import Flask, request, render_template, url_for, redirect, send_file
 from flask_heroku import Heroku
 
 from src.api.files.backblaze import B2Interface
@@ -8,17 +8,15 @@ from src.db import db
 
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
-from src.api.files.file_query import fQueryBP as queryBP, file_query
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
-from src.api.files.file_create import filesBP
+from src.api.files import filesBP
 
-from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
+from src.api.files.file_query import file_query
+from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
 from src.api.user.utils import getUserData
-from src.api.files.utils import getFileVersions, getFileGroups
 
-import json
 import os
 
 app = Flask(__name__)
@@ -30,7 +28,6 @@ db.init_app(app)
 
 app.register_blueprint(signinBP)
 app.register_blueprint(signupBP)
-app.register_blueprint(queryBP)
 app.register_blueprint(filesBP)
 app.register_blueprint(groupsBP)
 app.register_blueprint(errorsBP)
@@ -138,9 +135,10 @@ def version(id):
     return render_template("version.html", version=versionData, isLeader=isLeader)
 
 
-@app.route('/download/<versionid>', methods=['GET', 'POST'])
-def download(versionid):
+@app.route('/download/<versionid>/<filename>', methods=['GET', 'POST'])
+def download(versionid, filename):
     versionData = file_query({"versionid": versionid})[0]
+
     backblaze = B2Interface(application_key_id=os.environ.get("APPLICATION_KEY_ID"),
                             application_key=os.environ.get("APPLICATION_KEY"),
                             bucket_name=os.environ.get("BUCKET_NAME"))
@@ -149,7 +147,11 @@ def download(versionid):
                                                    versionData["filename"],
                                                    str(versionData["fileid"]))
 
-    return str(fileInfo["file_body"])
+    return send_file(
+        io.BytesIO(bytes(fileInfo["file_body"])),
+        attachment_filename=versionData["filename"]
+    )
+
 
 
 if __name__ == "main":

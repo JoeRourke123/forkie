@@ -1,18 +1,14 @@
 from traceback import print_exc
+import json
 
-from flask import Blueprint, request, redirect, url_for
+from flask import request, redirect, url_for
 
-from src.api.user.utils import getUserData
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db import db
 
+from src.api.files import filesBP
 from src.api.files.utils import newFileVersion
-
-from datetime import datetime
-import json
-
-filesBP = Blueprint('files', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api/files')
 
 
 @filesBP.route("/new", methods=["POST"])
@@ -29,7 +25,6 @@ def newFile():
                 "code": 401,
                 "msg": "You must be signed in to do this",
             }), 401
-
 
     if "file" not in request.files:
         if isBrowser:
