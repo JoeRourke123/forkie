@@ -1,10 +1,11 @@
+import os
+
 from flask import current_app as app
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
 
 from src.db.UserTable import UserTable
 from src.utils import hashPassword
 from src.db import db
-from app import APPLICATION_KEY, APPLICATION_KEY_ID, BUCKET_NAME
 
 from datetime import datetime
 import json
@@ -52,9 +53,9 @@ def signin():
                     "code": 200,
                     "msg": "You have been signed in",
                     "b2": {
-                        "application_key_id": APPLICATION_KEY_ID,
-                        "application_key": APPLICATION_KEY,
-                        "bucket_name": BUCKET_NAME
+                        "application_key_id": os.environ["APPLICATION_KEY_ID"],
+                        "application_key": os.environ["APPLICATION_KEY"],
+                        "bucket_name": os.environ["BUCKET_NAME"]
                     }
                 }))
 
