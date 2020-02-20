@@ -22,7 +22,7 @@ groupsBP = Blueprint('groups', __name__,
 @groupsBP.route("/addMember", methods=["POST"])
 def addMember():
     isBrowser = "email" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         try:
@@ -83,7 +83,7 @@ def addMember():
 @groupsBP.route("/removeMember", methods=["POST"])
 def removeMember():
     isBrowser = "userid" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         try:
@@ -145,7 +145,7 @@ def removeMember():
 @groupsBP.route("/new", methods=["POST"])
 def newGroup():
     isBrowser = "groupname" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         try:
