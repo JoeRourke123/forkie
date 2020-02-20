@@ -16,7 +16,6 @@ from src.api.files import filesBP
 
 from src.api.files.file_create import newFile
 from src.api.files.file_query import file_query
-from src.api.files.file_create import newFile
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
 from src.api.user.utils import getUserData
 
