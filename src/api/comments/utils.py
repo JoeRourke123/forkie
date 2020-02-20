@@ -6,10 +6,10 @@ from src.db import db
 from src.db.CommentReadTable import CommentReadTable
 from src.db.CommentTable import CommentTable
 
-def addComment(commentData, fileid, userid):
+def addComment(commentData, userid):
     try:
         comment = CommentTable({
-            "fileid": fileid,
+            "fileid": commentData["fileid"],
             "userid": userid,
             "comment": commentData["comment"],
             "date": datetime.now()
