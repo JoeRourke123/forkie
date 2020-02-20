@@ -11,8 +11,10 @@ from src.api.signup.routes import signupBP
 from src.api.groups.routes import groupsBP
 from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
+from src.api.metadata.routes import metadataBP
 from src.api.files import filesBP
 
+from src.api.files.file_create import newFile
 from src.api.files.file_query import file_query
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
 from src.api.user.utils import getUserData
@@ -28,10 +30,13 @@ db.init_app(app)
 
 app.register_blueprint(signinBP)
 app.register_blueprint(signupBP)
-app.register_blueprint(filesBP)
 app.register_blueprint(groupsBP)
 app.register_blueprint(errorsBP)
 app.register_blueprint(emailBP)
+app.register_blueprint(filesBP)
+app.register_blueprint(metadataBP)
+
+
 
 APPLICATION_KEY_ID = os.environ['APPLICATION_KEY_ID']
 APPLICATION_KEY = os.environ['APPLICATION_KEY']
