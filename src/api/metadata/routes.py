@@ -20,8 +20,13 @@ def addMetadata():
     data = request.form if isBrowser else json.loads(request.data)
 
     if not request.cookies.get("userid"):
-        return redirect(url_for('index', msg="You must be signed in to complete this action"))
-
+        if isBrowser:
+            return redirect(url_for("index", msg="You must be signed in to complete this action"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to complete this action"
+            }), 403
     try:
         metadata = MetadataTable(data)
 
