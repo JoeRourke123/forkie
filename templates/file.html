@@ -218,8 +218,8 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ file.fileid }}" name="fileid"/>
+                <form action="{{ url_for('comments.newComment') }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
                     <div class="form-group">
                         <input type="text" class="form-control" name="comment" id="comment"/>
