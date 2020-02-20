@@ -303,7 +303,7 @@ def getGroups():
             groups = getUserGroups(userid)
 
             rs = []
-            print('\n\nGetting files for user: ' + userid + ' query...')
+            print('\n\nGetting groups for user: ' + userid + ' query...')
             for g in range(len(groups)):
                 group = groups[g]
                 print('Group', str(g) + ':', group.serialise())

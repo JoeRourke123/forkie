@@ -129,6 +129,9 @@ def make(args: dict):
     
     # Opens all files into files_loaded
     files_loaded = [open(filename, 'rb') for filename in args_norm['files']]
+    for file in files_loaded:
+        file.seek(0, 2)
+        print(file.name + ' size:', file.tell())
     session = requests.session()
     repos: list = get_repo_details(v)
     
@@ -186,11 +189,16 @@ def make(args: dict):
                                 b2_key['bucket_name'])
         for file_open in files_loaded:
             cont_upload = False
+            file_open.seek(0, 0)
             filename = os.path.basename(file_open.name)
             file_bytes = UploadSourceBytes(file_open.read())
             if v:
                 print('Searching for files identical to ' + filename)
-            identical_files = interface.checkForEqualFiles(file_bytes.get_content_sha1, file_bytes.get_content_length, filename)
+            # ONLY CHECK FILES THAT ARE PART OF THE GROUP THE USER WANTS TO UPLOAD TO
+            # 1. Query all the files that belong to groupid
+            # 2. Extract all the fileids from the files
+            # 3. compare the identical_files fileid's with the extracted id's from the query
+            identical_files = interface.checkForEqualFiles(file_bytes.get_content_sha1(), file_bytes.get_content_length(), filename)
             if len(identical_files) > 0:
                 print('Found file(s) identical to ' + filename + ':')
                 for x in range(len(identical_files)):
@@ -205,30 +213,34 @@ def make(args: dict):
                 cont_upload = True
         
             if cont_upload:
+                file_open.seek(0, 0)  # Seeks back to the beginning of the file
                 files = {'file': file_open}
                 if v:
                     print('Posting to: http://' + chosen_repo['url'] + file_new_end)
-                upload_status = session.post('http://' + chosen_repo['url'] + file_new_end, files=files, json={'groupid': chosen_group['groupid']})
+                upload_status = session.post('http://' + chosen_repo['url'] + file_new_end, files=files, data={'groupid': chosen_group['groupid']})
                 if v:
                     print('Upload status:', upload_status)
-                try:
-                    code = upload_status.json()['code']
-                    msg = upload_status.json()['msg']
-                    if v:
-                        print('Returned code:', code)
-                        print('Returned message:', msg)
-                    if code == 401:
-                        print(msg + '. Use the "forkie login <repo>" command to login to this repo')
-                        break
-                except Exception:
-                    print("Woops something went wrong while trying to upload a file")
+                # try:
+                code = upload_status.json()['code']
+                msg = upload_status.json()['msg']
+                if v:
+                    print('Returned code:', code)
+                    print('Returned message:', msg)
+                if code == 401:
+                    print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                    break
+                else:
+                    print(msg)
+                # except Exception as e:
+                #     print(e)
+                #     print("Woops something went wrong while trying to upload a file")
     else:
         print("No cookie files found in .forkie")    
     
 def update(args: dict):
     """ Handles the 'update' subcommand. If no message option is found or message is empty then a temp file
         will be made and opened with the default editor. After the arguments have been handled then the
-        files along with the message are added to the database using the api
+        files along with the message are added to the database using the api. Adds a new version of the file to backblaze
         - args: the args passed in from forkie.py
     """
     # [-v | --verbose] [(-m <message>)] [(-k <keyword>)] (<file>)...

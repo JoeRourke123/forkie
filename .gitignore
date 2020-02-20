@@ -134,3 +134,7 @@ idea/
 
 # Forkie files
 .forkie
+
+
+# Smommit ignore
+.smommit/

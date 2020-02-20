@@ -13,8 +13,9 @@ from src.api.files.utils import newFileVersion
 
 @filesBP.route("/new", methods=["POST"])
 def newFile():
-    isBrowser = "groupid" in request.form
-    data = request.form if isBrowser else json.loads(request.data)
+    isBrowser = 'python-requests' not in request.headers.get('User-Agent')
+    # isBrowser = "groupid" in request.form
+    data = request.form
     
     # If there is no userid inside the cookie from a cli user then return 401 (unauthorized error)
     if "userid" not in request.cookies:
@@ -56,7 +57,13 @@ def newFile():
 
         newFileVersion(file, upload, request.cookies.get("userid"))
 
-        return redirect(url_for('file', id=str(file.fileid)))
+        if isBrowser:
+            return redirect(url_for('file', id=str(file.fileid)))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "File uploaded successfully",
+            }), 200
 
     except Exception as e:
         print(print_exc())
