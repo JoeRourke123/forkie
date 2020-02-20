@@ -38,7 +38,11 @@
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
-        <h2>{{ version.filename }} version</h2>
+        {% if "title" not in version["versions"][0] %}
+            <h2>{{ version.filename }} version</h2>
+        {% else %}
+            <h2>{{ version["versions"][0]["title"] }}</h2>
+        {% endif %}
     </div>
     <div class="row">
         <div class="col">
@@ -96,69 +100,69 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="card-title">Version Actions</div>
-                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
-                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
-                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
-                                                                                    title="minus"> </span> Remove Member</a>
+                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMetadata"
+                               role="button"><span class="oi oi-tags pr-1" title="tags"> </span> Add Metadata</a>
                         <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
-                                                                                     title="pencil"> </span> Rename
-                            Group</a>
-                        <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
-                                                                                      title="clipboard"> </span>
-                        Generate Report</a>
+                                                             title="pencil"> </span> Edit Metadata
+                        </a>
+                        <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#addComment" role="button"><span class="oi oi-comment-square pr-1"
+                                                                                    title="comment square"> </span> New Comment</a>
                         <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
-                        Group</a>
+                        Version</a>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
-<div class="modal hide" id="addMember" tabindex="-1" role="dialog">
+<div class="modal hide" id="addComment" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Member</h5>
+                <h5 class="modal-title">Add Comment</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ version.fileid }}" name="groupid"/>
+                    <input type="hidden" value="{{ version["versions"][0]["versionid"] }}" name="versionid"/>
 
                     <div class="form-group">
-                        <label for="group">User Email</label>
-                        <input type="email" class="form-control" name="email" id="email"/>
+                        <input type="text" class="form-control" name="comment" id="comment"/>
                     </div>
-                    <button class="btn btn-outline-success">
-                        <span class="oi oi-plus" title="plus"></span>
+                    <button class="btn btn-outline-info">
+                        <span class="oi oi-comment-square" title="comment sqaure"></span>
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<div class="modal hide" id="renameGroup" tabindex="-1" role="dialog">
+<div class="modal hide" id="addMetadata" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rename Group</h5>
+                <h5 class="modal-title">Add Metadata</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.renameGroup') }}" method="post">
-                    <input type="hidden" value="{{ version.fileid }}" name="groupid"/>
+                <form action="{{ url_for('metadata.addMetadata') }}" method="post">
+                    <input type="hidden" value="{{ version["versions"][0]["versionid"] }}" name="versionid"/>
 
                     <div class="form-group">
-                        <label for="newname">New Group Name</label>
-                        <input type="text" class="form-control" id="newname" name="newname">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" id="title" name="title">
+                    </div>
+                    <div class="form-group">
+                        <label for="value">Value</label>
+                        <input type="text" class="form-control" id="value" name="value">
                     </div>
                     <button class="btn btn-outline-success">
-                        <span class="oi oi-check" title="check"></span>
+                        <span class="oi oi-plus" title="plus"></span>
                     </button>
                 </form>
             </div>

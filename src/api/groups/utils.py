@@ -8,8 +8,7 @@ from traceback import print_exc
 
 def getUserGroups(userID):
     try:
-        res = GroupTable.query.join(UserGroupTable, UserGroupTable.userid == userID).all()
-        return res
+        return GroupTable.query.join(UserGroupTable).filter(UserGroupTable.userid == userID).all()
     except Exception as e:
         return print_exc()
 
