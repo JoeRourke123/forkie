@@ -13,8 +13,8 @@ class CommentTable(db.Model):
     comment = db.Column(db.String(256), nullable=False)
     date = db.Column(db.DateTime())
 
-    user = db.relationship(UserTable, foreign_keys=userid, backref=db.backref('user', lazy='joined'), lazy='joined')
-    file = db.relationship(FileTable, foreign_keys=fileid, backref=db.backref('file', lazy='joined'), lazy='joined')
+    user = db.relationship(UserTable, foreign_keys=userid, backref=db.backref('user', lazy='joined'))
+    commentFile = db.relationship(FileTable, foreign_keys=fileid, backref=db.backref('commentFile', lazy='joined'))
 
     def __init__(self, data):
         self.commentid = str(uuid.uuid1())
