@@ -38,17 +38,43 @@
     </div>
     <div class="row">
         <div class="col">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body">
                     <div class="card-title">Groups with Access</div>
                     <div class="list-group">
                         {% for group in file.groups %}
-                            <a href="{{ url_for('group', id=group["groupid"]) }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('group', id=group["groupid"]) }}"
+                               class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">{{ group["groupname"] }}</h5>
                                 </div>
                             </a>
                         {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">File Comments</div>
+                    <div class="list-group">
+                        {#                        {% for group in file.groups %}#}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="w-100">
+                                <h5 class="mb-1">Can we make the hedgehog a different colour?</h5>
+                                <p class="text-muted">from Joe Rourke</p>
+                            </div>
+                            <div class="d-block">
+                                <small class="text-muted mb-2">5 mins ago</small>
+                                <br>
+                                <div class="d-flex flex-row">
+                                    <a class="btn btn-sm btn-outline-dark disabled mt-2 mr-2"><span
+                                            class="oi oi-check text-muted"></span></a>
+                                    <a class="btn btn-sm btn-outline-dark mt-2"><span class="oi oi-trash"></span></a>
+                                </div>
+
+                            </div>
+                        </div>
+                        {#                        {% endfor %}#}
                     </div>
                 </div>
             </div>
@@ -58,7 +84,8 @@
                 <div class="card-body">
                     <div class="card-title">File Versions</div>
                     {% for version in file.versions %}
-                        <a href="/version/{{ version.versionid }}" class="list-group-item list-group-item-action">
+                        <a href="{{ url_for("version", id=version["versionid"]) }}"
+                           class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
                                 <small>
@@ -80,8 +107,9 @@
                     <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
                            role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
                     Group</a>
-                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup" role="button"><span class="oi oi-ban pr-1"
-                                                                                    title="ban"> </span> Leave Group</a>
+                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup"
+                           role="button"><span class="oi oi-ban pr-1"
+                                               title="ban"> </span> Leave Group</a>
                 </div>
             </div>
             {% if isLeader %}
@@ -89,17 +117,20 @@
                     <div class="card-body">
                         <div class="card-title">Admin Actions</div>
                         <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
-                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
-                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
-                                                                                    title="minus"> </span> Remove Member</a>
-                        <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
-                                                                                     title="pencil"> </span> Rename
-                            Group</a>
+                           role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
+                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember"
+                               role="button"><span class="oi oi-minus pr-1"
+                                                   title="minus"> </span> Remove Member</a>
+                        <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup"
+                               role="button"><span class="oi oi-pencil pr-1"
+                                                   title="pencil"> </span> Rename
+                        Group</a>
                         <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
                                                                                       title="clipboard"> </span>
                         Generate Report</a>
-                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
-                                                                                        title="trash"> </span> Delete
+                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal"
+                               data-target="#deleteGroup"><span class="oi oi-trash pr-1"
+                                                                title="trash"> </span> Delete
                         Group</a>
                     </div>
                 </div>
@@ -158,26 +189,50 @@
     </div>
 </div>
 <div class="modal hide" id="deleteGroup" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Are you sure?</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>This action cannot be undone!</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-            <input type="hidden" name="groupid" value="{{ file.fileid }}" />
-            <button class="btn btn-outline-danger">Delete Group</button>
-        </form>
-      </div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
+                    <input type="hidden" name="groupid" value="{{ file.fileid }}"/>
+                    <button class="btn btn-outline-danger">Delete Group</button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+<div class="modal hide" id="addComment" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Comment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('groups.addMember') }}" method="POST">
+                    <input type="hidden" value="{{ file.fileid }}" name="fileid"/>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="comment" id="comment"/>
+                    </div>
+                    <button class="btn btn-outline-info">
+                        <span class="oi oi-comment-square" title="comment sqaure"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
