@@ -72,16 +72,20 @@ def newFileVersion(fileData, uploadData, userid):
     db.session.add(fileversion)
     db.session.commit()
 
-    addMetadata({
+    authorData = MetadataTable({
         "versionid": fileversion.versionid,
         "title": "userid",
         "value": userid
     })
 
-    addMetadata({
+    uploadData = MetadataTable({
         "versionid": fileversion.versionid,
         "title": "uploaded",
         "value": str(datetime.now())
     })
+
+    db.session.add(authorData)
+    db.session.add(uploadData)
+    db.session.commit()
 
     return "File Uploaded"

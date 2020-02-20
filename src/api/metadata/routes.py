@@ -15,12 +15,9 @@ metadataBP = Blueprint("metadata", __name__,
 
 
 @metadataBP.route("/add", methods=["POST"])
-def addMetadata(browserData=None):
-    if browserData is None and request.data is None:
-        browserData = request.form
-
-    isBrowser = "versionid" in browserData
-    data = browserData if isBrowser else json.loads(request.data)
+def addMetadata():
+    isBrowser = "versionid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
 
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You must be signed in to complete this action"))
@@ -31,9 +28,9 @@ def addMetadata(browserData=None):
         db.session.add(metadata)
         db.session.commit()
 
-        if isBrowser and browserData is request.form:
+        if isBrowser:
             return redirect(url_for("version", id=data["versionid"], msg="Metadata added!"))
-        elif not isBrowser:
+        else:
             return json.dumps({
                 "code": 200,
                 "msg": "Metadata created!"
