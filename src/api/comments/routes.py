@@ -26,7 +26,7 @@ def newComment():
                 "msg": "You must be signed in to complete this action"
             }), 401
 
-    userFiles = list(map(lambda x: x.fileid, file_query({"userid": request.cookies.get("userid")})))
+    userFiles = list(map(lambda x: x["fileid"], file_query({"userid": request.cookies.get("userid")})))
 
     if data["fileid"] not in userFiles:
         if isBrowser:

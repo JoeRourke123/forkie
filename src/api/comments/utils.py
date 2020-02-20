@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from src.api.files.file_query import file_query
+from src.api.groups.utils import getGroupUsers
 from src.api.user.utils import getUserData
 from src.db import db
 
@@ -27,3 +29,28 @@ def addComment(commentData, userid):
         db.session.commit()
     except Exception as e:
         return str(e)
+
+
+def getComments(fileid):
+    comments = []
+    fileData = file_query({"fileid": fileid})[0]
+    groupMembers = []
+
+    for group in fileData["groups"]:
+        for member in getGroupUsers(group["groupid"]):
+            if str(member.userid) not in groupMembers:
+                groupMembers.append(str(member.userid))
+
+    try:
+        comments = CommentTable.query.filter(CommentTable.fileid == fileid).all()
+
+        return list(map(lambda i, x: {
+            "comment": x.comment,
+            "date": x.date,
+            "user": getUserData(x.userid),
+            "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(groupMembers)
+        }, comments))
+
+    except Exception as e:
+        return []
+
