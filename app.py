@@ -162,6 +162,14 @@ def download(versionid, filename):
     )
 
 
+@app.route("/bulkcomment")
+def bulkCommentPage():
+    if not request.cookies.get("userid"):
+        return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
+
+    files = file_query({})
+
+    return render_template("bulkcomment.html", files=files)
 
 if __name__ == "main":
     app.run(threaded=True, port=5000)

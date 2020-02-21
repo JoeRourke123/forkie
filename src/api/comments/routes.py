@@ -55,10 +55,56 @@ def newComment():
 
         if isBrowser:
             return redirect(
-                url_for("version", id=data["versionid"], msg="Sorry, something went wrong when adding your metadata"))
+                url_for("dash", msg="Sorry, something went wrong when adding your comment"))
         else:
             return json.dumps({
                 "code": 500,
-                "msg": "Something went wrong when adding metadata",
+                "msg": "Something went wrong when adding comment",
+                "err": print_exc()
+            }), 500
+
+
+@commentsBP.route("/bulkComment", methods=["POST"])
+def bulkComment():
+    isBrowser = "comment" in request.form
+    data = request.form if isBrowser else dict(json.loads(request.data))
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for("index", msg="You must be signed in to complete this action"))
+        else:
+            return json.dumps({
+                "code": 401,
+                "msg": "You must be signed in to complete this action"
+            }), 401
+
+    fileids = data.getlist("fileids") if isBrowser else data["fileids"]
+    data = dict(data)
+
+    try:
+        for fileid in fileids:
+            data["fileid"] = fileid
+            addComment(data, request.cookies.get("userid"))
+
+        if isBrowser:
+            return redirect(
+                url_for("dash", msg="Your comments have been added")
+            )
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Your comments has been added!",
+            })
+    except Exception as e:
+        print(print_exc())
+        return str(e)
+
+        if isBrowser:
+            return redirect(
+                url_for("dash", msg="Sorry, something went wrong when adding your comments"))
+        else:
+            return json.dumps({
+                "code": 500,
+                "msg": "Something went wrong when adding comments",
                 "err": print_exc()
             }), 500
