@@ -14,11 +14,6 @@ from src.db.GroupTable import GroupTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db.MetadataTable import MetadataTable
 
-from src.api.files.backblaze import application_key
-from src.api.files.backblaze import application_key_id
-from src.api.files.backblaze import file_rep_bucket
-from src.api.metadata.routes import addMetadata
-
 
 def getFileExtension(filename: str) -> str:
     return os.path.splitext(filename)[1]
@@ -54,7 +49,11 @@ def getFileGroups(fileID):
 
 
 def newFileVersion(fileData, uploadData, userid):
-    b2 = B2Interface(application_key_id, application_key, file_rep_bucket)
+    b2 = B2Interface(
+        os.environ.get("APPLICATION_KEY_ID"),
+        os.environ.get("APPLICATION_KEY"),
+        os.environ.get("BUCKET_NAME")
+    )
 
     fileversion = FileVersionTable({
         "fileid": fileData.fileid,
@@ -62,10 +61,16 @@ def newFileVersion(fileData, uploadData, userid):
     })
 
     upload = b2.uploadFile(data=uploadData.read(),
-                  versionid=fileversion.versionid,
-                  filename=uploadData.filename,
-                  fileid=str(fileData.fileid),
-                  extension=fileData.extension)
+                           versionid=fileversion.versionid,
+                           filename=uploadData.filename,
+                           fileid=str(fileData.fileid),
+                           extension=fileData.extension)
+
+    if not b2.checkForEqualFiles(upload.get_content_sha1(),
+                                 filename=fileData["filename"],
+                                 size=upload.get_content_length(),
+                                 versions=getFileVersions(fileData["fileid"])):
+        return False
 
     fileversion.versionhash = upload.get_content_sha1()
 
@@ -88,4 +93,4 @@ def newFileVersion(fileData, uploadData, userid):
     db.session.add(uploadData)
     db.session.commit()
 
-    return "File Uploaded"
+    return True

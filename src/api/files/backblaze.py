@@ -1,12 +1,16 @@
+import os
+
 from b2sdk.v1 import InMemoryAccountInfo, B2Api, UploadSourceBytes, DownloadDestBytes, FileVersionInfo
 from uuid import uuid1
 from os.path import join, dirname, abspath
 
 # THIS IS JUST USED FOR TESTING
 # These are my b2 key details for a bucket called file-rep0
+
 application_key_id = '0003976a482cd540000000001'
 application_key = 'K0000L+ZHdPrf3wT4G+7enptKGSct68'
 file_rep_bucket = 'file-rep0'
+
 
 class CouldNotFindCorrectFile(Exception):
     """ Raised when the b2api cannot find the specified folder in the bucket """
@@ -51,6 +55,7 @@ class B2Interface:
     def downloadFileByVersionId(self, versionid: str, filename: str = None, fileid: str = None) -> dict:
         # Creates a space in memory for the downloaded file
         memory_location = DownloadDestBytes()
+
         self.bucket.download_file_by_name(
             file_name=versionid,
             download_dest=memory_location
@@ -63,7 +68,8 @@ class B2Interface:
             'content_type': memory_location.content_type,
             'content_sha1': memory_location.content_sha1,
             'fileid': memory_location.file_info['fileid'],
-            'filename': memory_location.file_info['filename']
+            'filename': memory_location.file_info['filename'],
+            'backblazeid': memory_location.file_id
         }
         del memory_location  # Cleanup memory (idk if this actually does anything)
         
@@ -75,7 +81,7 @@ class B2Interface:
             if return_data['fileid'] != fileid:
                 raise CouldNotFindCorrectFile('File found does not match the fileid given')
 
-        print(return_data)
+        # print(return_data)
         return return_data
     
     def downloadFileByFileId(self, fileid: str, filename: str = None, versionid: str = None) -> dict:
@@ -96,31 +102,40 @@ class B2Interface:
                 break
         print(file_data.file_name)
         return self.downloadFileByVersionId(file_data.file_name)
-    
-    def checkForEqualFiles(self, sha1: str, size: int, filename: str = None) -> list:
-        """ Checks for files that are equal in the bucket """
-        bucket_gen = self.bucket.ls(
-            folder_to_list='',
-            show_versions=False,
-            recursive=False,
-            fetch_count=None
-        )
-        equal_files: list = []
 
-        for f in bucket_gen:
-            file_data: FileVersionInfo = f[0]
+    def checkForEqualFiles(self, sha1: str, size: int, filename: str, versions: list) -> bool:
+        """ Checks for files that are equal in the bucket """
+        # bucket_gen = self.bucket.ls(
+        #     folder_to_list='',
+        #     show_versions=False,
+        #     recursive=False,
+        #     fetch_count=None
+        # )
+
+        versionFiles = [
+            self.downloadFileByVersionId(version["versionid"]) for version in versions
+        ]
+
+        for file in versionFiles:
             # print('\n' + file_data.file_info['filename'], 'vs', filename)
             # print(file_data.size, 'vs', size)
             # print(file_data.content_sha1, 'vs', sha1)
-            if file_data.size == size:
-                if file_data.content_sha1 == sha1:
-                    # Checks filename if filename not none
-                    currFName = file_data.file_info['filename']
-                    if currFName == filename if filename is not None else currFName:
-                        # print('Equal')
-                        equal_files.append(file_data)
+            if file["content_length"] == size:
+                if file["content_sha1"] == sha1:
+                    return False
 
-        return equal_files
+        return True
+
+    def removeFile(self, versionid: str):
+        file = self.downloadFileByVersionId(
+            versionid=versionid
+        )
+
+        self.bucket.delete_file_version(
+            file_id=file["backblazeid"],
+            file_name=versionid
+        )
+
 
 # # Create B2Interface object
 # interface = B2Interface(application_key_id, application_key, file_rep_bucket)
