@@ -152,10 +152,7 @@ def download(versionid, filename):
                             application_key=os.environ.get("APPLICATION_KEY"),
                             bucket_name=os.environ.get("BUCKET_NAME"))
 
-    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][0]["versionid"]),
-                                                   versionData["filename"],
-                                                   str(versionData["fileid"]))
-
+    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][0]["versionid"]))
     return send_file(
         io.BytesIO(bytes(fileInfo["file_body"])),
         attachment_filename=versionData["filename"]
