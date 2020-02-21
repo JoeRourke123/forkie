@@ -145,7 +145,7 @@ def version(id):
 
 
 @app.route('/download/<versionid>/<filename>', methods=['GET', 'POST'])
-def download(versionid, filename):
+def download(versionid):
     versionData = file_query({"versionid": versionid})[0]
 
     backblaze = B2Interface(application_key_id=os.environ.get("APPLICATION_KEY_ID"),
