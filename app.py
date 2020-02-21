@@ -139,7 +139,7 @@ def version(id):
     userData = getUserData(request.cookies.get("userid"))
     isLeader = (versionData['versions'][0]['author'] == userData)\
                or (True in [isGroupLeader(request.cookies.get("userid"), str(group["groupid"])) for group in versionData["groups"]])\
-               or userData.admin
+               or userData["admin"]
 
     return render_template("version.html", version=versionData, isLeader=isLeader)
 

@@ -7,7 +7,16 @@ from src.db.UserGroupTable import UserGroupTable
 from sqlalchemy import and_
 
 def getUserData(userid):
-    return UserTable.query.filter(UserTable.userid == userid).first()
+    query = UserTable.query.filter(UserTable.userid == userid).first()
+
+    return {
+        "userid": query.userid,
+        "username": query.username,
+        "email": query.email,
+        "lastlogin": query.lastlogin,
+        "admin": query.admin
+    }
+
 
 def getFilesUserCanAccess(userid: str):
     """ Returns the Query of the files that the user (userid) can access. This is the join of
@@ -25,7 +34,7 @@ def getFilesUserCanAccess(userid: str):
         .add_columns(FileTable.fileid, FileTable.filename, GroupTable.groupname, GroupTable.groupid)\
         .filter(and_(FileGroupTable.fileid == FileTable.fileid, FileGroupTable.groupid == GroupTable.groupid, FileGroupTable.groupid == UserGroupTable.groupid, UserGroupTable.userid == userid))\
 
-    if userData.admin:
+    if userData["admin"]:
         query = FileTable.query
 
     return query

@@ -34,7 +34,7 @@
                         <a class="dropdown-item disabled" href="#">You're not in any groups</a>
                     {% endif %}
                     {% for group in groups %}
-                        <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group.groupname }}</a>
+                        <a class="dropdown-item" href="/group/{{ group.groupid }}">{{ group["groupname"] }}</a>
                     {% endfor %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{{ url_for('newGroupPage') }}"><span class="oi oi-plus" title="plus"
@@ -74,9 +74,9 @@
                         {% for file in files %}
                             <a href="/file/{{ file.fileid }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ file.filename }}</h5>
+                                    <h5 class="mb-1">{{ file["filename"] }}</h5>
                                 </div>
-                                <small class="text-muted">Updated <time class="timeago" datetime="{{ file.versions[0].uploaded }}">5 mins ago</time> by {{ file.versions[0].author.username }}</small>
+                                <small class="text-muted">Updated <time class="timeago" datetime="{{ file["versions"][0].uploaded }}">5 mins ago</time> by {{ file["versions"][0]["author"]["username"] }}</small>
                               </a>
                         {% endfor %}
                     </div>

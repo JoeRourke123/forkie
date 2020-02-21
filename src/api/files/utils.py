@@ -38,7 +38,7 @@ def getFileVersions(fileID):
 
         for data in metadata:
             if data.title == "userid":
-                versionData["author"] = str(getUserData(data.value))
+                versionData["author"] = getUserData(data.value)
             # elif data.title == "uploaded":
             #     versionData["uploaded"] = datetime.fromisoformat(data.value)
             else:
