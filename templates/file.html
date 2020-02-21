@@ -37,13 +37,14 @@
         <h2>{{ file.filename }}</h2>
     </div>
     <div class="row">
-        <div class="col">
-            <div class="card">
+        <div class="col-4">
+            <div class="card mb-4">
                 <div class="card-body">
                     <div class="card-title">Groups with Access</div>
                     <div class="list-group">
                         {% for group in file.groups %}
-                            <a href="{{ url_for('group', id=group["groupid"]) }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('group', id=group["groupid"]) }}"
+                               class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">{{ group["groupname"] }}</h5>
                                 </div>
@@ -52,15 +53,54 @@
                     </div>
                 </div>
             </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">File Comments</div>
+                    <div class="list-group">
+                        {% for comment in comments %}
+                            <div class="list-group-item list-group-item-action">
+                                <div class="w-100">
+                                    <h5 class="mb-1">{{ comment["comment"] }}</h5>
+                                    <p class="text-muted">from {{ comment["user"]["username"] }}</p>
+                                </div>
+                                <div class="d-block">
+                                    <small class="text-muted mb-2">
+                                        <time class="timeago" datetime="{{ comment["date"] }}"></time>
+                                    </small>
+                                    <br>
+                                    <div class="d-flex flex-row">
+                                        {% if not comment["read"] %}
+                                            <span tabindex="0" data-toggle="tooltip" data-placement="top" title="Comment not seen by all with access"><a class="btn btn-sm btn-outline-dark disabled mt-2 mr-2"><span
+                                                class="oi oi-check"></span></a></span>
+                                        {% else %}
+                                            <span tabindex="0" data-toggle="tooltip" data-placement="top" title="Comment seen by all"><a class="btn btn-sm btn-outline-success disabled mt-2 mr-2"><span class="oi oi-check"></span></a></span>
+                                        {% endif %}
+                                        {% if comment["user"]["userid"]|string == request.cookies.get("userid") %}
+                                            <a class="btn btn-sm btn-outline-danger mt-2"><span class="oi oi-trash text-danger"></span></a>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col">
+        <div class="col-5">
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">File Versions</div>
                     {% for version in file.versions %}
-                        <a href="/version/{{ version.versionid }}" class="list-group-item list-group-item-action">
+                        <a href="{{ url_for("version", id=version["versionid"]) }}"
+                           class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
+                                    {% if "title" not in version %}
+                                        <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
+                                    {% else %}
+                                        <h5 class="mb-1">{{ version["title"] }}</h5>
+                                    {% endif %}
+                                </h5>
                                 <small>
                                     <time class="timeago" datetime="{{ version.uploaded }}">5 mins ago</time>
                                 </small>
@@ -71,36 +111,33 @@
                 </div>
             </div>
         </div>
-        <div class="col">
+        <div class="col-3">
             <div class="card mb-4">
-                <div class="card-body">
-                    <div class="card-title">Group Actions</div>
-                    <a class="btn btn-success mb-2" href="{{ url_for('newFilePage') }}" role="button"><span
-                            class="oi oi-document pr-1" title="document"> </span> New File</a>
-                    <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#emailGroup"
-                           role="button"><span class="oi oi-envelope-closed pr-1" title="envelope closed"> </span> Email
-                    Group</a>
-                    <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#leaveGroup" role="button"><span class="oi oi-ban pr-1"
-                                                                                    title="ban"> </span> Leave Group</a>
+                <div class="card-body d-flex w-100 flex-column flex-fill">
+                    <div class="card-title">File Actions</div>
+                    <a class="btn btn-outline-success m-0" href="{{ url_for('newFilePage') }}" role="button"><span
+                            class="oi oi-document pr-1" title="document"> </span> New Version</a>
+                    <br><a class="btn btn-outline-info m-0" href="#" data-toggle="modal" data-target="#addComment"
+                           role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
+                    Comment</a>
                 </div>
             </div>
             {% if isLeader %}
                 <div class="card">
-                    <div class="card-body">
+                    <div class="card-body d-flex w-100 flex-column flex-fill">
                         <div class="card-title">Admin Actions</div>
-                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMember"
-                               role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Member</a>
-                        <br><a class="btn btn-danger mb-2" href="#" data-toggle="modal" data-target="#removeMember" role="button"><span class="oi oi-minus pr-1"
-                                                                                    title="minus"> </span> Remove Member</a>
-                        <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
-                                                                                     title="pencil"> </span> Rename
-                            Group</a>
-                        <br><a class="btn btn-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
+                        <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addGroup"
+                           role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Group</a>
+                        <br><a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#removeGroup"
+                               role="button"><span class="oi oi-minus pr-1"
+                                                   title="minus"> </span> Revoke Group Access</a>
+                        <br><a class="btn btn-outline-info mb-2" href="#" role="button"><span class="oi oi-clipboard pr-1"
                                                                                       title="clipboard"> </span>
                         Generate Report</a>
-                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
-                                                                                        title="trash"> </span> Delete
-                        Group</a>
+                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
+                               data-target="#deleteFile"><span class="oi oi-trash pr-1"
+                                                                title="trash"> </span> Delete
+                        File</a>
                     </div>
                 </div>
             {% endif %}
@@ -158,26 +195,50 @@
     </div>
 </div>
 <div class="modal hide" id="deleteGroup" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Are you sure?</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>This action cannot be undone!</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-            <input type="hidden" name="groupid" value="{{ file.fileid }}" />
-            <button class="btn btn-outline-danger">Delete Group</button>
-        </form>
-      </div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
+                    <input type="hidden" name="groupid" value="{{ file.fileid }}"/>
+                    <button class="btn btn-outline-danger">Delete Group</button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+<div class="modal hide" id="addComment" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Comment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('comments.newComment') }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="comment" id="comment"/>
+                    </div>
+                    <button class="btn btn-outline-info">
+                        <span class="oi oi-comment-square" title="comment sqaure"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
@@ -187,6 +248,10 @@
 <script>
     $(document).ready((e) => {
         $("time.timeago").timeago();
+    });
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
     });
 </script>
 </html>
