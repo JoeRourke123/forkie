@@ -1,4 +1,5 @@
 from datetime import datetime
+from traceback import print_exc
 
 from src.api.files.file_query import file_query
 from src.api.groups.utils import getGroupUsers
@@ -44,13 +45,14 @@ def getComments(fileid):
     try:
         comments = CommentTable.query.filter(CommentTable.fileid == fileid).all()
 
-        return list(map(lambda i, x: {
+        return list(map((lambda i, x: {
             "comment": x.comment,
             "date": x.date,
             "user": getUserData(x.userid),
             "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(groupMembers)
-        }, comments))
+        }), comments))
 
     except Exception as e:
-        return []
+        print(print_exc())
+        return comments
 

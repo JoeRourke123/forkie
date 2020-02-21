@@ -3,6 +3,7 @@ import io
 from flask import Flask, request, render_template, url_for, redirect, send_file
 from flask_heroku import Heroku
 
+from src.api.comments.utils import getComments
 from src.api.files.backblaze import B2Interface
 from src.db import db
 
@@ -117,11 +118,12 @@ def file(id):
     if not file:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
+    fileComments = getComments(id)
     userData = getUserData(request.cookies.get("userid"))
     isLeader = (True in [isGroupLeader(request.cookies.get("userid"),
                                        str(group["groupid"])) for group in fileData["groups"]]) or userData.admin
 
-    return render_template("file.html", file=fileData, isLeader=isLeader)
+    return render_template("file.html", file=fileData, isLeader=isLeader, comments=fileComments)
 
 
 @app.route("/version/<id>")
