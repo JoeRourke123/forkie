@@ -32,13 +32,13 @@ def getFileVersions(fileID):
         metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
 
         versionData = {
-            "versionid": version.versionid,
+            "versionid": str(version.versionid),
             "versionhash": version.versionhash,
         }
 
         for data in metadata:
             if data.title == "userid":
-                versionData["author"] = getUserData(data.value)
+                versionData["author"] = str(getUserData(data.value))
             # elif data.title == "uploaded":
             #     versionData["uploaded"] = datetime.fromisoformat(data.value)
             else:

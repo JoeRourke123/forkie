@@ -109,21 +109,21 @@ class B2Interface:
 
         for f in bucket_gen:
             file_data: FileVersionInfo = f[0]
-            # print('\n' + file_data.file_info['filename'])
-            # print(file_data.size)
-            # print(file_data.content_sha1)
+            # print('\n' + file_data.file_info['filename'], 'vs', filename)
+            # print(file_data.size, 'vs', size)
+            # print(file_data.content_sha1, 'vs', sha1)
             if file_data.size == size:
                 if file_data.content_sha1 == sha1:
                     # Checks filename if filename not none
                     currFName = file_data.file_info['filename']
                     if currFName == filename if filename is not None else currFName:
-                        print('Equal')
+                        # print('Equal')
                         equal_files.append(file_data)
 
         return equal_files
 
 # # Create B2Interface object
-interface = B2Interface(application_key_id, application_key, file_rep_bucket)
+# interface = B2Interface(application_key_id, application_key, file_rep_bucket)
 #
 # # Testing uploading
 # resource_location = join(dirname(dirname(dirname(dirname(abspath(__file__))))), "res/tests/files")

@@ -134,3 +134,7 @@ dmypy.json
 
 # Forkie files
 .forkie
+
+
+# Smommit ignore
+.smommit/

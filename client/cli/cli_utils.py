@@ -62,7 +62,7 @@ def ask_for_list(input_ls: list) -> int:
                     break
         except ValueError:
             print('Line number is not a integer. Try again.')
-    return line_no
+    return line_no - 1
 
 def check_if_404(url: str) -> bool:
     """ Checks if URL returns a 404
