@@ -126,7 +126,7 @@ class B2Interface:
 
         return True
 
-    def removeFile(self, versionid: str):
+    def removeVersion(self, versionid: str):
         file = self.downloadFileByVersionId(
             versionid=versionid
         )
