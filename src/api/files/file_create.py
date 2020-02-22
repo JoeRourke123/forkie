@@ -3,6 +3,7 @@ import json
 
 from flask import request, redirect, url_for
 
+from src.api.files.file_query import file_query
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db import db
@@ -90,3 +91,35 @@ def newVersion():
                 "code": 401,
                 "msg": "You must be signed in to do this",
             }), 401
+
+    upload = request.files["file"]
+
+    try:
+        fileData = file_query({"fileid": data["fileid"]})[0]
+
+        if newFileVersion(fileData, upload, request.cookies.get("userid")):
+            fileData = file_query({"fileid": data["fileid"]})
+
+            if isBrowser:
+                return redirect(url_for("version", id=fileData["versions"][0]["versionid"]))
+            else:
+                return json.dumps({
+                    "code": 200,
+                    "msg": "New version, " + fileData["versions"][0]["versionid"] + " created successfully!"
+                })
+        else:
+            if isBrowser:
+                return redirect(url_for("file", id=fileData["fileid"], msg="Sorry, your new version already matches one in this file"))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Sorry, your new version matches one already in the file"
+                }), 500
+    except Exception as e:
+        if isBrowser:
+            return redirect(url_for("file", id=fileData["fileid"], msg="Sorry, something went wrong creating your new version"))
+        else:
+            return json.dumps({
+                "code": 500,
+                "msg": "Sorry, something went wrong when creating your new version"
+            }), 500
