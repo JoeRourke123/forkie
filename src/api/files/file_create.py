@@ -5,6 +5,8 @@ from flask import request, redirect, url_for
 
 from src.api.comments.utils import addComment
 from src.api.files.file_query import file_query
+from src.api.files.file_delete import deleteVersion
+
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db import db

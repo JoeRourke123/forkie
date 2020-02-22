@@ -98,7 +98,7 @@
                         <br><a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
                                                              title="pencil"> </span> Edit Metadata
                         </a>
-                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
+                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteVersion"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
                         Version</a>
                     </div>
@@ -136,7 +136,7 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteGroup" role="dialog">
+<div class="modal hide" id="deleteVersion" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -150,9 +150,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-            <input type="hidden" name="groupid" value="{{ version.fileid }}" />
-            <button class="btn btn-outline-danger">Delete Group</button>
+        <form action="{{ url_for('files.deleteVersion') }}" method="POST">
+            <input type="hidden" name="versionid" value="{{ version["versions"][0]["versionid"] }}" />
+            <button class="btn btn-outline-danger">Delete Version</button>
         </form>
       </div>
     </div>
