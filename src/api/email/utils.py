@@ -2,16 +2,16 @@ import sendgrid
 import os
 from traceback import print_exc
 
-from src.api.groups.utils import getUserGroups
+from src.api.groups.utils import getGroupUsers
 
 def sendGroupEmail(groupID, data, sender):
-    groupUsers = getUserGroups(groupID)
+    groupUsers = getGroupUsers(groupID)
     sg = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
 
     try:
         for user in groupUsers:
             mail = sendgrid.Mail("forkie@example.com",
-                                 str(user.email), str(data["subject"] + " - from " + sender.username),
+                                 str(user["email"]), str(data["subject"] + " - from " + sender["username"]),
                                  str(data["content"]))
             response = sg.send(mail)
             print(response.status_code)
