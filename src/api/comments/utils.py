@@ -45,7 +45,7 @@ def getComments(fileid):
     try:
         comments = CommentTable.query.filter(CommentTable.fileid == fileid).all()
 
-        return list(map((lambda i, x: {
+        return list(map((lambda x: {
             "comment": x.comment,
             "date": x.date,
             "user": getUserData(str(x.userid)),
