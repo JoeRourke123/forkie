@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import and_
 
+from src.api.email.utils import sendGroupEmail
 from src.api.files.backblaze import B2Interface
 from src.api.user.utils import getUserData
 
@@ -48,7 +49,7 @@ def getFileGroups(fileID):
     return [group.serialise() for group in GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()]
 
 
-def newFileVersion(fileData, uploadData, userid):
+def newFileVersion(fileData, uploadData, title, userid):
     b2 = B2Interface(
         os.environ.get("APPLICATION_KEY_ID"),
         os.environ.get("APPLICATION_KEY"),
@@ -89,8 +90,24 @@ def newFileVersion(fileData, uploadData, userid):
         "value": str(datetime.now())
     })
 
+    titleData = MetadataTable({
+        "versionid": fileversion.versionid,
+        "title": "title",
+        "value": title
+    })
+
+    db.session.add(titleData)
     db.session.add(authorData)
     db.session.add(uploadData)
     db.session.commit()
+
+    userData = getUserData(userid)
+
+    for group in getFileGroups(fileData["fileid"]):
+        sendGroupEmail(group["groupid"], {
+            "subject": "New Version of " + fileData["filename"] + " Created",
+            "content": "Hi, " + userData["username"] + "(" + userData["email"] + ") has created a new version of " +
+                       fileData["filename"] + " with the title " + titleData.value + ". \n\n Thanks,\nfile-rep0"
+        }, userData)
 
     return True

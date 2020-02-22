@@ -3,6 +3,7 @@ import json
 
 from flask import request, redirect, url_for
 
+from src.api.comments.utils import addComment
 from src.api.files.file_query import file_query
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
@@ -62,13 +63,21 @@ def newFile():
             "extension": file.extension
         }
 
-        if newFileVersion(file, upload, request.cookies.get("userid")):
+        if newFileVersion(file, upload, "Initial Upload", request.cookies.get("userid")):
+            if data["comment"]:
+                commentData = {
+                    "fileid": str(file["fileid"]),
+                    "comment": data["comment"]
+                }
+                addComment(commentData, request.cookies.get("userid"))
+
+
             if isBrowser:
-                return redirect(url_for('file', id=str(file.fileid)))
+                return redirect(url_for('file', id=str(file["fileid"])))
             else:
                 return json.dumps({
                     "code": 200,
-                    "msg": "File uploaded successfully",
+                    "msg": file["filename"] + " uploaded successfully",
                 }), 200
         else:
             if isBrowser:
@@ -103,7 +112,7 @@ def newVersion():
     try:
         fileData = file_query({"fileid": data["fileid"]})[0]
 
-        if newFileVersion(fileData, upload, request.cookies.get("userid")):
+        if newFileVersion(fileData, upload, data["title"], request.cookies.get("userid")):
             fileData = file_query({"fileid": data["fileid"]})[0]
 
             if isBrowser:
