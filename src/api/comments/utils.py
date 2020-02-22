@@ -56,3 +56,12 @@ def getComments(fileid):
         print(print_exc())
         return comments
 
+
+def getRecentComments():
+    userFiles = file_query({})
+    commentsList = []
+
+    for file in userFiles:
+        commentsList.extend(getComments(file["fileid"]))
+
+    return sorted(commentsList, key=lambda x: x["date"], reverse=True)

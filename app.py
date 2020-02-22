@@ -3,7 +3,7 @@ import io
 from flask import Flask, request, render_template, url_for, redirect, send_file
 from flask_heroku import Heroku
 
-from src.api.comments.utils import getComments
+from src.api.comments.utils import getComments, getRecentComments
 from src.api.files.backblaze import B2Interface
 from src.db import db
 
@@ -62,13 +62,12 @@ def dash():
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
     files = file_query({})
-    print("\n\n\n\n")
-    print(files)
+    recentComments = getRecentComments()[:10]
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=files)
+    return render_template("dashboard.html", user=userData, groups=groupData, files=files, comments=recentComments)
 
 
 @app.route("/group/<id>")
