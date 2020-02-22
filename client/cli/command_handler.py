@@ -150,7 +150,6 @@ def make(args: dict):
         
         # Gets all groups that the user is a member of
         # This is to choose which group the file should be uploaded to
-        # print("blah")
         if v:
             print('Getting: https://' + chosen_repo['url'] + group_query_end)
         groups = requests.Response()
@@ -168,11 +167,14 @@ def make(args: dict):
                 groups_returned = groups.json()['rows']
                 print('\n\nPlease choose a group to upload to:')
                 if len(groups_returned) != 1:
-                    for r in range(len(groups_returned)):
-                        row = groups_returned[r]
-                        print('\n' + str(r + 1) + '\'s group info:', row)
+                    headers = list(groups_returned[0].keys())
+                    headers.sort()
+                    headers.insert(0, 'file no.')
+                    values = [list(data.values()) for data in groups_returned]
+                    print(cli_utils.format_rows(headers, values))
                     chosen_group = groups_returned[cli_utils.ask_for_list(groups_returned)]
                 else:
+                    print('Only one group found (' + groups_returned[0]['groupname'] + ') so using that one')
                     chosen_group = groups_returned[0]
             else:
                 print(msg + '. Use the "forkie login <repo>" command to login to this repo')
@@ -195,15 +197,45 @@ def make(args: dict):
             if v:
                 print('Searching for files identical to ' + filename)
             # ONLY CHECK FILES THAT ARE PART OF THE GROUP THE USER WANTS TO UPLOAD TO
+            identical_files = interface.getEqualFilesList(file_bytes.get_content_sha1(), file_bytes.get_content_length(), filename)
             # 1. Query all the files that belong to groupid
+            file_group = requests.Response()
+            try:
+                file_group = session.post('http://' + chosen_repo['url'] + file_query_end, json={'groupid': chosen_group['groupid']})
+            except requests.exceptions.ConnectionError:
+                file_group.status_code = "Connection refused"
+            try:
+                code = file_group.json()['code']
+                msg = file_group.json()['msg']
+                if v:
+                    print('Returned code:', code)
+                    print('Returned message:', msg)
+                if code == 200:
+                    files_returned = file_group.json()['rows']
+                else:
+                    print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                    return
+            except Exception as e:
+                print("Woops something went wrong while querying groups")
+                print(print_exc())
+                return
+
             # 2. Extract all the fileids from the files
             # 3. compare the identical_files fileid's with the extracted id's from the query
-            identical_files = interface.checkForEqualFiles(file_bytes.get_content_sha1(), file_bytes.get_content_length(), filename)
-            if len(identical_files) > 0:
+            files_for_user = []
+            for file in identical_files:
+                for fileid in files_returned:
+                    if file.file_info['fileid'] == fileid['fileid']:
+                        files_for_user.append(file)
+
+            if len(files_for_user) > 0:
                 print('Found file(s) identical to ' + filename + ':')
-                for x in range(len(identical_files)):
-                    identical_file = identical_files[x]
-                    print(str(x + 1) + '\'s file info:', identical_file.file_info)
+                file_dicts = [dict(file.file_info) for file in files_for_user]
+                headers = list(file_dicts[0].keys())
+                headers.sort()
+                headers.insert(0, 'file no.')
+                values = [list(data.values()) for data in file_dicts]
+                print(cli_utils.format_rows(headers, values))
                 cont_upload = cli_utils.ask_for('Do you still want to start tracking a new file?', ['y', 'n'])
                 if not cont_upload:
                     print('Please use "forkie update" to create a new version of the file')
@@ -211,31 +243,39 @@ def make(args: dict):
                 if v:
                     print('No identical files found continuing...')
                 cont_upload = True
-        
+
             if cont_upload:
                 file_open.seek(0, 0)  # Seeks back to the beginning of the file
                 files = {'file': file_open}
                 if v:
                     print('Posting to: http://' + chosen_repo['url'] + file_new_end)
-                upload_status = session.post('http://' + chosen_repo['url'] + file_new_end, files=files, data={'groupid': chosen_group['groupid']})
+                upload_status = requests.Response()
+                try:
+                    upload_status = session.post(
+                        'http://' + chosen_repo['url'] + file_new_end,
+                        files=files,
+                        data={
+                            'groupid': chosen_group['groupid'],
+                            'comment': args_norm['message']['description']
+                        }
+                    )
+                except requests.exceptions.ConnectionError:
+                    upload_status.status_code = "Connection refused"
                 if v:
                     print('Upload status:', upload_status)
-                # try:
-                code = upload_status.json()['code']
-                msg = upload_status.json()['msg']
-                if v:
-                    print('Returned code:', code)
-                    print('Returned message:', msg)
-                if code == 401:
-                    print(msg + '. Use the "forkie login <repo>" command to login to this repo')
-                    break
-                else:
-                    print(msg)
-                # except Exception as e:
-                #     print(e)
-                #     print("Woops something went wrong while trying to upload a file")
+                try:
+                    code = upload_status.status_code
+                    if v:
+                        print('Returned code:', code)
+                    if code == 401:
+                        print('Use the "forkie login <repo>" command to login to this repo')
+                        break
+                    else:
+                        print('Upload successful')
+                except Exception as e:
+                    print("Woops something went wrong while trying to upload a file")
     else:
-        print("No cookie files found in .forkie")    
+        print("No cookie files found in .forkie")
     
 def update(args: dict):
     """ Handles the 'update' subcommand. If no message option is found or message is empty then a temp file
@@ -327,16 +367,26 @@ def find(args: dict):
             msg = returned.json()['msg']
             if v:
                 print('Query JSON:', query_json)
-                print('Returned JSON:', returned.json())
             if code == 200:
                 if 'rows' in returned.json():
-                    rows = returned.json()['rows']
-                    files_queried.extend(rows)
-                    if len(rows) != 0:
-                        found_rows = True
-                        for row in range(len(rows)):
-                            print('\t' + str(offset + row + 1) + ':', rows[row])
-                        offset += len(rows)
+                    if len(returned.json()['rows']) != 0:
+                        files_queried.extend(returned.json()['rows'])
+                        formatted_rows = returned.json()['rows']
+                        if v:
+                            print('Returned rows (raw):', returned.json()['rows'])
+                        for row in formatted_rows:
+                            group_name_list = []
+                            for group in row['groups']:
+                                group_name_list.append(group['groupname'])
+                            row['belongs to'] = ', '.join(group_name_list)
+                            versions = len(row['versions'])
+                            row['no. of versions'] = versions
+
+                        formatted_rows = cli_utils.delete_listdict_keys(formatted_rows, ['groups', 'versions'])
+                        headers = list(formatted_rows[0].keys())
+                        headers.insert(0, 'file no.')
+                        print(cli_utils.format_rows(headers, [list(data.values()) for data in formatted_rows], offset))
+                        offset += len(returned.json()['rows'])
                     else:
                         print('No files found')
                 else:
@@ -356,11 +406,33 @@ def find(args: dict):
         interface = B2Interface(b2_key['application_key_id'],
                                 b2_key['application_key'],
                                 b2_key['bucket_name'])
+
         chosen_file = files_queried[row_num]
+        versions = chosen_file['versions'].copy()
+        # Format the version data for the chosen file
+        for v in range(len(versions)):
+            version = versions[v]
+            print('before', version)
+            version['versionhash'] = version['versionhash'][:6]  # Shortens the version hash
+            uploaded = version['uploaded']
+            # Removes everything after the first dot (in this case the milliseconds)
+            uploaded = uploaded.split(".")[0]
+            version['uploaded'] = uploaded
+            version['uploaded by'] = version['author']['email']
+            # Some version data don't have titles
+            if 'title' not in version:
+                version['title'] = '~'
+            versions[v] = dict(sorted(version.items()))
+        cli_utils.delete_listdict_keys(versions, ['versionid', 'author'])
+        headers = list(versions[0].keys())
+        headers.sort()
+        headers.insert(0, 'file no.')
+        values = [list(data.values()) for data in versions]
         print('\n\nHere are all the versions for ' + chosen_file['filename'] + ":")
-        for v in range(len(chosen_file['versions'])):
-            version = chosen_file['versions'][v]
-            print(str(v + 1) + '.', version)
+        print(cli_utils.format_rows(headers, values))
+        # for v in range(len(chosen_file['versions'])):
+        #     version = chosen_file['versions'][v]
+        #     print(str(v + 1) + '.', version)
         print('Which version of the file do you want to download? ', end='')
         version_num = cli_utils.ask_for_list(chosen_file['versions'])
         print('\nDownloading...')

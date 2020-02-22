@@ -64,6 +64,40 @@ def ask_for_list(input_ls: list) -> int:
             print('Line number is not a integer. Try again.')
     return line_no - 1
 
+def format_rows(headers: list, rows: list, offset: int = 0) -> str:
+    """ Formats rows into a prettier tabular format given the headers and rows. The first header
+        will always be a number count to aid with selection during the CLI flow.
+        Modified from: https://stackoverflow.com/questions/9535954/printing-lists-as-tabular-data
+        - headers: a list containing the headers which are printed at the top of the table, first header must be a number count
+        - rows: the list containing the row data to input
+        - offset: the offset the the number count
+        - returns: the string to print
+    """
+    output = []
+    header_format = ''
+    row_format = ''
+    top_format = '{:^{}}'
+    left_format = '{:<{}}'
+    cell_format = '{:>{}}'
+    row_delim = '\n'
+    col_delim = ' | '
+    table = [headers] + [[name] + row for name, row in zip([nos for nos in range(offset + 1, len(rows) + 1)], rows)]
+    table_format = [len(headers) * [top_format]] \
+        + len(rows) * [[left_format] + len(headers) * [cell_format]]
+    col_widths = [max(len(format.format(cell, 0)) for format, cell in zip(col_format, col)) for col_format, col in zip(zip(*table_format), zip(*table))]
+    return row_delim.join(col_delim.join(format.format(cell, width) for format, cell, width in zip(row_format, row, col_widths)) for row_format, row in zip(table_format, table))
+
+def delete_listdict_keys(listOfDicts: list, toDelete: list) -> list:
+    """ Deletes the given list of keys from a list dicts
+    """
+    new_data = []
+    for row in listOfDicts:
+        for delete in toDelete:
+            if delete in row:
+                del row[delete]
+        new_data.append(row)
+    return new_data
+
 def check_if_404(url: str) -> bool:
     """ Checks if URL returns a 404
         - url: URL to check

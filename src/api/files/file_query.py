@@ -14,6 +14,8 @@ import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
 
+from sqlalchemy import and_
+
 query_schema = {
     "type": "object",
     "properties": {
@@ -70,29 +72,21 @@ def file_query(browserQuery=None):
             query = getFilesUserCanAccess(userid)
             get_first = False
             if len(data) > 0:
-                # Works (tested)
                 if "filename" in data:
                     # Searches by wildcard so any filename containing that string will be included
                     query = query.filter(FileTable.filename.like("%" + str(data["filename"]) + "%"))
-                # Works (tested)
                 if "fileid" in data:
                     query = query.filter(FileTable.fileid == str(data["fileid"]))
-                # No worky (not tested)
                 if "versionid" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
-                # No worky (not tested)
                 if "extension" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
-                # No worky (not tested)
                 if "versionhash" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
-                # Works (not tested)
                 if "groupid" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
-                # Works (not tested)
                 if "groupname" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
-                # Works (tested)
                 if "first" in data:
                     get_first = data['first']
                     
@@ -103,12 +97,12 @@ def file_query(browserQuery=None):
             rs_list = []
             print('\n\nGetting files for user: ' + userid + ' query of', data)
             for x, row in enumerate(query):
-                print('\nFile ' + str(x) + ':')
+                # print('\nFile ' + str(x) + ':')
                 if row is not None:
                     # print("FileID:", str(row.fileid))
                     # print("Filename:", row.filename)
                     # print("Groups:", getFileGroups(str(row.fileid)))
-                    # print("Versions:", getFileVersions(str(row[1])))
+                    # print("Versions:", getFileVersions(str(row.fileid)))
                     rs_json = {
                         "fileid": str(row.fileid),
                         "filename": row.filename,
@@ -123,6 +117,13 @@ def file_query(browserQuery=None):
             if browserQuery is not None:
                 return rs_list
 
+            # Fixes JSON serialisation issues. Did this this way to not interfere with any other modules
+            for rs in rs_list:
+                for ver in rs['versions']:
+                    # Userid key is UUID object so convert to string
+                    ver['author']['userid'] = str(ver['author']['userid'])
+                    # lastlogin key is datetime object so convert to string
+                    ver['author']['lastlogin'] = str(ver['author']['lastlogin'])
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
 

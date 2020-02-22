@@ -125,6 +125,32 @@ class B2Interface:
                     return False
 
         return True
+    
+    def getEqualFilesList(self, sha1: str, size: int, filename: str = None) -> list:
+        """ Checks for files that are equal in the bucket """
+        bucket_gen = self.bucket.ls(
+            folder_to_list='',
+            show_versions=False,
+            recursive=False,
+            fetch_count=None
+        )
+        equal_files: list = []
+
+        for f in bucket_gen:
+            file_data: FileVersionInfo = f[0]
+            # print(file_data)
+            # print('\n' + file_data.file_info['filename'], 'vs', filename)
+            # print(file_data.size, 'vs', size)
+            # print(file_data.content_sha1, 'vs', sha1)
+            if file_data.size == size:
+                if file_data.content_sha1 == sha1:
+                    # Checks filename if filename not none
+                    currFName = file_data.file_info['filename']
+                    if currFName == filename if filename is not None else currFName:
+                        # print('Equal')
+                        equal_files.append(file_data)
+
+        return equal_files
 
     def removeVersion(self, versionid: str):
         file = self.downloadFileByVersionId(
