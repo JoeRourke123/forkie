@@ -39,8 +39,8 @@ def getComments(fileid):
 
     for group in fileData["groups"]:
         for member in getGroupUsers(group["groupid"]):
-            if str(member.userid) not in groupMembers:
-                groupMembers.append(str(member.userid))
+            if str(member["userid"]) not in groupMembers:
+                groupMembers.append(str(member["userid"]))
 
     try:
         comments = CommentTable.query.filter(CommentTable.fileid == fileid).all()
@@ -48,7 +48,7 @@ def getComments(fileid):
         return list(map((lambda i, x: {
             "comment": x.comment,
             "date": x.date,
-            "user": getUserData(x.userid),
+            "user": getUserData(str(x.userid)),
             "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(groupMembers)
         }), comments))
 
