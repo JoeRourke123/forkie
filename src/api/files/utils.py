@@ -106,8 +106,8 @@ def newFileVersion(fileData, uploadData, title, userid):
     for group in getFileGroups(fileData["fileid"]):
         sendGroupEmail(group["groupid"], {
             "subject": "New Version of " + fileData["filename"] + " Created",
-            "content": "Hi, " + userData["username"] + "(" + userData["email"] + ") has created a new version of " +
-                       fileData["filename"] + " with the title " + titleData.value + ". \n\n Thanks,\nfile-rep0"
+            "content": "Hi there!\n" + userData["username"] + " (" + userData["email"] + ") has created a new version of " +
+                       fileData["filename"] + " with the title \"" + titleData.value + "\". \n\nThanks,\nfile-rep0"
         }, userData)
 
     return True
