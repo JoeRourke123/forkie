@@ -102,19 +102,19 @@ def file_query(browserQuery=None):
             # Construct return rows to be passed to the returned JSON response
             rs_list = []
             print('\n\nGetting files for user: ' + userid + ' query of', data)
-            for r in range(0, len(query) if not get_first else 1):
-                print('\nFile ' + str(r) + ':')
-                row = query[r]
+            for x, row in enumerate(query):
+                print('\nFile ' + str(x) + ':')
                 if row is not None:
-                    print("FileID:", str(row[1]))
-                    print("Filename:", row[2])
-                    print("Groups:", getFileGroups(str(row[1])))
-                    print("Versions:", getFileVersions(str(row[1])))
+                    # print("FileID:", str(row.fileid))
+                    # print("Filename:", row.filename)
+                    # print("Groups:", getFileGroups(str(row.fileid)))
+                    # print("Versions:", getFileVersions(str(row[1])))
                     rs_json = {
-                        "fileid": str(row[1]),
-                        "filename": row[2],
-                        "groups": getFileGroups(str(row[1])),
-                        "versions": getFileVersions(str(row[1]))
+                        "fileid": str(row.fileid),
+                        "filename": row.filename,
+                        "extension": row.extension,
+                        "groups": getFileGroups(str(row.fileid)),
+                        "versions": getFileVersions(str(row.fileid))
                     }
                     rs_list.append(rs_json)
 

@@ -56,20 +56,20 @@ def newFileVersion(fileData, uploadData, userid):
     )
 
     fileversion = FileVersionTable({
-        "fileid": fileData.fileid,
+        "fileid": fileData["fileid"],
         "versionhash": "temp"
     })
 
     upload = b2.uploadFile(data=uploadData.read(),
                            versionid=fileversion.versionid,
-                           filename=uploadData.filename,
-                           fileid=str(fileData.fileid),
-                           extension=fileData.extension)
+                           filename=fileData["filename"],
+                           fileid=str(fileData["fileid"]),
+                           extension=fileData["extension"])
 
     if not b2.checkForEqualFiles(upload.get_content_sha1(),
-                                 filename=fileData.filename,
+                                 filename=fileData["filename"],
                                  size=upload.get_content_length(),
-                                 versions=getFileVersions(str(fileData.fileid))):
+                                 versions=getFileVersions(str(fileData["fileid"]))):
         return False
 
     fileversion.versionhash = upload.get_content_sha1()

@@ -56,6 +56,12 @@ def newFile():
         db.session.add(filegroup)
         db.session.commit()
 
+        file = {
+            "fileid": file.fileid,
+            "filename": file.filename,
+            "extension": file.extension
+        }
+
         if newFileVersion(file, upload, request.cookies.get("userid")):
             if isBrowser:
                 return redirect(url_for('file', id=str(file.fileid)))
@@ -98,10 +104,10 @@ def newVersion():
         fileData = file_query({"fileid": data["fileid"]})[0]
 
         if newFileVersion(fileData, upload, request.cookies.get("userid")):
-            fileData = file_query({"fileid": data["fileid"]})
+            fileData = file_query({"fileid": data["fileid"]})[0]
 
             if isBrowser:
-                return redirect(url_for("version", id=fileData["versions"][0]["versionid"]))
+                return redirect(url_for("version", id=fileData["versions"][0]["versionid"], msg="New version created successfully!"))
             else:
                 return json.dumps({
                     "code": 200,
@@ -116,6 +122,8 @@ def newVersion():
                     "msg": "Sorry, your new version matches one already in the file"
                 }), 500
     except Exception as e:
+        print(print_exc())
+
         if isBrowser:
             return redirect(url_for("file", id=fileData["fileid"], msg="Sorry, something went wrong creating your new version"))
         else:
