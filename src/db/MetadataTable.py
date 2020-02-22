@@ -8,7 +8,7 @@ class MetadataTable(db.Model):
     __tablename__ = "metadatatable"
 
     metadataid = db.Column(UUID(as_uuid=True), primary_key=True)
-    versionid = db.Column(UUID(as_uuid=True), db.ForeignKey('fileversiontable.versionid'), nullable=False)
+    versionid = db.Column(UUID(as_uuid=True), db.ForeignKey('fileversiontable.versionid', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)
 

@@ -8,8 +8,8 @@ import uuid
 class CommentTable(db.Model):
     __tablename__ = "commenttable"
     commentid = db.Column(UUID(as_uuid=True), primary_key=True)
-    fileid = db.Column(UUID(as_uuid=True), db.ForeignKey('filetable.fileid'), nullable=False)
-    userid = db.Column(UUID(as_uuid=True), db.ForeignKey('usertable.userid'), nullable=False)
+    fileid = db.Column(UUID(as_uuid=True), db.ForeignKey('filetable.fileid', ondelete='CASCADE'), nullable=False)
+    userid = db.Column(UUID(as_uuid=True), db.ForeignKey('usertable.userid', ondelete='CASCADE'), nullable=False)
     comment = db.Column(db.String(256), nullable=False)
     date = db.Column(db.DateTime())
 
