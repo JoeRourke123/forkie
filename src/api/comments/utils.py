@@ -11,7 +11,6 @@ from src.db import db
 
 from src.db.CommentReadTable import CommentReadTable
 from src.db.CommentTable import CommentTable
-from src.db.FileTable import FileTable
 
 
 def addComment(commentData, userid):
