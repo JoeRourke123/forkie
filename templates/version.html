@@ -45,7 +45,7 @@
         {% endif %}
     </div>
     <div class="row">
-        <div class="col">
+        <div class="col-9">
             <div class="card">
                 <div class="card-body">
                     <div class="card-title">Version Metadata</div>
@@ -81,33 +81,24 @@
                 </div>
             </div>
         </div>
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <div class="card-title">Comments</div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
+        <div class="col-3">
             <div class="card mb-4">
-                <div class="card-body">
-                    <a class="btn btn-success" href="{{ url_for('download', versionid=version["versions"][0]["versionid"]) }}" role="button" download><span
+                <div class="card-body d-flex flex-column">
+                    <a class="btn btn-outline-success" href="{{ url_for('download', versionid=version["versions"][0]["versionid"]) }}" role="button" download><span
                             class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download File
                     </a>
                 </div>
             </div>
             {% if isLeader %}
                 <div class="card">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <div class="card-title">Version Actions</div>
-                        <a class="btn btn-success mb-2" href="#" data-toggle="modal" data-target="#addMetadata"
+                        <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addMetadata"
                                role="button"><span class="oi oi-tags pr-1" title="tags"> </span> Add Metadata</a>
-                        <br><a class="btn btn-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
+                        <br><a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
                                                              title="pencil"> </span> Edit Metadata
                         </a>
-                        <br><a class="btn btn-info mb-2" href="#" data-toggle="modal" data-target="#addComment" role="button"><span class="oi oi-comment-square pr-1"
-                                                                                    title="comment square"> </span> New Comment</a>
-                        <br><a class="btn btn-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
+                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
                         Version</a>
                     </div>
