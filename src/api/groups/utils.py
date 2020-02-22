@@ -1,3 +1,4 @@
+from src.api.user.utils import getUserData
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
 from src.db.UserTable import UserTable
@@ -25,7 +26,7 @@ def isGroupLeader(userID, groupID):
 def getGroupUsers(groupID):
     try:
         res = UserTable.query.join(UserGroupTable, and_(UserGroupTable.userid == UserTable.userid, UserGroupTable.groupid == groupID)).all()
-        return res
+        return list(map(lambda user: getUserData(user.userid), res))
     except Exception as e:
         print(print_exc())
         return []
