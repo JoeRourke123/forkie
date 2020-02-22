@@ -62,6 +62,8 @@ def dash():
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
     files = file_query({})
+    print("\n\n\n\n")
+    print(files)
 
     if not userData:
         return redirect(url_for('error.error', code=401))
@@ -144,7 +146,7 @@ def version(id):
     return render_template("version.html", version=versionData, isLeader=isLeader)
 
 
-@app.route('/download/<versionid>/<filename>', methods=['GET', 'POST'])
+@app.route('/download/<versionid>', methods=['GET', 'POST'])
 def download(versionid):
     versionData = file_query({"versionid": versionid})[0]
 

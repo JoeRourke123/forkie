@@ -67,9 +67,9 @@ def newFileVersion(fileData, uploadData, userid):
                            extension=fileData.extension)
 
     if not b2.checkForEqualFiles(upload.get_content_sha1(),
-                                 filename=fileData["filename"],
+                                 filename=fileData.filename,
                                  size=upload.get_content_length(),
-                                 versions=getFileVersions(fileData["fileid"])):
+                                 versions=getFileVersions(str(fileData.fileid))):
         return False
 
     fileversion.versionhash = upload.get_content_sha1()

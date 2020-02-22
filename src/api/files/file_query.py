@@ -130,8 +130,8 @@ def file_query(browserQuery=None):
         except Exception as e:
             print(print_exc())
 
-            if browserQuery:
-                return redirect(url_for("errors.error", code=500, url="file_query.file_query"))
+            if browserQuery is not None:
+                return []
             else:
                 return json.dumps({
                     "code": 500,
@@ -139,7 +139,7 @@ def file_query(browserQuery=None):
                 }), 500
     except ValidationError:
         if browserQuery is not None:
-            return redirect(url_for("errors.error", code=400, url="file_query.file_query"))
+            []
         else:
             return json.dumps({
                 "code": 400,
