@@ -12,7 +12,7 @@ class MetadataTable(db.Model):
     title = db.Column(db.String(64), nullable=False)
     value = db.Column(db.String(128), nullable=False)
 
-    version = db.relationship(FileVersionTable, foreign_keys=versionid, backref=db.backref('version', lazy='joined'))
+    version = db.relationship(FileVersionTable, foreign_keys=versionid, backref=db.backref('version', lazy='joined', cascade="all, delete-orphan"))
 
 
     def __init__(self, data):
