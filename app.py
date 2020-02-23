@@ -5,6 +5,7 @@ from flask_heroku import Heroku
 
 from src.api.comments.utils import getComments, getRecentComments, readUnreadComments
 from src.api.files.backblaze import B2Interface
+from src.api.files.utils import getFileVersions
 from src.db import db
 
 from src.api.signin.routes import signinBP
@@ -135,6 +136,7 @@ def version(id):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
     versionData = file_query({"versionid": id})[0]
+    versionCount = len(getFileVersions(versionData["fileid"]))
 
     if not versionData:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
@@ -144,7 +146,7 @@ def version(id):
                or (True in [isGroupLeader(request.cookies.get("userid"), str(group["groupid"])) for group in versionData["groups"]])\
                or userData["admin"]
 
-    return render_template("version.html", version=versionData, isLeader=isLeader)
+    return render_template("version.html", version=versionData, isLeader=isLeader, versionCount=versionCount)
 
 
 @app.route('/download/<versionid>', methods=['GET', 'POST'])
