@@ -9,7 +9,8 @@ from traceback import print_exc
 
 def getUserGroups(userID):
     try:
-        return GroupTable.query.join(UserGroupTable).filter(UserGroupTable.userid == userID).all()
+        res = GroupTable.query.join(UserGroupTable).filter(UserGroupTable.userid == userID).all()
+        return list(map(lambda x: x.serialise(), res))
     except Exception as e:
         return print_exc()
 
