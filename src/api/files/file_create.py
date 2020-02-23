@@ -6,13 +6,14 @@ from flask import request, redirect, url_for
 from src.api.comments.utils import addComment
 from src.api.files.file_query import file_query
 from src.api.files.file_delete import deleteVersion
+from src.api.user.utils import getUserData
 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db import db
 
 from src.api.files import filesBP
-from src.api.files.utils import newFileVersion
+from src.api.files.utils import newFileVersion, leaderCheck
 
 
 @filesBP.route("/new", methods=["POST"])
@@ -33,7 +34,7 @@ def newFile():
 
     if "file" not in request.files:
         if isBrowser:
-            return redirect(url_for('errors.error', code=406, msg="No files were included in the request"))
+            return redirect(url_for('dash', msg="No files were included in the request"))
         else:
             return json.dumps({
                 "code": 406,
@@ -141,4 +142,58 @@ def newVersion():
             return json.dumps({
                 "code": 500,
                 "msg": "Sorry, something went wrong when creating your new version"
+            }), 500
+
+
+@filesBP.route("/addGroup", methods=["POST"])
+def addGroup():
+    isBrowser = "fileid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for('errors.error', code=401))
+        else:
+            return json.dumps({
+                "code": 401,
+                "msg": "You must be signed in to do this",
+            }), 401
+
+    file = file_query({"fileid": data["fileid"]})[0]
+    userData = getUserData(request.cookies.get("userid"))
+
+    if not file or not (userData["admin"] or leaderCheck(file["groups"], str(userData["userid"]))):
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this!"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You don't have permission to add groups",
+            })
+
+    try:
+        filegroup = FileGroupTable({
+            "fileid": data["fileid"],
+            "groupid": data["groupid"]
+        })
+
+        db.session.add(filegroup)
+        db.session.commit()
+
+        if isBrowser:
+            return redirect(url_for('file', id=data["fileid"], msg="Group added successfully!"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Group was added successfully!",
+            })
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("file", id=data["fileid"], msg="Sorry, something went wrong when adding this group"))
+        else:
+            return json.dumps({
+                "code": 500,
+                "msg": "Sorry, something went wrong when adding this group"
             }), 500

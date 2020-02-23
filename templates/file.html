@@ -135,10 +135,13 @@
                         <div class="card-title">Admin Actions</div>
                         <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addGroup"
                            role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Group</a>
-                        <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
-                               data-target="#removeGroup"
-                               role="button"><span class="oi oi-minus pr-1"
-                                                   title="minus"> </span> Revoke Group Access</a>
+
+                        {% if file["groups"]|length > 1 %}
+                            <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
+                                   data-target="#removeGroup"
+                                   role="button"><span class="oi oi-minus pr-1"
+                                                       title="minus"> </span> Revoke Group Access</a>
+                        {% endif %}
                         <a class="btn btn-outline-info mb-2" href="#" role="button"><span
                             class="oi oi-clipboard pr-1"
                             title="clipboard"> </span>
@@ -153,23 +156,35 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="addMember" tabindex="-1" role="dialog">
+<div class="modal fade" id="addGroup" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Member</h5>
+                <h5 class="modal-title">Add Group</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                <form action="{{ url_for("files.addGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                    <div class="form-group">
-                        <label for="group">User Email</label>
-                        <input type="email" class="form-control" name="email" id="email"/>
-                    </div>
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% set groupCount = namespace(value=0) %}
+                            {% for group in userGroups %}
+                                {% if group not in file["groups"] %}
+                                    <option value="{{ group["groupid"] }}" selected>{{ group["groupname"] }}</option>
+                                    {% set groupCount.value = groupCount.value + 1 %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if groupCount.value <= 0 %}
+                                <option disabled>No other groups to add</option>
+                            {% endif %}
+                        </select>
+                      </div>
                     <button class="btn btn-outline-success">
                         <span class="oi oi-plus" title="plus"></span>
                     </button>
@@ -178,24 +193,28 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="renameGroup" tabindex="-1" role="dialog">
+<div class="modal fade" id="removeGroup" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rename Group</h5>
+                <h5 class="modal-title">Revoke Group Access</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.renameGroup') }}" method="post">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                <form action="{{ url_for("files.removeGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                    <div class="form-group">
-                        <label for="newname">New Group Name</label>
-                        <input type="text" class="form-control" id="newname" name="newname">
-                    </div>
-                    <button class="btn btn-outline-success">
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% for group in file["groups"] %}
+                                <option value="{{ group["groupid"] }}">{{ group["groupname"] }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    <button class="btn btn-outline-danger">
                         <span class="oi oi-check" title="check"></span>
                     </button>
                 </form>
@@ -203,7 +222,7 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteFile" role="dialog">
+<div class="modal fade" id="deleteFile" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
