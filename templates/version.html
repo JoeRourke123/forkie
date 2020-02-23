@@ -23,7 +23,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+                <a class="nav-link" href="{{ url_for('file', id=version["fileid"]) }}">Back to File</a>
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
@@ -95,10 +95,10 @@
                         <div class="card-title">Version Actions</div>
                         <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addMetadata"
                                role="button"><span class="oi oi-tags pr-1" title="tags"> </span> Add Metadata</a>
-                        <br><a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
+                        <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
                                                              title="pencil"> </span> Edit Metadata
                         </a>
-                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteGroup"><span class="oi oi-trash pr-1"
+                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteVersion"><span class="oi oi-trash pr-1"
                                                                                         title="trash"> </span> Delete
                         Version</a>
                     </div>
@@ -136,7 +136,7 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteGroup" role="dialog">
+<div class="modal hide" id="deleteVersion" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -146,17 +146,27 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>This action cannot be undone!</p>
+          <p>This action cannot be undone.</p>
+          {% if versionCount <= 1 %}
+            <p>Deleting this version will delete the entire file entry.</p>
+          {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-            <input type="hidden" name="groupid" value="{{ version.fileid }}" />
-            <button class="btn btn-outline-danger">Delete Group</button>
+        <form action="{{ url_for('files.deleteVersion') }}" method="POST">
+            <input type="hidden" name="versionid" value="{{ version["versions"][0]["versionid"] }}" />
+            <button class="btn btn-outline-danger" onclick="openLoader()">Delete Version</button>
         </form>
       </div>
     </div>
   </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="loading">
+    <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
+        <div class="spinner-grow text-warning" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>

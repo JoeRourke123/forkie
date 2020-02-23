@@ -2,6 +2,7 @@
 """
 import os
 from datetime import datetime
+from traceback import print_exc
 
 from sqlalchemy import and_
 
@@ -21,29 +22,33 @@ def getFileExtension(filename: str) -> str:
 
 
 def getFileVersions(fileID):
-    versions = list(FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all())
-    results = []
+    try:
+        versions = list(FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all())
+        results = []
 
-    for version in versions:
-        metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
+        for version in versions:
+            metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
 
-        versionData = {
-            "versionid": str(version.versionid),
-            "versionhash": version.versionhash,
-        }
+            versionData = {
+                "versionid": str(version.versionid),
+                "versionhash": version.versionhash,
+            }
 
-        for data in metadata:
-            if data.title == "userid":
-                versionData["author"] = getUserData(data.value)
-            # elif data.title == "uploaded":
-            #     versionData["uploaded"] = datetime.fromisoformat(data.value)
-            else:
-                versionData[data.title] = data.value
+            for data in metadata:
+                if data.title == "userid":
+                    versionData["author"] = getUserData(data.value)
+                # elif data.title == "uploaded":
+                #     versionData["uploaded"] = datetime.fromisoformat(data.value)
+                else:
+                    versionData[data.title] = data.value
 
-        results.append(versionData)
+            results.append(versionData)
 
-    return sorted(results, key=lambda x: x["uploaded"], reverse=True)
+        return sorted(results, key=lambda x: x["uploaded"], reverse=True)
+    except Exception as e:
+        print(print_exc())
 
+        return []
 
 def getFileGroups(fileID):
     return [group.serialise() for group in GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()]
@@ -106,8 +111,12 @@ def newFileVersion(fileData, uploadData, title, userid):
     for group in getFileGroups(fileData["fileid"]):
         sendGroupEmail(group["groupid"], {
             "subject": "New Version of " + fileData["filename"] + " Created",
-            "content": "Hi, " + userData["username"] + "(" + userData["email"] + ") has created a new version of " +
-                       fileData["filename"] + " with the title " + titleData.value + ". \n\n Thanks,\nfile-rep0"
+            "content": "Hi there!\n" + userData["username"] + " (" + userData["email"] + ") has created a new version of " +
+                       fileData["filename"] + " with the title \"" + titleData.value + "\". \n\nThanks,\nfile-rep0"
         }, userData)
 
     return True
+
+
+def leaderCheck(groupList, userid):
+    return True in [group["groupleaderid"] == userid for group in groupList]

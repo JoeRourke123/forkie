@@ -3,8 +3,9 @@ import io
 from flask import Flask, request, render_template, url_for, redirect, send_file
 from flask_heroku import Heroku
 
-from src.api.comments.utils import getComments
+from src.api.comments.utils import getComments, getRecentComments, readUnreadComments
 from src.api.files.backblaze import B2Interface
+from src.api.files.utils import getFileVersions
 from src.db import db
 
 from src.api.signin.routes import signinBP
@@ -62,13 +63,12 @@ def dash():
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
     files = file_query({})
-    print("\n\n\n\n")
-    print(files)
+    recentComments = getRecentComments()[:10]
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=files)
+    return render_template("dashboard.html", user=userData, groups=groupData, files=files, comments=recentComments)
 
 
 @app.route("/group/<id>")
@@ -81,12 +81,12 @@ def group(id):
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
-    if id not in list(map(lambda x: str(x.groupid), groupData)):
+    if id not in list(map(lambda x: str(x["groupid"]), groupData)):
         return redirect(url_for('dash', msg="You do not have permissions to view this group"))
 
     return render_template("group.html",
                            user=getUserData(request.cookies.get("userid")),
-                           groupData=list(filter(lambda x: str(x.groupid) == id, groupData))[0],
+                           groupData=list(filter(lambda x: str(x["groupid"]) == id, groupData))[0],
                            groupUsers=groupUsers, isLeader=isLeader,
                            groupFiles=groupFiles)
 
@@ -120,12 +120,16 @@ def file(id):
     if not file:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
-    fileComments = getComments(id)
     userData = getUserData(request.cookies.get("userid"))
-    isLeader = (True in [isGroupLeader(request.cookies.get("userid"),
-                                       str(group["groupid"])) for group in fileData["groups"]]) or userData.admin
+    userGroups = getUserGroups(userData["userid"])
 
-    return render_template("file.html", file=fileData, isLeader=isLeader, comments=fileComments)
+    isLeader = (True in [isGroupLeader(request.cookies.get("userid"),
+                                       str(group["groupid"])) for group in fileData["groups"]]) or userData["admin"]
+
+    readUnreadComments(id)
+    fileComments = getComments(id)
+
+    return render_template("file.html", file=fileData, isLeader=isLeader, comments=fileComments, userGroups=userGroups)
 
 
 @app.route("/version/<id>")
@@ -134,6 +138,7 @@ def version(id):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
     versionData = file_query({"versionid": id})[0]
+    versionCount = len(getFileVersions(versionData["fileid"]))
 
     if not versionData:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
@@ -143,7 +148,7 @@ def version(id):
                or (True in [isGroupLeader(request.cookies.get("userid"), str(group["groupid"])) for group in versionData["groups"]])\
                or userData["admin"]
 
-    return render_template("version.html", version=versionData, isLeader=isLeader)
+    return render_template("version.html", version=versionData, isLeader=isLeader, versionCount=versionCount)
 
 
 @app.route('/download/<versionid>', methods=['GET', 'POST'])

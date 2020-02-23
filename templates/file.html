@@ -121,9 +121,10 @@
             <div class="card mb-4">
                 <div class="card-body d-flex w-100 flex-column flex-fill">
                     <div class="card-title">File Actions</div>
-                    <a class="btn btn-outline-success m-0" href="#" data-toggle="modal" data-target="#newVersion" role="button"><span
+                    <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#newVersion"
+                       role="button"><span
                             class="oi oi-document pr-1" title="document"> </span> New Version</a>
-                    <br><a class="btn btn-outline-info m-0" href="#" data-toggle="modal" data-target="#addComment"
+                    <a class="btn btn-outline-info mb-2" href="#" data-toggle="modal" data-target="#addComment"
                            role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
                     Comment</a>
                 </div>
@@ -134,15 +135,18 @@
                         <div class="card-title">Admin Actions</div>
                         <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addGroup"
                            role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Group</a>
-                        <br><a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
-                               data-target="#removeGroup"
-                               role="button"><span class="oi oi-minus pr-1"
-                                                   title="minus"> </span> Revoke Group Access</a>
-                        <br><a class="btn btn-outline-info mb-2" href="#" role="button"><span
+
+                        {% if file["groups"]|length > 1 %}
+                            <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
+                                   data-target="#removeGroup"
+                                   role="button"><span class="oi oi-minus pr-1"
+                                                       title="minus"> </span> Revoke Group Access</a>
+                        {% endif %}
+                        <a class="btn btn-outline-info mb-2" href="#" role="button"><span
                             class="oi oi-clipboard pr-1"
                             title="clipboard"> </span>
                         Generate Report</a>
-                        <br><a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
+                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
                                data-target="#deleteFile"><span class="oi oi-trash pr-1"
                                                                title="trash"> </span> Delete
                         File</a>
@@ -152,23 +156,35 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="addMember" tabindex="-1" role="dialog">
+<div class="modal fade" id="addGroup" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Member</h5>
+                <h5 class="modal-title">Add Group</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                <form action="{{ url_for("files.addGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                    <div class="form-group">
-                        <label for="group">User Email</label>
-                        <input type="email" class="form-control" name="email" id="email"/>
-                    </div>
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% set groupCount = namespace(value=0) %}
+                            {% for group in userGroups %}
+                                {% if group not in file["groups"] %}
+                                    <option value="{{ group["groupid"] }}" selected>{{ group["groupname"] }}</option>
+                                    {% set groupCount.value = groupCount.value + 1 %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if groupCount.value <= 0 %}
+                                <option disabled>No other groups to add</option>
+                            {% endif %}
+                        </select>
+                      </div>
                     <button class="btn btn-outline-success">
                         <span class="oi oi-plus" title="plus"></span>
                     </button>
@@ -177,24 +193,28 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="renameGroup" tabindex="-1" role="dialog">
+<div class="modal fade" id="removeGroup" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rename Group</h5>
+                <h5 class="modal-title">Revoke Group Access</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('groups.renameGroup') }}" method="post">
-                    <input type="hidden" value="{{ file.fileid }}" name="groupid"/>
+                <form action="{{ url_for("files.removeGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                    <div class="form-group">
-                        <label for="newname">New Group Name</label>
-                        <input type="text" class="form-control" id="newname" name="newname">
-                    </div>
-                    <button class="btn btn-outline-success">
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% for group in file["groups"] %}
+                                <option value="{{ group["groupid"] }}">{{ group["groupname"] }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    <button class="btn btn-outline-danger">
                         <span class="oi oi-check" title="check"></span>
                     </button>
                 </form>
@@ -202,7 +222,7 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteGroup" role="dialog">
+<div class="modal fade" id="deleteFile" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -212,13 +232,14 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>This action cannot be undone!</p>
+                <p>This action cannot be undone! Deleting the file will also delete all the versions, comments, and
+                    metadata that are associated with it.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-                    <input type="hidden" name="groupid" value="{{ file.fileid }}"/>
-                    <button class="btn btn-outline-danger">Delete Group</button>
+                <form action="{{ url_for('files.deleteFile') }}" method="POST">
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete File</button>
                 </form>
             </div>
         </div>
@@ -260,7 +281,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('files.newVersion') }}" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
                     <div class="form-group">
                         <input type="file" class="form-control-file" id="file" name="file" required>
                     </div>
@@ -269,11 +290,18 @@
                         <input type="text" class="form-control" id="title" name="title"
                                placeholder='"Fixed punctation version etc..."' required>
                     </div>
-                    <button class="btn btn-outline-success">
+                    <button class="btn btn-outline-success" onclick="openLoader()">
                         <span class="oi oi-cloud-upload" title="cloud upload"></span>
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="loading">
+    <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
+        <div class="spinner-grow text-warning" role="status">
+            <span class="sr-only">Loading...</span>
         </div>
     </div>
 </div>
