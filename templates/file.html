@@ -121,7 +121,8 @@
             <div class="card mb-4">
                 <div class="card-body d-flex w-100 flex-column flex-fill">
                     <div class="card-title">File Actions</div>
-                    <a class="btn btn-outline-success m-0" href="#" data-toggle="modal" data-target="#newVersion" role="button"><span
+                    <a class="btn btn-outline-success m-0" href="#" data-toggle="modal" data-target="#newVersion"
+                       role="button"><span
                             class="oi oi-document pr-1" title="document"> </span> New Version</a>
                     <br><a class="btn btn-outline-info m-0" href="#" data-toggle="modal" data-target="#addComment"
                            role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
@@ -202,7 +203,7 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteGroup" role="dialog">
+<div class="modal hide" id="deleteFile" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -212,13 +213,14 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>This action cannot be undone!</p>
+                <p>This action cannot be undone! Deleting the file will also delete all the versions, comments, and
+                    metadata that are associated with it.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-                    <input type="hidden" name="groupid" value="{{ file.fileid }}"/>
-                    <button class="btn btn-outline-danger">Delete Group</button>
+                <form action="{{ url_for('files.deleteFile') }}" method="POST">
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete File</button>
                 </form>
             </div>
         </div>
@@ -260,7 +262,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('files.newVersion') }}" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
                     <div class="form-group">
                         <input type="file" class="form-control-file" id="file" name="file" required>
                     </div>
@@ -269,11 +271,18 @@
                         <input type="text" class="form-control" id="title" name="title"
                                placeholder='"Fixed punctation version etc..."' required>
                     </div>
-                    <button class="btn btn-outline-success">
+                    <button class="btn btn-outline-success" onclick="openLoader()">
                         <span class="oi oi-cloud-upload" title="cloud upload"></span>
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="loading">
+    <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
+        <div class="spinner-grow text-warning" role="status">
+            <span class="sr-only">Loading...</span>
         </div>
     </div>
 </div>

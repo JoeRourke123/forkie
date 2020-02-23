@@ -146,17 +146,27 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>This action cannot be undone!</p>
+          <p>This action cannot be undone.</p>
+          {% if versionCount <= 1 %}
+            <p>Deleting this version will delete the entire file entry.</p>
+          {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
         <form action="{{ url_for('files.deleteVersion') }}" method="POST">
             <input type="hidden" name="versionid" value="{{ version["versions"][0]["versionid"] }}" />
-            <button class="btn btn-outline-danger">Delete Version</button>
+            <button class="btn btn-outline-danger" onclick="openLoader()">Delete Version</button>
         </form>
       </div>
     </div>
   </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="loading">
+    <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
+        <div class="spinner-grow text-warning" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
 </div>
 </body>
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
