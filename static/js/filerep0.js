@@ -10,3 +10,8 @@ $(document).ready(() => {
         }
     });
 });
+
+function openLoader() {
+    $(".modal").modal("hide");
+    $("#loading").modal("show");
+}
