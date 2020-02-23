@@ -116,3 +116,7 @@ def newFileVersion(fileData, uploadData, title, userid):
         }, userData)
 
     return True
+
+
+def leaderCheck(groupList, userid):
+    return True in [group["groupleaderid"] == userid for group in groupList]
