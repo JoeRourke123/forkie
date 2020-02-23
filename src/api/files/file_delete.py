@@ -3,6 +3,7 @@ from traceback import print_exc
 import json
 
 from flask import request, redirect, url_for
+from sqlalchemy import and_
 
 from src.api.files.backblaze import B2Interface
 from src.api.files.file_query import file_query
@@ -13,7 +14,7 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db import db
 
 from src.api.files import filesBP
-from src.api.files.utils import newFileVersion, getFileVersions
+from src.api.files.utils import newFileVersion, getFileVersions, leaderCheck
 from src.db.FileVersionTable import FileVersionTable
 
 @filesBP.route("/deleteFile", methods=["POST"])
@@ -149,5 +150,62 @@ def deleteVersion():
             return json.dumps({
                 "code": 500,
                 "msg": "Something went wrong when deleting the file version"
+            }), 500
+
+
+@filesBP.route("/removeGroup", methods=["POST"])
+def removeGroup():
+    isBrowser = "fileid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for('errors.error', code=401))
+        else:
+            return json.dumps({
+                "code": 401,
+                "msg": "You must be signed in to do this",
+            }), 401
+
+    file = file_query({"fileid": data["fileid"]})[0]
+    userData = getUserData(request.cookies.get("userid"))
+
+    if not file or not (userData["admin"] or leaderCheck(file["groups"], str(userData["userid"]))):
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this!"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You don't have permission to add groups",
+            })
+
+    try:
+        groupExists = True in [str(group["groupid"]) == data["groupid"] for group in file["groups"]]
+
+        if not groupExists:
+            raise Exception("That group couldn't be found")
+
+        filegroup = FileGroupTable.query.filter(and_(FileGroupTable.groupid == data["groupid"],
+                                                     FileGroupTable.fileid == data["fileid"])).first()
+
+        db.session.delete(filegroup)
+        db.session.commit()
+
+        if isBrowser:
+            return redirect(url_for('file', id=data["fileid"], msg="Group removed successfully!"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Group was removed successfully!",
+            })
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("file", id=data["fileid"], msg="Sorry, something went wrong when removing this group"))
+        else:
+            return json.dumps({
+                "code": 500,
+                "msg": "Sorry, something went wrong when removing this group"
             }), 500
 
