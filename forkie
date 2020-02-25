@@ -3,8 +3,8 @@
 
 Usage:
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
-    {0} {1} [-v | --verbose] [(-m <message>)] [(-k <keyword>)] (<file>)...
-    {0} {1} (-a | (-n <name> -k <keyword>)) [(-p <group>)] [-vd] [(-c <comment>) [-f | --force]]
+    {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
+    {0} {1} (-a | -n <name> [(-p <group>)]) [-vd] [(-c <comment>) [-f | --force]]
     {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
     {0} {1} (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
     {0} {1} (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]
@@ -42,6 +42,8 @@ Options:
 from docopt import docopt
 from client.cli import command_handler
 import sys
+
+__version__ = '1.0.0'
 
 python_interpreter = sys.executable
 main_exec = "forkie.py"
@@ -134,7 +136,7 @@ def find_difference(dict1: dict, dict2: dict) -> dict:
     return {key: dict2[key] for key in dict1.keys() if dict1[key] != dict2[key]}
 
 if __name__ == '__main__':
-    arguments = docopt(init_docs(__doc__), version='DEMO 1.0')
+    arguments = docopt(init_docs(__doc__), version=__version__)
     arguments = remove_options(arguments)
     # print(arguments)
     arguments = find_difference(args_commands, arguments)

@@ -64,6 +64,17 @@ def ask_for_list(input_ls: list) -> int:
             print('Line number is not a integer. Try again.')
     return line_no - 1
 
+def ask_for_multiple_list(input_ls: list, question: str, answers: list) -> list:
+    """ Handles the logic for a multiple element list select """
+    output_list = []
+    while True:
+        line_no = ask_for_list(input_ls)
+        output_list.append(line_no) if line_no not in output_list else print('Already selected.')
+        more = ask_for(question, answers)
+        if not more:
+            break
+    return output_list
+
 def format_rows(headers: list, rows: list, offset: int = 0) -> str:
     """ Formats rows into a prettier tabular format given the headers and rows. The first header
         will always be a number count to aid with selection during the CLI flow.
@@ -81,7 +92,7 @@ def format_rows(headers: list, rows: list, offset: int = 0) -> str:
     cell_format = '{:>{}}'
     row_delim = '\n'
     col_delim = ' | '
-    table = [headers] + [[name] + row for name, row in zip([nos for nos in range(offset + 1, len(rows) + 1)], rows)]
+    table = [headers] + [[name] + row for name, row in zip([nos for nos in range(offset + 1, offset + len(rows) + 1)], rows)]
     table_format = [len(headers) * [top_format]] \
         + len(rows) * [[left_format] + len(headers) * [cell_format]]
     col_widths = [max(len(format.format(cell, 0)) for format, cell in zip(col_format, col)) for col_format, col in zip(zip(*table_format), zip(*table))]

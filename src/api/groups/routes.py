@@ -306,8 +306,8 @@ def getGroups():
             print('\n\nGetting groups for user: ' + userid + ' query...')
             for g in range(len(groups)):
                 group = groups[g]
-                print('Group', str(g + 1) + ':', group.serialise())
-                rs.append(group.serialise())
+                print('Group', str(g + 1) + ':', group)
+                rs.append(group)
 
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the groups you are a member of", "rows": rs}))
             resp.set_cookie("userid", userid)
