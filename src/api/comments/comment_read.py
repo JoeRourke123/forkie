@@ -30,3 +30,13 @@ def commentRead(fileVersionID, groupID):
             read_status = False
 
     return read_status
+
+
+def readComment(commentID, userID):
+    entry = CommentReadTable({
+        "commentid": commentID,
+        "userid": userID
+    })
+
+    db.session.add(CommentReadTable)
+    db.session.commit()
