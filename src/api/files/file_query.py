@@ -1,3 +1,4 @@
+from datetime import datetime
 from traceback import print_exc
 
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
@@ -14,7 +15,9 @@ import json
 from uuid import UUID
 from jsonschema import validate, ValidationError
 
-from sqlalchemy import and_
+from sqlalchemy import and_, cast, Date
+
+from src.db.MetadataTable import MetadataTable
 
 query_schema = {
     "type": "object",
@@ -89,7 +92,7 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
                 if "first" in data:
                     get_first = data['first']
-                    
+
             # Queries all even when first flag is true as it needs all columns from query object 
             # and first() method strips other columns for some reason
             query = query.all()
