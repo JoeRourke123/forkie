@@ -1,6 +1,6 @@
 import io
 
-from flask import Flask, request, render_template, url_for, redirect, send_file
+from flask import Flask, request, render_template, url_for, redirect, send_file, session
 from flask_heroku import Heroku
 
 from src.api.comments.utils import getComments, getRecentComments, readUnreadComments
@@ -44,6 +44,7 @@ app.register_blueprint(commentsBP)
 APPLICATION_KEY_ID = os.environ['APPLICATION_KEY_ID']
 APPLICATION_KEY = os.environ['APPLICATION_KEY']
 BUCKET_NAME = os.environ['BUCKET_NAME']
+
 
 # Routes
 @app.route("/")
