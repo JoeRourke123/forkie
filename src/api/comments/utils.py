@@ -2,7 +2,8 @@ from datetime import datetime
 from traceback import print_exc
 
 from flask import request
-from sqlalchemy import and_
+from sqlalchemy import and_, exists
+from sqlalchemy.orm import aliased
 
 from src.api.files.file_query import file_query
 from src.api.groups.utils import getGroupUsers
@@ -47,28 +48,34 @@ def getComments(fileid):
                 groupMembers.append(str(member["userid"]))
 
     try:
-        comments = CommentTable.query.filter(CommentTable.fileid == fileid).all()
+        comments = CommentTable.query.filter(CommentTable.fileid == fileid).order_by(CommentTable.date.desc()).all()
 
         return list(map((lambda x: {
             "comment": x.comment,
             "date": x.date,
+            "file": fileData["fileid"],
             "user": getUserData(str(x.userid)),
-            "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(groupMembers)
+            "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(
+                groupMembers)
         }), comments))
 
     except Exception as e:
         print(print_exc())
-        return comments
+        return sorted(comments)
 
 
-def getRecentComments():
-    userFiles = file_query({})
-    commentsList = []
+def getUnreadComments(files):
+    if not request.cookies.get("userid"):
+        return []
 
-    for file in userFiles:
-        commentsList.extend(getComments(file["fileid"]))
+    unread = []
 
-    return sorted(commentsList, key=lambda x: x["date"], reverse=True)
+    for file in files:
+        unread.extend(
+            filter(lambda x: not x["read"], getComments(file["fileid"]))
+        )
+
+    return sorted(unread, key=lambda x: x["date"], reverse=True)
 
 
 def readUnreadComments(fileid):

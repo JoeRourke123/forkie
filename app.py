@@ -1,9 +1,10 @@
 import io
+from datetime import datetime
 
-from flask import Flask, request, render_template, url_for, redirect, send_file
+from flask import Flask, request, render_template, url_for, redirect, send_file, session
 from flask_heroku import Heroku
 
-from src.api.comments.utils import getComments, getRecentComments, readUnreadComments
+from src.api.comments.utils import getComments, getUnreadComments, readUnreadComments
 from src.api.files.backblaze import B2Interface
 from src.api.files.utils import getFileVersions
 from src.db import db
@@ -17,12 +18,14 @@ from src.api.metadata.routes import metadataBP
 from src.api.comments.routes import commentsBP
 from src.api.files import filesBP
 
-from src.api.files.file_create import newFile
 from src.api.files.file_query import file_query
+from src.api.files.file_create import newFile
 from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
 from src.api.user.utils import getUserData
 
 import os
+
+from src.db.UserTable import UserTable
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -45,6 +48,21 @@ APPLICATION_KEY_ID = os.environ['APPLICATION_KEY_ID']
 APPLICATION_KEY = os.environ['APPLICATION_KEY']
 BUCKET_NAME = os.environ['BUCKET_NAME']
 
+
+@app.before_request
+def beforeRequest():
+    if request.cookies.get("userid") and not session.get("active"):
+        session["active"] = True
+
+        userRow = UserTable.query.get(request.cookies.get("userid"))
+
+        session["lastlogin"] = userRow.lastlogin
+
+        userRow.lastlogin = datetime.now()
+
+        db.session.commit()
+
+
 # Routes
 @app.route("/")
 def index(msg=None, code=200):
@@ -56,19 +74,18 @@ def index(msg=None, code=200):
 
 @app.route("/dash")
 def dash():
-
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
     userData = getUserData(request.cookies.get("userid"))
     groupData = getUserGroups(request.cookies.get("userid"))
     files = file_query({})
-    recentComments = getRecentComments()[:10]
+    unread = getUnreadComments(files)
 
     if not userData:
         return redirect(url_for('error.error', code=401))
 
-    return render_template("dashboard.html", user=userData, groups=groupData, files=files, comments=recentComments)
+    return render_template("dashboard.html", user=userData, groups=groupData, files=files, unreadComments=unread)
 
 
 @app.route("/group/<id>")
@@ -176,4 +193,4 @@ def bulkCommentPage():
     return render_template("bulkcomment.html", files=files)
 
 if __name__ == "main":
-    app.run(threaded=True, port=5000)
+    app.run(threaded=True, port=4000)

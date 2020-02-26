@@ -10,6 +10,14 @@
     </style>
 </head>
 <body>
+{% if "msg" in request.args %}
+    <div class="alert alert-warning alert-dismissible fade show position-fixed m-4 msg" role="alert">
+        {{ request.args["msg"] }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
 <div class="container-fluid d-flex h-100 flex-column justify-content-center orange-grad">
     <div class="row">
         <div class="col-md-3 col-lg-4"></div>
@@ -67,4 +75,8 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+<script>
+    $(".alert").alert();
+    setTimeout(() => { $(".alert").alert("close") }, 5000);
+</script>
 </html>
