@@ -1,7 +1,6 @@
-from datetime import datetime
 from traceback import print_exc
 
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from flask import request, make_response
 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
@@ -12,12 +11,7 @@ from src.api.user.utils import getFilesUserCanAccess
 from src.api.files.utils import getFileGroups, getFileVersions
 
 import json
-from uuid import UUID
 from jsonschema import validate, ValidationError
-
-from sqlalchemy import and_, cast, Date
-
-from src.db.MetadataTable import MetadataTable
 
 query_schema = {
     "type": "object",
@@ -83,9 +77,9 @@ def file_query(browserQuery=None):
                 if "versionid" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
+                    query = query.filter(FileTable.extension == data["extension"])
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionhash == data["versionhash"])
                 if "groupid" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 if "groupname" in data:

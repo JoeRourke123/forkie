@@ -1,11 +1,13 @@
+from traceback import print_exc
+
+from sqlalchemy import and_
+
+import src.api.files.file_query
 from src.api.user.utils import getUserData
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
 from src.db.UserTable import UserTable
 
-from sqlalchemy import and_
-
-from traceback import print_exc
 
 def getUserGroups(userID):
     try:
@@ -17,7 +19,7 @@ def getUserGroups(userID):
 
 def isGroupLeader(userID, groupID):
     try:
-        res = GroupTable.query.filter(and_(GroupTable.groupleaderid==userID, GroupTable.groupid==groupID))
+        res = GroupTable.query.filter(and_(GroupTable.groupleaderid == userID, GroupTable.groupid == groupID))
         return res.count() > 0
     except Exception as e:
         print(print_exc())
@@ -26,7 +28,8 @@ def isGroupLeader(userID, groupID):
 
 def getGroupUsers(groupID):
     try:
-        res = UserTable.query.join(UserGroupTable, and_(UserGroupTable.userid == UserTable.userid, UserGroupTable.groupid == groupID)).all()
+        res = UserTable.query.join(UserGroupTable, and_(UserGroupTable.userid == UserTable.userid,
+                                                        UserGroupTable.groupid == groupID)).all()
         return list(map(lambda user: getUserData(user.userid), res))
     except Exception as e:
         print(print_exc())
@@ -34,4 +37,13 @@ def getGroupUsers(groupID):
 
 
 def getGroupData(groupID):
-    return GroupTable.query.filter_by(groupid=groupID).first()
+    groupData = GroupTable.query.filter_by(groupid=groupID).first()
+
+    return {
+        "groupid": groupID,
+        "members": getGroupUsers(groupID),
+        "files": src.api.files.file_query.file_query({"groupid": groupID}),
+        "groupname": groupData.groupname,
+        "groupleader": getUserData(groupData.groupleaderid),
+
+    }

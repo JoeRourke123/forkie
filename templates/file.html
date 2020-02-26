@@ -89,8 +89,13 @@
                                                     class="oi oi-check"></span></a></span>
                                         {% endif %}
                                         {% if comment["user"]["userid"]|string == request.cookies.get("userid") %}
-                                            <a class="btn btn-sm btn-outline-danger mt-2"><span
-                                                    class="oi oi-trash text-danger"></span></a>
+                                            <form action="{{ url_for("comments.deleteComment") }}" class="m-0" method="POST">
+                                                <input type="hidden" name="commentid" value="{{ comment["commentid"] }}" />
+                                                <input type="hidden" name="fileid" value="{{ file["fileid"] }}">
+                                                <button type="submit" role="button" class="btn btn-sm btn-outline-danger mt-2">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </form>
                                         {% endif %}
                                     </div>
 
