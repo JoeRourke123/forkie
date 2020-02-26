@@ -23,6 +23,7 @@ query_schema = {
         "groupid": {"type": "string"},
         "groupname": {"type": "string"},
         "versionhash": {"type": "number"},
+        "archived": {"type": "boolean"},
         "first": {"type": "boolean"}
     }
 }
@@ -86,6 +87,8 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
                 if "first" in data:
                     get_first = data['first']
+                if "archived" in data:
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.archived == data["archive"])
 
             # Queries all even when first flag is true as it needs all columns from query object 
             # and first() method strips other columns for some reason
@@ -105,8 +108,9 @@ def file_query(browserQuery=None):
                         "filename": row.filename,
                         "extension": row.extension,
                         "groups": getFileGroups(str(row.fileid)),
-                        "versions": getFileVersions(str(row.fileid))
+                        "versions": getFileVersions(str(row.fileid), archived=("archived" in data and data["archived"]))
                     }
+
                     rs_list.append(rs_json)
 
             rs_list = sorted(rs_list, key=lambda x: x["versions"][0]["uploaded"], reverse=True)

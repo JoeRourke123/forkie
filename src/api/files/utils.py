@@ -21,9 +21,12 @@ def getFileExtension(filename: str) -> str:
     return os.path.splitext(filename)[1]
 
 
-def getFileVersions(fileID):
+def getFileVersions(fileID, archived=False):
     try:
-        versions = list(FileVersionTable.query.filter(FileVersionTable.fileid == fileID).all())
+        versionQuery = FileVersionTable.query.filter(FileVersionTable.fileid == fileID).filter(
+            FileVersionTable.archived == archived)
+
+        versions = versionQuery.all()
         results = []
 
         for version in versions:
@@ -37,8 +40,6 @@ def getFileVersions(fileID):
             for data in metadata:
                 if data.title == "userid":
                     versionData["author"] = getUserData(data.value)
-                # elif data.title == "uploaded":
-                #     versionData["uploaded"] = datetime.fromisoformat(data.value)
                 else:
                     versionData[data.title] = data.value
 
@@ -50,8 +51,11 @@ def getFileVersions(fileID):
 
         return []
 
+
 def getFileGroups(fileID):
-    return [group.serialise() for group in GroupTable.query.join(FileGroupTable, and_(GroupTable.groupid == FileGroupTable.groupid, FileGroupTable.fileid == fileID)).all()]
+    return [group.serialise() for group in GroupTable.query.join(FileGroupTable,
+                                                                 and_(GroupTable.groupid == FileGroupTable.groupid,
+                                                                      FileGroupTable.fileid == fileID)).all()]
 
 
 def newFileVersion(fileData, uploadData, title, userid):
@@ -111,7 +115,8 @@ def newFileVersion(fileData, uploadData, title, userid):
     for group in getFileGroups(fileData["fileid"]):
         sendGroupEmail(group["groupid"], {
             "subject": "New Version of " + fileData["filename"] + " Created",
-            "content": "Hi there!\n" + userData["username"] + " (" + userData["email"] + ") has created a new version of " +
+            "content": "Hi there!\n" + userData["username"] + " (" + userData[
+                "email"] + ") has created a new version of " +
                        fileData["filename"] + " with the title \"" + titleData.value + "\". \n\nThanks,\nfile-rep0"
         }, userData)
 
