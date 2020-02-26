@@ -20,7 +20,7 @@ from src.api.files import filesBP
 
 from src.api.files.file_query import file_query
 from src.api.files.file_create import newFile
-from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader
+from src.api.groups.utils import getUserGroups, getGroupUsers, isGroupLeader, getGroupData
 from src.api.user.utils import getUserData
 
 import os
@@ -90,22 +90,19 @@ def dash():
 
 @app.route("/group/<id>")
 def group(id):
-    groupData = getUserGroups(request.cookies.get("userid"))
-    groupUsers = getGroupUsers(id)
-    groupFiles = file_query({"groupid": id})
-    isLeader = isGroupLeader(request.cookies.get("userid"), id)
+    groupData = getGroupData(id)
+    userData = getUserData(request.cookies.get("userid"))
 
     if not request.cookies.get('userid'):
         return redirect(url_for('index', msg="Please sign in to see your dashboard"))
 
-    if id not in list(map(lambda x: str(x["groupid"]), groupData)):
+    if not groupData or (userData not in groupData["members"] and not userData["admin"]):
         return redirect(url_for('dash', msg="You do not have permissions to view this group"))
 
     return render_template("group.html",
-                           user=getUserData(request.cookies.get("userid")),
-                           groupData=list(filter(lambda x: str(x["groupid"]) == id, groupData))[0],
-                           groupUsers=groupUsers, isLeader=isLeader,
-                           groupFiles=groupFiles)
+                           user=userData,
+                           group=groupData,
+                           isLeader=groupData["groupleader"]["userid"] == userData["userid"])
 
 
 @app.route("/group/new")
@@ -132,10 +129,12 @@ def file(id):
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
-    fileData = file_query({"fileid": id})[0]
+    fileData = file_query({"fileid": id})
 
-    if not file:
+    if not fileData:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
+    else:
+        fileData = fileData[0]
 
     userData = getUserData(request.cookies.get("userid"))
     userGroups = getUserGroups(userData["userid"])

@@ -53,7 +53,8 @@ def getComments(fileid):
         return list(map((lambda x: {
             "comment": x.comment,
             "date": x.date,
-            "file": fileData["fileid"],
+            "commentid": str(x.commentid),
+            "file": fileid,
             "user": getUserData(str(x.userid)),
             "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(
                 groupMembers)
@@ -72,7 +73,10 @@ def getUnreadComments(files):
 
     for file in files:
         unread.extend(
-            filter(lambda x: not x["read"], getComments(file["fileid"]))
+            filter(lambda x: CommentReadTable.query.filter(and_(
+                CommentReadTable.commentid == x["commentid"],
+                CommentReadTable.userid == request.cookies.get("userid")
+            )).count() is not 1, getComments(file["fileid"]))
         )
 
     return sorted(unread, key=lambda x: x["date"], reverse=True)

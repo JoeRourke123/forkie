@@ -67,6 +67,12 @@
                     <a class="btn btn-outline-info mt-2 mb-2" href="{{ url_for("bulkCommentPage") }}"
                        role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Bulk
                         Comment</a>
+
+                    {% if user["admin"] %}
+                        <a class="btn btn-outline-danger mt-2 mb-2" href="{{ url_for("bulkCommentPage") }}"
+                           role="button"><span class="oi oi-box pr-1"> </span> Access
+                            Archive</a>
+                    {% endif %}
                 </div>
             </div>
             <div class="card">
@@ -92,7 +98,8 @@
                                         <time class="timeago" datetime="{{ comment["date"] }}"></time>
                                     </small>
                                     <div class="d-flex flex-column mt-2">
-                                        <a class="btn btn-sm btn-outline-info" href="{{ url_for("file", id=comment["file"]) }}" role="button"><span
+                                        <a class="btn btn-sm btn-outline-info"
+                                           href="{{ url_for("file", id=comment["file"]) }}" role="button"><span
                                                 class="oi oi-eye pr-1"></span></a>
                                     </div>
 
@@ -113,7 +120,8 @@
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">You don't have access to any files.</h5>
                                 </div>
-                                <p class="mb-1">Try creating one by pressing the <span class="oi oi-document"></span></span> button!</p>
+                                <p class="mb-1">Try creating one by pressing the <span
+                                        class="oi oi-document"></span></span> button!</p>
                             </a>
                         {% endif %}
                         {% for file in files %}
