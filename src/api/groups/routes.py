@@ -11,7 +11,7 @@ from src.db.UserTable import UserTable
 from src.db import db
 
 from src.api.user.utils import getUserData
-from src.api.groups.utils import getUserGroups
+from src.api.groups.utils import getUserGroups, getGroupDataFromName, getGroupUsers
 
 groupsBP = Blueprint('groups', __name__,
                     template_folder='../../templates',
@@ -20,13 +20,22 @@ groupsBP = Blueprint('groups', __name__,
 
 
 @groupsBP.route("/addMember", methods=["POST"])
-def addMember():
-    isBrowser = "email" in request.form
-    data = request.form if isBrowser else json.loads(request.data)
+def addMember(groupid: str = None, email: str = None, param_userid: str = None, browser: bool = None):
+    """ JSON requires groupid, email and userid inside cookie """
+    data = {}
+    if None in [groupid, email, param_userid, browser]:
+        isBrowser = "email" in request.form
+        data = request.form if isBrowser else json.loads(request.data)
+    else:
+        # If userid and groupid are defined in parameters then overwrite data
+        data['email'] = email
+        data['groupid'] = groupid
+        isBrowser = browser
+    cookie_userid = param_userid if param_userid is not None else request.cookies.get('userid')
 
-    if request.cookies.get("userid"):
+    if cookie_userid:
         try:
-            group = GroupTable.query.filter(and_(GroupTable.groupleaderid==request.cookies.get("userid"), GroupTable.groupid==data["groupid"])).first()
+            group = GroupTable.query.filter(and_(GroupTable.groupleaderid==cookie_userid, GroupTable.groupid==data["groupid"])).first()
 
             if not group:
                 if isBrowser:
@@ -81,16 +90,25 @@ def addMember():
 
 
 @groupsBP.route("/removeMember", methods=["POST"])
-def removeMember():
-    isBrowser = "userid" in request.form
-    data = request.form if isBrowser else json.loads(request.data)
+def removeMember(userid: str = None, groupid: str = None, param_userid: str = None, browser: bool = None):
+    """ JSON requires the userid of the member being removed and the groupid of the group to remove them from """
+    data = {}
+    if None in [userid, groupid, param_userid, browser]:
+        isBrowser = "userid" in request.form
+        data = request.form if isBrowser else json.loads(request.data)
+    else:
+        # If userid and groupid are defined in parameters then overwrite data
+        data['userid'] = userid
+        data['groupid'] = groupid
+        isBrowser = browser
+    cookie_userid = param_userid if param_userid is not None else request.cookies.get('userid')
 
-    if request.cookies.get("userid"):
+    if cookie_userid:
         try:
             print(data)
             group = GroupTable.query.filter_by(groupid=data["groupid"]).first()
 
-            if not group or not (str(group.groupleaderid) is not request.cookies.get("userid") and request.cookies.get("userid") is not data["userid"]):
+            if not group or not (str(group.groupleaderid) is not cookie_userid and cookie_userid is not data["userid"]):
                 if isBrowser:
                     return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
                 else:
@@ -104,7 +122,7 @@ def removeMember():
             db.session.delete(usergroup)
             db.session.commit()
 
-            if data["userid"] == request.cookies.get("userid"):
+            if data["userid"] == cookie_userid:
                 if isBrowser:
                     return redirect(url_for('dash', msg="You have left " + group.groupname))
                 else:
@@ -118,7 +136,7 @@ def removeMember():
                 else:
                     return json.dumps({
                         "code": 200,
-                        "msg": "Your group has been renamed"
+                        "msg": "The member of id \"" + data['userid'] + '" has been removed from "' + group.groupname + '"'
                     })
         except Exception as e:
             print(print_exc())
@@ -130,6 +148,82 @@ def removeMember():
                 return json.dumps({
                     "code": 500,
                     "msg": "Something went wrong when removing the user."
+                }), 500
+    else:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=403, msg=print_exc()))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this",
+                "exc": print_exc()
+            }), 403
+
+
+@groupsBP.route("/moveMember", methods=['POST'])
+def moveMember():
+    """ Member can be moved by removing from the group they are currently in. Invokes addMember and removeMember. User invoking this function must be in both src and dst group
+        JSON requires USERID and EMAIL of user to move, source group's GROUPID, destination group's GROUPID
+        {
+            'userid': string
+            'email': string
+            'src_groupid': string
+            'dst_groupid': string
+        }
+    """
+    isBrowser = 'python-requests' not in request.headers.get('User-Agent')
+    data = request.form if isBrowser else json.loads(request.data)
+    
+    cookie_userid = request.cookies.get('userid')
+
+    if cookie_userid:
+        try:
+            print(data)
+            src_group = GroupTable.query.filter_by(groupid=data["src_groupid"]).first()
+            dst_group = GroupTable.query.filter_by(groupid=data["dst_groupid"]).first()
+
+            # Checks if the user invoking function is in both src and dst groups
+            if (not src_group or not (str(src_group.groupleaderid) is not cookie_userid and cookie_userid is not data["userid"])) and (not dst_group or not (str(dst_group.groupleaderid) is not cookie_userid and cookie_userid is not data['userid'])):
+                if isBrowser:
+                    return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You don't have permission to complete this action!"
+                    }), 401
+
+            # Remove user from src
+            remove = removeMember(data['userid'], data['src_groupid'], cookie_userid, isBrowser)
+            print(remove)
+            # Don't know if this works on browser yet
+            status_code = remove.status_code if isBrowser else json.loads(remove)['code']
+            if status_code != 200:
+                return remove
+            
+            # Add user to dst
+            add = addMember(data['dst_groupid'], data['email'], cookie_userid, isBrowser)
+            status_code = add.status_code if isBrowser else json.loads(add)['code']
+            if status_code != 200:
+                return add
+            
+            if isBrowser:
+                return redirect(url_for('group', id=dst_group.groupid, msg="User has been moved from " + src_group.groupname + ' to ' + dst_group.groupname))
+            else:
+                return json.dumps({
+                    "code": 200,
+                    "msg": "User has been moved from " + src_group.groupname + ' to ' + dst_group.groupname
+                })
+
+        except Exception as e:
+            print(print_exc())
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when moving user."
                 }), 500
     else:
         if isBrowser:
@@ -195,13 +289,13 @@ def newGroup():
 @groupsBP.route("/rename", methods=["POST"])
 def renameGroup():
     isBrowser = "groupid" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         try:
             group = GroupTable.query.filter(and_(GroupTable.groupleaderid==request.cookies.get("userid"),
                                                  GroupTable.groupid==data["groupid"])).first()
-
+            print('Group', group)
             if not group and not getUserData(request.cookies.get("userid")).admin:
                 if isBrowser:
                     return redirect(url_for('dash', msg="Sorry you are not permitted to complete this action"))
@@ -214,8 +308,15 @@ def renameGroup():
             group.groupname = data["newname"]
 
             db.session.commit()
+            
+            if not isBrowser:
+                return json.dumps({
+                    'code': 200,
+                    'msg': 'Successfully renamed "' + data['groupid'] + '" to "' + group.groupname + '"'
+                }), 200
 
         except Exception as e:
+            print(str(e))
             return str(e)
 
             if isBrowser:
@@ -247,7 +348,7 @@ def renameGroup():
 @groupsBP.route("/delete", methods=["POST"])
 def deleteGroup():
     isBrowser = "groupid" in request.form
-    data = request.form if isBrowser else request.data
+    data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
         try:
@@ -266,7 +367,13 @@ def deleteGroup():
             db.session.delete(group)
             db.session.commit()
 
-            return redirect(url_for('dash', msg=group.groupname + " has been deleted"))
+            if isBrowser:
+                return redirect(url_for('dash', msg=group.groupname + " has been deleted"))
+            else:
+                return json.dumps({
+                    'code': 200,
+                    'msg': 'Successfully deleted "' + data['groupid'] + '"'
+                }), 200
         except Exception as e:
             print(print_exc())
             return str(e)
@@ -293,7 +400,7 @@ def deleteGroup():
 def getGroups():
     """ Returns the groups that the user is a part of
     """
-    isBrowser = "groupid" in request.form
+    isBrowser = 'python-requests' not in request.headers.get('User-Agent')
     # data = request.form if isBrowser else json.loads(request.data)
 
     if request.cookies.get("userid"):
@@ -333,3 +440,66 @@ def getGroups():
                 "msg": "You must be signed in to do this",
                 "exc": print_exc()
             }), 403
+
+
+@groupsBP.route("/getGroupUsers", methods=["POST"])
+def getUsersInGroups():
+    """ Gets all the users that a group with the given groupid or groupname contain """
+    isBrowser = 'python-requests' not in request.headers.get('User-Agent')
+    data = request.form if isBrowser else json.loads(request.data)
+    
+    if request.cookies.get("userid"):
+        userid = request.cookies.get('userid')
+        try:
+            # If groupid doesn't exist in query then get the groupid from the groupname
+            if 'groupid' not in data:
+                data['groupid'] = getGroupDataFromName(data['groupname']).serialise()['groupid']
+            groupid = data['groupid']
+            groups = getUserGroups(userid)
+            groupids = [group['groupid'] for group in groups]
+            if groupid not in groupids:
+                if isBrowser:
+                    return redirect(url_for('errors.error', code=401, msg=print_exc()))
+                else:
+                    return json.dumps({
+                        "code": 401,
+                        "msg": "You cannot query a group you are not a member of"
+                    }), 401
+            
+            group_users = getGroupUsers(groupid)
+            rs = []
+            print('\n\nGetting users in group: ' + groupid + ' for user: ' + userid)
+            for u in range(len(group_users)):
+                user = group_users[u]
+                # Userid key is UUID object so convert to string
+                user['userid'] = str(user['userid'])
+                # lastlogin key is datetime object so convert to string
+                user['lastlogin'] = str(user['lastlogin'])
+                print('User', str(u + 1) + ':', user)
+                rs.append(user)
+
+            resp = make_response(json.dumps({"code": 200, "msg": "Here are the users in the requested group", "rows": rs}))
+            resp.set_cookie("userid", userid)
+
+            return resp
+        except Exception as e:
+            print(print_exc())
+            return str(e)
+
+            if isBrowser:
+                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+            else:
+                return json.dumps({
+                    "code": 500,
+                    "msg": "Something went wrong when querying the groups."
+                }), 500
+    else:
+        if isBrowser:
+            return redirect(url_for('errors.error', code=403, msg=print_exc()))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this",
+                "exc": print_exc()
+            }), 403
+    

@@ -35,3 +35,6 @@ def getGroupUsers(groupID):
 
 def getGroupData(groupID):
     return GroupTable.query.filter_by(groupid=groupID).first()
+
+def getGroupDataFromName(groupname: str):
+    return GroupTable.query.filter_by(groupname=groupname).first()

@@ -1,15 +1,13 @@
-from client.cli import cli_utils
-from src.api.files.file_compare import check_if_equal
+from client import cli_utils
+from client.abstractions import check_bool_option, check_if_equal, check_string_option, handle_message, print_dict, get_emailandpass, get_repo_details, format_file_rows, query_allrepos
 from src.api.files.backblaze import B2Interface, application_key, application_key_id, file_rep_bucket, UploadSourceBytes
 from urllib.parse import urljoin
 from traceback import print_exc
 
 import requests
-import subprocess
 import os
 import time
 import pickle
-import getpass
 import json
 import io
 import copy
@@ -19,93 +17,16 @@ file_new_end = '/api/files/new'
 file_new_version_end = '/api/files/newVersion'
 file_query_end = '/api/files/query'
 group_query_end = '/api/groups/getGroups'
+group_users_query_end = '/api/groups/getGroupUsers'
+group_new_end = '/api/groups/new'
+group_del_end = '/api/groups/delete'
+group_rename_end = '/api/groups/rename'
+group_newmem_end = '/api/groups/addMember'
+group_remmem_end = '/api/groups/removeMember'
+group_movmem_end = '/api/groups/moveMember'
 signin_end = '/api/signin'
 signup_end = '/api/signup'
 bulk_comment_end = '/api/comment/bulkComment'
-
-
-def check_bool_option(args: dict, option: str) -> bool:
-    """ Check if theres a boolean option with the given name
-        - args: the args to check for the option
-        - option: the name of the option to check for
-        - return: whether option is True or False
-    """
-    try:
-        return args[option] > 0 if type(args[option]) == int else args[option]
-    except KeyError:
-        return False
-    
-def check_string_option(args: dict, option: str, arg: str) -> str:
-    """ Check if theres a boolean option with the given name
-        - args: the args to check for the option
-        - option: the name of the option to check for
-        - return: whether the string that follows the option or None if not found
-    """
-    try:
-        equal = False if type(args[option]) == bool else 0
-        if args[option] != equal:
-            if args["<" + arg + ">"] != "":
-                return args["<" + arg + ">"] 
-    except KeyError:
-        return None
-
-def handle_message(args: dict, verbose: bool) -> dict:
-    """ Handles the message if no message option is specified in make and update subcommands
-        - args: the dictionary of arguments from the input command
-        - verbose: whether or not the verbose option was included in the args or not
-        - return: dictionary of the message where 'title' is the title of the message and 'description' is the description
-    """
-    # Template used in temporary message files to explain to the user that they need to add a
-    # message in order to add the file
-    tmp_msg_body: str = "\n# Please write a name and description of this add in the line above.\n# If no message is added then you will not be able to add the files you wanted to.\n# The general overview should be written on the first line and more in depth descriptions on the third.\n# DO NOT REMOVE OR EDIT ANY OF THE TEXT STARTING WITH '#'"
-    tmp_msg_lines: int = tmp_msg_body.count("\n")
-    message: dict = {}
-    
-    try:
-        if args["<message>"] == "":
-            raise KeyError
-        else:
-            message["description"] = args["<message>"]
-            if verbose:
-                print("Message defined in command: " + message["description"])
-    except KeyError:
-        if verbose:
-            print("Message NOT defined in command starting default editor")
-        tmp_file_path = os.path.join(os.getcwd(), "message.txt")
-        # Will generate a new temp message filename if a file with that name already exists
-        while os.path.exists(tmp_file_path) and os.path.isfile(tmp_file_path):
-            tmp_file_path = os.path.join(os.path.dirname(tmp_file_path), os.path.splitext(tmp_file_path)[0] + "_tmp.txt")
-        
-        changed = False
-        message_complete = False
-        
-        # Create tmp message file then open it in default editor. Then check if there were changes made to the message file
-        while not message_complete:
-            cli_utils.create_file_incwd(os.path.basename(tmp_file_path), tmp_msg_body)
-            while not changed:
-                # Opens the default editor for text files and waits for it to exit before opening another
-                process = cli_utils.open_default_editor(tmp_file_path).wait()
-                message_file = open(tmp_file_path, "rb").read()
-                if not check_if_equal(bytearray(tmp_msg_body, "utf-8"), message_file):
-                    changed = True
-            with open(tmp_file_path, "r") as mf:
-                mf_lines = mf.readlines()
-                if len(mf_lines) >= tmp_msg_lines:
-                    # If the template and the read message have equal line length then the user just input the title
-                    message["title"] = mf_lines[0]
-                    if len(mf_lines) > tmp_msg_lines + 1:
-                        # Title and description with newline seperating them
-                        message["description"] = ""
-                        for line in range(2, len(mf_lines) - tmp_msg_lines):
-                            message["description"] += mf_lines[line]
-                    message_complete = True
-                else:
-                    print("Don't delete the template message (any text with #)")
-            mf.close()
-            # Delete temp message file. Sleep is kinda jank
-            time.sleep(3)
-            os.remove(tmp_file_path)
-    return message
 
 def make(args: dict):
     """ Handles the 'make' subcommand. If no message option is found or message is empty then a temp file
@@ -160,7 +81,8 @@ def make(args: dict):
         try:
             groups = session.get('http://' + chosen_repo['url'] + group_query_end)
         except requests.exceptions.ConnectionError:
-            groups.status_code = "Connection refused"
+            print('COULD NOT CONNECT TO THIS REPO')
+            return
         try:
             code = groups.json()['code']
             msg = groups.json()['msg']
@@ -207,7 +129,8 @@ def make(args: dict):
             try:
                 file_group = session.post('http://' + chosen_repo['url'] + file_query_end, json={'groupid': chosen_group['groupid']})
             except requests.exceptions.ConnectionError:
-                file_group.status_code = "Connection refused"
+                print('COULD NOT CONNECT TO THIS REPO')
+                return
             try:
                 code = file_group.json()['code']
                 msg = file_group.json()['msg']
@@ -264,7 +187,8 @@ def make(args: dict):
                         }
                     )
                 except requests.exceptions.ConnectionError:
-                    upload_status.status_code = "Connection refused"
+                    print('COULD NOT CONNECT TO THIS REPO')
+                    return
                 if v:
                     print('Upload status:', upload_status)
                 try:
@@ -303,9 +227,6 @@ def update(args: dict):
         print_dict(args_norm["message"])
         print("files:", args_norm["files"])
 
-    session = requests.session()
-    repos: list = get_repo_details(v)
-
     # Get all the files queried by the filename from the passed file arg
     found_rows = False
     session = requests.session()
@@ -327,8 +248,8 @@ def update(args: dict):
                 found_rows_current = False
                 found_rows_current, files_queried, rep_offset = query_allrepos(query_json, session, repo, v, False, r, offset)
                 found_rows = found_rows_current if found_rows_current else found_rows
-                files_rep.extend(files_queried[:])
-                # print(all_queriedfiles)
+                if files_queried is not None:
+                    files_rep.extend(files_queried[:])
 
             # Display all queried files
             print('\n\n' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
@@ -390,8 +311,9 @@ def update(args: dict):
             try:
                 version = session.post('http://' + repos[repo_num]['url'] + file_new_version_end, data=version_json, files=files)
             except requests.exceptions.ConnectionError:
-                version.status_code = "Connection refused"
-            print(version)
+                print('COULD NOT CONNECT TO THIS REPO')
+                return
+
             try:
                 try:
                     code = version.json()['code']
@@ -440,7 +362,8 @@ def find(args: dict):
     # Check if there's a force
     args_norm["force"] = check_bool_option(args, "--force")
     # Check for group
-    args_norm["group"] = check_string_option(args, "-p", "group")
+    if check_string_option(args, "-p", "group"):
+        args_norm['group'] = args['<group>']
     # Check for download flag
     args_norm["download"] = check_bool_option(args, "--download")
     # All
@@ -474,8 +397,10 @@ def find(args: dict):
         for r in range(len(repos)):
             files_rep = []
             repo = repos[r]
-            found_rows, files_rep, offset = query_allrepos(query_json, session, repo, v, True, r, offset)
-            files_queried.extend(files_rep[:])
+            found_rows_current, files_rep, offset = query_allrepos(query_json, session, repo, v, True, r, offset)
+            found_rows = found_rows_current if found_rows_current else found_rows
+            if files_rep is not None:
+                files_queried.extend(files_rep[:])
     else:
         print("No cookie files found in .forkie")
 
@@ -499,7 +424,6 @@ def find(args: dict):
                 # Format the version data for the chosen file if there are more than one versions
                 for v in range(len(versions)):
                     version = versions[v]
-                    print('before', version)
                     version['versionhash'] = version['versionhash'][:6]  # Shortens the version hash
                     uploaded = version['uploaded']
                     # Removes everything after the first dot (in this case the milliseconds)
@@ -559,7 +483,8 @@ def find(args: dict):
             try:
                 comment = session.post('http://' + repos[repo_num]['url'] + bulk_comment_end, json={'fileids': [file['fileid'] for file in chosen_files], 'comment': args_norm['comment']})
             except requests.exceptions.ConnectionError:
-                comment.status_code = "Connection refused"
+                print('COULD NOT CONNECT TO THIS REPO')
+                return
             try:
                 try:
                     code = comment.json()['code']
@@ -614,8 +539,246 @@ def group(args: dict):
         All users can access the view commands but only users with group leader or admin positions can access the editing commands. This is done by
         querying the correct tables
     """
-    # (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
+    # (-V [--peeps] [<email>...] | (--add | --rm | --change) (-p <group>) [<email>]) [-vf]
+    args_norm = {
+        "verbose": False,
+        "view": False,
+        "peeps": False,
+        "force": False,
+        "add": False,
+        "remove": False,
+        "change": False,
+        "group": None,
+        "email": None
+    }
     print(args)
+    
+    # Check whether querying for people
+    args_norm['peeps'] = check_bool_option(args, '--peeps')
+    # Check for add
+    args_norm['add'] = check_bool_option(args, '--add')
+    # Check for remove
+    args_norm['remove'] = check_bool_option(args, '--rm')
+    # Check for change
+    args_norm['change'] = check_bool_option(args, '--change')
+    # Check if there's verbose
+    args_norm["verbose"] = check_bool_option(args, "--verbose")
+    v = args_norm['verbose']
+    # Check if there's a force
+    args_norm["force"] = check_bool_option(args, "--force")
+    # Check if there's a view
+    args_norm["view"] = check_bool_option(args, "--view")
+    # Check for group
+    args_norm["group"] = check_string_option(args, "-p", "group")
+    # Check for email
+    if '<email>' in args:
+        args_norm['email'] = args['<email>']
+    # Check for group
+    if check_string_option(args, "-p", "group"):
+        args_norm['group'] = args['<group>']
+        
+    # Get all group data for user. This includes all groups that the user belongs to and all users that are a part of them
+    # 1. First get all groups user belongs to
+    found_rows = False
+    session = requests.session()
+    repos: list = get_repo_details(v)
+    files_queried = []
+    repos_groups_belong = []
+    print('Gathering some info...')
+
+    if len(repos) != 0:
+        offset = 0
+        for r in range(len(repos)):
+            repo = repos[r]
+            session.cookies.update(repo['cookie'])
+            repos_groups_belong.append({'repo_name': repo['repo_name'], 'groups': []})
+            if v:
+                print('Getting: https://' + repo['url'] + group_query_end)
+            groups = requests.Response()
+            try:
+                groups = session.get('http://' + repo['url'] + group_query_end)
+            except requests.exceptions.ConnectionError:
+                print('Could not connect to ' + repo['repo_name'])
+                continue
+            try:
+                code = groups.json()['code']
+                msg = groups.json()['msg']
+            except Exception:
+                print('Something went wrong when querying ' + repo['repo_name'])
+                continue
+            if v:
+                print('Returned code:', code)
+                print('Returned message:', msg)
+            # Always display repo name, url and number
+            if code == 200:
+                if 'rows' in groups.json():
+                    groups_returned = groups.json()['rows']
+                    print('\n\nRepo no.: ' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')', end="\n" if args_norm['view'] else ' no. of groups: ' + str(len(groups_returned)) + '\n')
+                    if not args_norm['view']:
+                        print()
+                    repos_groups_belong[r]['groups'].extend(copy.deepcopy(groups_returned))
+                    if args_norm['view'] and not args_norm['peeps'] and not args_norm['email']:
+                        print('\nHere are all your groups in repo "' + repo['repo_name'] + '":')
+                        headers = list(groups_returned[0].keys())
+                        headers.sort()
+                        headers.insert(0, 'file no.')
+                        values = [list(data.values()) for data in groups_returned]
+                        print(cli_utils.format_rows(headers, values))
+                    
+                    # Query users inside that group
+                    if len(repos_groups_belong[r]['groups']) > 0:
+                        for g in range(len(repos_groups_belong[r]['groups'])):
+                            group = repos_groups_belong[r]['groups'][g]
+                            if args_norm['view'] and args_norm['peeps']:
+                                print('\nUsers in "' + group['groupname'] + '":')
+                            if v:
+                                print('Getting: https://' + repo['url'] + group_users_query_end)
+                            users = requests.Response()
+                            try:
+                                users = session.post('http://' + repo['url'] + group_users_query_end, json={'groupid': group['groupid']})
+                            except requests.exceptions.ConnectionError:
+                                print('Could not connect to ' + repo['repo_name'])
+                                continue
+
+                            try:
+                                code = users.json()['code']
+                                msg = users.json()['msg']
+                            except Exception:
+                                print('Something went wrong when querying ' + repo['repo_name'])
+                                continue
+                            if v:
+                                print('Returned code:', code)
+                                print('Returned message:', msg)
+                            if code == 200:
+                                if 'rows' in users.json():
+                                    users_returned = users.json()['rows']
+                                    repos_groups_belong[r]['groups'][g]['users'] = copy.deepcopy(users_returned)
+                                    if args_norm['view'] and args_norm['peeps']:
+                                        rows = []
+                                        headers = ['user no.', 'username', 'email', 'group name']
+                                        for user in repos_groups_belong[r]['groups'][g]['users']:
+                                            contains_email = True
+                                            # Will check all specified <email> args if they are contained in the current users email
+                                            # If one email arg isn't contained then the user will not be displayed
+                                            if args_norm['email'] is not None:
+                                                for email in args_norm['email']:
+                                                    if email not in user['email']:
+                                                        contains_email = False
+                                                        break
+                                            if contains_email:
+                                                row = []
+                                                row.append(user['username'])
+                                                row.append(user['email'])
+                                                row.append(repos_groups_belong[r]['groups'][g]['groupname'])
+                                                rows.append(row)
+                                        if len(rows) != 0:
+                                            print(cli_utils.format_rows(headers, rows, 0))
+                                        else:
+                                            print('There are no users in ' + repo['repo_name'] + ' that fit that criteria')
+                            else:
+                                print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                                return
+                    else:
+                        if v:
+                            print('Didn\'t find any groups in ' + repo['repo_name'])
+                else:
+                    print("Woops something went wrong while querying groups for " + repo['repo_name'])
+            else:
+                print(msg + '. Use the "forkie login <repo>" command to login to this repo')
+                return
+    else:
+        print("No cookie files found in .forkie")
+    # print(repos_groups_belong)
+
+    cont = True
+    # 2. Check which subsubcommand was specified (if there was one)
+    if args_norm['add'] or args_norm['remove'] or args_norm['change']:
+        # 3. Ask user to choose repo to apply command to
+        gerund = next((item if item not in ['remove', 'change'] else item[:-1] for item in args_norm if item in ['add', 'remove', 'change'] and args_norm[item]), None) + 'ing'  # Fancy python club
+        print('\nYou are ' + gerund + ' "' + args_norm['group'] + '"')
+        print('Which repo are you choosing? ', end='')
+        repo_num = cli_utils.ask_for_list(repos)
+        chosen_repo = repos[repo_num]
+        chosen_data = repos_groups_belong[repo_num]
+        chosen_group = next((item for item in chosen_data['groups'] if item['groupname'] == args_norm['group']), None)
+        if chosen_group is not None or (args_norm['add'] and args_norm['email'] is None):
+            chosen_user = None
+
+            session.cookies.update(chosen_repo['cookie'])
+            # If no emails are specified then the subsubcommands are taking place on the group not the user
+            group_flag = args_norm['email'] is None
+
+            end_point = ''
+            post_json = {}
+            # Assigning the correct end point based on the selected option and the flag set above
+            if args_norm['add']:
+                end_point = group_new_end if group_flag else group_newmem_end
+                post_json = {'groupname': args_norm['group']} if group_flag else {'groupid': chosen_group['groupid'], 'email': args_norm['email'][0]}
+            elif args_norm['remove']:
+                if group_flag:
+                    end_point = group_del_end
+                    post_json = {'groupid': chosen_group['groupid']}
+                else:
+                    end_point = group_remmem_end
+                    chosen_user = next((item for item in chosen_group['users'] if item['email'] == args_norm['email'][0]), None)
+                    if chosen_user is None:
+                        print('The email you specified doesn\'t belong to the repository you choice')
+                        cont = False
+                    else:
+                        post_json = {'groupid': chosen_group['groupid'], 'userid': chosen_user['userid']}
+            else:
+                if group_flag:
+                    end_point = group_rename_end
+                    post_json = {'groupid': chosen_group['groupid'], 'newname': cli_utils.ask_for_string('Enter a name for the new group')}
+                else:
+                    chosen_user = next((item for item in chosen_group['users'] if item['email'] == args_norm['email'][0]), None)
+                    if chosen_user is None:
+                        print('The email you specified doesn\'t belong to the repository you choice')
+                        cont = False
+                    else:
+                        end_point = group_movmem_end
+                        # If using the change subsubcommand along with an email then this means that you want to move someone from one group to another
+                        # Therefore there needs to be a dialog to chose a destination group
+                        print('\nWhich group do you want to move ' + chosen_user['username'] + ' to?')
+                        group_headers = ['group no.', 'group name', 'groupid', 'group leader']
+                        # Compiles all the groups the user can choose from in the current repository
+                        group_rows = [[group['groupname'], group['groupid'], next((item['email'] for item in group['users'] if item['userid'] == group['groupleaderid']), None)] for group in chosen_data['groups']]
+                        print(cli_utils.format_rows(group_headers, group_rows, 0))
+                        destination_group = chosen_data['groups'][cli_utils.ask_for_list(chosen_data['groups'])]
+                        post_json = {'userid': chosen_user['userid'], 'email': args_norm['email'][0], 'src_groupid': chosen_group['groupid'], 'dst_groupid': destination_group['groupid']}
+        else:
+            print('\nYour chosen group doesn\'t exist inside ' + chosen_repo['repo_name'])
+            cont = False
+    if v:
+        print('JSON to post:', post_json)
+        print('Endpoint to POST to:', end_point)
+    
+    cont = False if args_norm['view'] else cont   # Stop view command from continuing onto next section
+    
+    # 4. Post to endpoint found above (only if cont)
+    if cont:
+        if v:
+            print('\n\nContinuing to post...')
+            print('Getting: https://' + chosen_repo['url'] + end_point)
+        post = requests.Response()
+        try:
+            post = session.post('http://' + chosen_repo['url'] + end_point, json=post_json)
+        except requests.exceptions.ConnectionError:
+            print('\nCould not connect to ' + chosen_repo['repo_name'])
+            return
+        # print(post)
+        try:
+            code = post.json()['code']
+            msg = post.json()['msg']
+        except Exception:
+            print('\nSomething went wrong when querying ' + chosen_repo['repo_name'])
+            return
+        if v:
+            print('Returned code:', code)
+            print('Returned message:', msg)
+        print()
+        print(msg)
+    print('Done!')
 
 def report(args: dict):
     """ Generate report on everything or an individual group or person. A report is a PDF which is generated from a markdown file and output to a 
@@ -672,7 +835,11 @@ def login(args: dict):
             while not done:
                 login = get_emailandpass(login)
 
-                signin = session.post(signin_path, json=login, headers=headers)
+                try:
+                    signin = session.post(signin_path, json=login, headers=headers)
+                except requests.ConnectionError:
+                    print('COULD NOT CONNECT TO THIS REPO')
+                    return
                 msg = str(signin.json()["msg"])
                 if v:
                     print("Signin_path:", signin_path)
@@ -689,7 +856,11 @@ def login(args: dict):
                         login["username"] = str(input("Enter a username: "))
                         # Will keep checking if user wants to sign up or if error 401 otherwise break
                         while True:
-                            signup = session.post(signup_path, json=login, headers=headers)
+                            try:
+                                signup = session.post(signup_path, json=login, headers=headers)
+                            except requests.ConnectionError:
+                                print('COULD NOT CONNECT TO THIS REPO')
+                                return
                             msg = str(signup.json()["msg"])
                             if signup.status_code == 401:
                                 # If email already exists
@@ -735,98 +906,3 @@ def login(args: dict):
                     print("Created " + hostname + " cookie file in .forkie/" + hostname)
     else:
         print("Error 404: That repository does not exist")
-    
-def print_dict(args: dict):
-    for arg in args.keys():
-        print(str(arg) + ": " + str(args[arg]))
-        
-def get_emailandpass(login: dict) -> dict:
-    login["email"] = str(input("Enter email: "))
-    login["password"] = str(getpass.getpass(prompt="Enter password: "))
-    return login
-
-def get_repo_details(v: bool) -> list:
-    """ Gets the list of repositories in the .forkie folder and returns a dict with the binary cookies
-        and url for all available repos
-    """
-    repos = []
-    if not os.path.exists(".forkie"):
-        print(".forkie directory does not exist try logging in")
-    else:
-        directories = [name for name in os.listdir('./.forkie') if os.path.isdir(os.path.join('.forkie', name))]
-        for directory in directories:
-            # Read the cookie bin
-            current_repo = {}
-            current_dir = os.path.join('.forkie', directory)
-            cookie_file_path = os.path.join(current_dir, directory + '.bin')
-            b2_file_path = os.path.join(current_dir, 'b2.json')
-            current_repo['repo_name'] = directory
-            with open(cookie_file_path, 'rb') as f:
-                current_repo['cookie'] = pickle.load(f)
-            f.close()
-            # Get the url from the list of domains inside the cookie
-            current_repo_url = current_repo['cookie'].list_domains()[0]
-            if current_repo_url == '0.0.0.0':
-                current_repo_url += ':5000'
-            current_repo['url'] = current_repo_url
-            # Get B2 bucket info from b2.json
-            if v:
-                print('Cookies:', cookie_file_path)
-                print('B2 keys:', b2_file_path)
-            if os.path.exists(b2_file_path) and os.path.isfile(b2_file_path):
-                with open(b2_file_path) as b2:
-                    current_repo['b2'] = json.load(b2)
-                b2.close()
-            repos.append(current_repo)
-
-    return repos
-
-def query_allrepos(query_json: dict, session: requests.Session, repo: dict, v: bool, p: bool, r: int, offset: int):
-    files_queried = []
-    found_rows = False
-    formatted_rows = []
-    return_offset = 0
-    if p:
-        print('\n\n' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
-    session.cookies.update(repo['cookie'])
-    returned = session.post('http://' + repo['url'] + file_query_end, json=query_json)
-    code = returned.json()['code']
-    msg = returned.json()['msg']
-    if v and p:
-        print('Query JSON:', query_json)
-    if code == 200:
-        if 'rows' in returned.json():
-            if len(returned.json()['rows']) != 0:
-                found_rows = True
-                files_queried = returned.json()['rows']
-                if p:
-                    if v:
-                        print('Returned rows (raw):', returned.json()['rows'])
-                    formatted_rows = returned.json()['rows'][:]
-                    print(format_file_rows(formatted_rows, offset))
-                return_offset = len(returned.json()['rows'])
-            else:
-                if p:
-                    print('No files found')
-        else:
-            if p:
-                print('Something went wrong with querying your files')
-    else:
-        if p:
-            print(msg)
-    return found_rows, files_queried, return_offset
-
-def format_file_rows(formatted_rows: list, offset: int) -> str:
-    formatted_rows = copy.deepcopy(formatted_rows)
-    for row in formatted_rows:
-        group_name_list = []
-        for group in row['groups']:
-            group_name_list.append(group['groupname'])
-        row['belongs to'] = ', '.join(group_name_list)
-        versions = len(row['versions'])
-        row['no. of versions'] = versions
-
-    formatted_rows = cli_utils.delete_listdict_keys(formatted_rows, ['groups', 'versions'])
-    headers = list(formatted_rows[0].keys())
-    headers.insert(0, 'file no.')
-    return cli_utils.format_rows(headers, [list(data.values()) for data in formatted_rows], offset)

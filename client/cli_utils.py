@@ -40,7 +40,16 @@ def open_default_editor(filename: str) -> subprocess.Popen:
     else:
         raise FileNotFoundError("Filename specified does not exist")
 
-def ask_for(question: str, answers: list):
+def ask_for_string(prompt: str) -> str:
+    """ Asks the user for a string and asks if that the string they entered is ok
+    """
+    while True:
+        output = str(input(prompt + ': '))
+        if ask_for('Is "' + output + '" ok?', ['y', 'n']):
+            break
+    return output
+
+def ask_for(question: str, answers: list) -> int:
     """ Given a question and a list of answers it will return the answer. If the list of answers has only 2 elements then
         if the answer is equal to the first element it will return True and False otherwise
     """
