@@ -156,13 +156,13 @@ def make(args: dict):
                         files_for_user.append(file)
 
             if len(files_for_user) > 0:
-                print('Found file(s) identical to ' + filename + ':')
+                print('\nFound file(s) identical to ' + filename + ':')
                 file_dicts = [dict(file.file_info) for file in files_for_user]
                 headers = list(file_dicts[0].keys())
                 headers.sort()
                 headers.insert(0, 'file no.')
                 values = [list(data.values()) for data in file_dicts]
-                print(cli_utils.format_rows(headers, values))
+                print(cli_utils.format_rows(headers, values), '\n')
                 cont_upload = cli_utils.ask_for('Do you still want to start tracking a new file?', ['y', 'n'])
                 if not cont_upload:
                     print('Please use "forkie update" to create a new version of the file')
@@ -303,7 +303,7 @@ def update(args: dict):
                 'title': args_norm['message']['title'] if 'title' in args_norm['message'] else args_norm['message']['description'],
                 'fileid': fileq['fileid']
             }
-            print(version_json)
+            # print(version_json)
             
             if v:
                 print('Posting: https://' + repos[repo_num]['url'] + file_new_version_end)
@@ -322,7 +322,8 @@ def update(args: dict):
                         print('Returned code:', code)
                         print('Returned message:', msg)
                     print(msg)
-                    print('New version created successfully')
+                    if code == 200:
+                        print('New version created successfully')
                 except json.JSONDecodeError:
                     if version.status_code == 200:
                         print('New version created successfully')
@@ -331,11 +332,11 @@ def update(args: dict):
             except Exception as e:
                 # Check redirect url for below string to check
                 if 'your+new+version+already+matches+one+in+this+file' in version.url:
-                    print('Your new version matches the old one')
+                    print('\nYour new version matches the old one')
                 elif 'New+version+created+successfully' in version.url:
-                    print('New version created successfully')
+                    print('\nNew version created successfully')
                 else:
-                    print("Woops something went wrong while posting new version of " + fileq['filename'])
+                    print("\nWoops something went wrong while posting new version of " + fileq['filename'])
     else:
         print('No files found matching file argument(s). Use "forkie make" to start tracking file(s)')
 
@@ -551,7 +552,7 @@ def group(args: dict):
         "group": None,
         "email": None
     }
-    print(args)
+    # print(args)
     
     # Check whether querying for people
     args_norm['peeps'] = check_bool_option(args, '--peeps')
@@ -619,12 +620,15 @@ def group(args: dict):
                     repos_groups_belong[r]['groups'].extend(copy.deepcopy(groups_returned))
                     if args_norm['view'] and not args_norm['peeps'] and not args_norm['email']:
                         print('\nHere are all your groups in repo "' + repo['repo_name'] + '":')
-                        headers = list(groups_returned[0].keys())
-                        headers.sort()
-                        headers.insert(0, 'file no.')
-                        values = [list(data.values()) for data in groups_returned]
-                        print(cli_utils.format_rows(headers, values))
-                    
+                        if len(groups_returned) > 0:
+                            headers = list(groups_returned[0].keys())
+                            headers.sort()
+                            headers.insert(0, 'file no.')
+                            values = [list(data.values()) for data in groups_returned]
+                            print(cli_utils.format_rows(headers, values))
+                        else:
+                            print('You have no groups in this repo')
+
                     # Query users inside that group
                     if len(repos_groups_belong[r]['groups']) > 0:
                         for g in range(len(repos_groups_belong[r]['groups'])):
@@ -846,10 +850,9 @@ def login(args: dict):
                     print("Signup_path:", signup_path)
                     print("Status code:", signin.status_code)
                     print("Response:", msg)
-                # Check for 400
-                if signin.status_code == 400:
-                    signup_answer = cli_utils.ask_for(msg + ". Do you want to signup?", ["y", "n"])
-                    if signup_answer:
+
+                if signin.status_code in [500, 403]:
+                    if cli_utils.ask_for(msg + " Do you want to signup?", ["y", "n"]):
                         # Keep the email and pass from signin
                         if cli_utils.ask_for("Do you want to enter a new email and password?", ["y", "n"]):
                             login = get_emailandpass(login)
@@ -871,26 +874,23 @@ def login(args: dict):
                                 break
                         cont = True
                         if v:
-                            print("JSON returned:", signup.json)
+                            print("JSON returned:", signup.json())
                         if signup.status_code in [400, 500]:
                             print(msg + ". Try again another time.")
                             cont = False
+                        else:
+                            print(msg)
+                            b2_app_key = signup.json()['b2'] if 'b2' in signup.json() else None
                         done = True
                     else:
-                        done = not cli_utils.ask_for("Do you want to try again?", ["y", "n"])
-                elif signin.status_code in [500, 403]:
-                    done = not cli_utils.ask_for(msg + " Try again?", ["y", "n"])
-                    cont = False
+                        done = not cli_utils.ask_for('Try again?', ['y', 'n'])
                 else:
                     if v:
                         print(msg)
-                        done = True
-                        cont = True
-                    if 'b2' in signin.json():
-                        b2_app_key = signin.json()['b2']
-                    else:
-                        b2_app_key = None
-                        
+                    done = True
+                    cont = True
+                    b2_app_key = signin.json()['b2'] if 'b2' in signin.json() else None
+
             if cont:
                 # Create cookie file folder 
                 os.makedirs(os.path.dirname(forkie_cookies))

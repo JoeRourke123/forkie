@@ -56,7 +56,7 @@ def ask_for(question: str, answers: list) -> int:
     answer = str(input(question + " " + str(answers) + ": ")).lower()
     while answer not in answers:
         print("Don't understand that input")
-        answer = str(input(question + " " + str(answers))).lower()
+        answer = str(input(question + " " + str(answers)) + ': ').lower()
     return answer if len(answers) > 2 else answers[0] == answer
 
 def ask_for_list(input_ls: list) -> int:

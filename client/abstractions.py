@@ -164,7 +164,7 @@ def query_allrepos(query_json: dict, session: requests.Session, repo: dict, v: b
         except KeyError:
             print('Something went wrong when querying for ' + str(repo['repo_name']))
             return False, None, 0
-        print(returned)
+
         if v and p:
             print('Query JSON:', query_json)
         if code == 200:
@@ -174,7 +174,7 @@ def query_allrepos(query_json: dict, session: requests.Session, repo: dict, v: b
                     files_queried = returned.json()['rows']
                     if p:
                         if v:
-                            print('Returned rows (raw):', returned.json()['rows'])
+                            print('Returned rows (raw):', returned.json()['rows'], '\n')
                         formatted_rows = returned.json()['rows'][:]
                         print(format_file_rows(formatted_rows, offset))
                     return_offset = len(returned.json()['rows'])
@@ -207,58 +207,3 @@ def format_file_rows(formatted_rows: list, offset: int) -> str:
     headers = list(formatted_rows[0].keys())
     headers.insert(0, 'file no.')
     return cli_utils.format_rows(headers, [list(data.values()) for data in formatted_rows], offset)
-
-def query_groupusers_repo(query_json: dict, session: requests.Session, repo: dict, v: bool, p: bool, r: int, offset: int):
-    """ Queries a repo with the get group users query endpoint. Usually called from a loop through all repos
-        - query_json: the json to post to the endpoint
-        - session: the requests session object containing the user cookies
-        - repo: the dict containing the current repo details
-        - v: verbose
-        - p: whether to print
-        - r: the current repo (used for print)
-        - offset: the int offset of files (used so that file no. continues from last repo)
-    """
-    users_queried = []
-    found_rows = False
-    formatted_rows = []
-    return_offset = 0
-    if p:
-        print('\n\n' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
-    session.cookies.update(repo['cookie'])
-    try:
-        returned = session.post('http://' + repo['url'] + file_query_end, json=query_json)
-        try:
-            code = returned.json()['code']
-            msg = returned.json()['msg']
-        except KeyError:
-            print('Something went wrong when querying for ' + str(repo['repo_name']))
-            return False, None, 0
-        print(returned)
-        if v and p:
-            print('Query JSON:', query_json)
-        if code == 200:
-            if 'rows' in returned.json():
-                if len(returned.json()['rows']) != 0:
-                    found_rows = True
-                    files_queried = returned.json()['rows']
-                    if p:
-                        if v:
-                            print('Returned rows (raw):', returned.json()['rows'])
-                        formatted_rows = returned.json()['rows'][:]
-                        # For the meantime
-                        print(formatted_rows)
-                    return_offset = len(returned.json()['rows'])
-                else:
-                    if p:
-                        print('No files found')
-            else:
-                if p:
-                    print('Something went wrong with querying the users for group ', query_json['groupname'])
-        else:
-            if p:
-                print(msg)
-        return found_rows, files_queried, return_offset
-    except requests.ConnectionError:
-        if p:
-            print('COULD NOT CONNECT TO THIS REPO')
-        return False, None, 0
