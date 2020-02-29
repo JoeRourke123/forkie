@@ -7,6 +7,13 @@ from src.db.UserGroupTable import UserGroupTable
 from sqlalchemy import and_
 
 def getUserData(userid):
+    """ Gets the serialised dictionary of the data in the user's record from the UserTable
+
+        - userid: UUID of the user to fetch data from
+
+        - returns: a serialised dictionary of the user's data
+    """
+
     query = UserTable.query.filter(UserTable.userid == userid).first()
 
     return {
@@ -19,6 +26,10 @@ def getUserData(userid):
 
 
 def getAdmins():
+    """
+        - returns: a list of dictionaries for all the users who have admin privileges
+    """
+
     query = UserTable.query.filter(UserTable.admin == True).all()
     return [getUserData(str(admin.userid)) for admin in query]
 
