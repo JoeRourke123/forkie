@@ -7,7 +7,7 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
 
 from src.api.files import filesBP
-from src.api.user.utils import getFilesUserCanAccess
+from src.api.user.utils import getFilesUserCanAccess, getUserData
 from src.api.files.utils import getFileGroups, getFileVersions
 
 import json
@@ -45,7 +45,6 @@ query_schema = {
     shortlisted by the criteria inside the JSON query. Rows from query obj are then converted to a JSON to be returned
 """
 
-
 @filesBP.route("/query", methods=["POST"])
 def file_query(browserQuery=None):
     data = browserQuery if browserQuery is not None else json.loads(request.data)
@@ -64,7 +63,7 @@ def file_query(browserQuery=None):
             userid = request.cookies.get("userid")
 
             # Return bad request if the user id is None
-            if userid is None:
+            if userid is None or ("archived" in data and not getUserData(userid)["admin"]):
                 raise Exception
 
             query = getFilesUserCanAccess(userid)

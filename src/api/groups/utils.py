@@ -9,12 +9,14 @@ from src.db.UserGroupTable import UserGroupTable
 from src.db.UserTable import UserTable
 
 
+# Given a user ID will returns a list of serialised GroupTable rows
 def getUserGroups(userID):
     try:
         res = GroupTable.query.join(UserGroupTable).filter(UserGroupTable.userid == userID).all()
-        return list(map(lambda x: x.serialise(), res))
+        return list(map(lambda x: x.serialise(), res))  # Uses map with a lambda in order to convert
     except Exception as e:
-        return print_exc()
+        print(print_exc())
+        return []       # If an
 
 
 def isGroupLeader(userID, groupID):
