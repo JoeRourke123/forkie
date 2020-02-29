@@ -99,7 +99,7 @@ def newFile():
 @filesBP.route("/newVersion", methods=["POST"])
 def newVersion():
     # isBrowser = 'python-requests' not in request.headers.get('User-Agent')
-    print(request.headers)
+    # print(request.headers)
     isBrowser = "fileid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 

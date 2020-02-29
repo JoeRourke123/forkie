@@ -161,7 +161,7 @@ def query_allrepos(query_json: dict, session: requests.Session, repo: dict, v: b
         try:
             code = returned.json()['code']
             msg = returned.json()['msg']
-        except KeyError:
+        except Exception:
             print('Something went wrong when querying for ' + str(repo['repo_name']))
             return False, None, 0
 

@@ -1,6 +1,6 @@
 from client import cli_utils
 from client.abstractions import check_bool_option, check_if_equal, check_string_option, handle_message, print_dict, get_emailandpass, get_repo_details, format_file_rows, query_allrepos
-from src.api.files.backblaze import B2Interface, application_key, application_key_id, file_rep_bucket, UploadSourceBytes
+from src.api.files.backblaze import B2Interface, UploadSourceBytes
 from urllib.parse import urljoin
 from traceback import print_exc
 
@@ -199,7 +199,7 @@ def make(args: dict):
                         print('Use the "forkie login <repo>" command to login to this repo')
                         break
                     else:
-                        print('Upload successful')
+                        print('Uploaded "' + file_open.name + '" successfully')
                 except Exception as e:
                     print("Woops something went wrong while trying to upload a file")
     else:
@@ -503,37 +503,6 @@ def find(args: dict):
             except Exception as e:
                 print("Woops something went wrong while posting comments")
                 print(print_exc())
-
-def archive(args: dict):
-    """ Queries database for archived files or manually archives files not accessed in the past year
-    """
-    # [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
-    args_norm = {
-        "verbose": False,
-        "force": False,
-        "all_files": False,
-        "view": False,
-        "keyword": None,
-        "group": None,
-    }
-    
-    # Check if there's verbose
-    args_norm["verbose"] = check_bool_option(args, "--verbose")
-    # Check if there's a force
-    args_norm["force"] = check_bool_option(args, "--force")
-    # Check if there's a view
-    args_norm["view"] = check_bool_option(args, "--view")
-    # Check for group
-    args_norm["group"] = check_string_option(args, "-p", "group")
-    # All
-    args_norm["all_files"] = check_bool_option(args, "-a")
-    # Get keyword
-    args_norm["keyword"] = check_string_option(args, "--keyword", "keyword")
-    if args_norm["verbose"]:
-        if args_norm["group"] is not None:
-            print("group:", args_norm["group"])
-        if args_norm["keyword"] is not None:
-            print("keyword: \"" + args_norm["keyword"] + "\"")
 
 def group(args: dict):
     """ View all groups or just peeps and filter by email. Add person to group. Remove person from group. Change person from one group to another.
