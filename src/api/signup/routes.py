@@ -2,15 +2,19 @@ from flask import current_app as app
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
 
 from src.db.UserTable import UserTable
-from src.utils import hashPassword
 from src.db import db
 
+from hashlib import sha256
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import json
 
 signupBP = Blueprint('signup', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
+
+
+def hashPassword(password):
+    return str(sha256(password.encode('utf-8')).hexdigest())
 
 @signupBP.route("/signup", methods=["POST"])
 def signup():

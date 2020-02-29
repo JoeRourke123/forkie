@@ -1,10 +1,9 @@
 import os
 
-from flask import current_app as app
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from flask import Blueprint, request, make_response, redirect, url_for
 
 from src.db.UserTable import UserTable
-from src.utils import hashPassword
+from src.api.signup.routes import hashPassword
 from src.db import db
 
 from datetime import datetime
