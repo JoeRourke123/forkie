@@ -107,12 +107,15 @@ def file_query(browserQuery=None):
                         "filename": row.filename,
                         "extension": row.extension,
                         "groups": getFileGroups(str(row.fileid)),
-                        "versions": getFileVersions(str(row.fileid), archived=("archived" in data and data["archived"]))
+                        "versions": getFileVersions(str(row.fileid), archived=("archived" in data and data["archived"])),
                     }
+
+                    rs_json["versionorder"] = sorted(rs_json["versions"].keys(),
+                                                     key=lambda vID: rs_json["versions"][vID]["uploaded"], reverse=True)
 
                     rs_list.append(rs_json)
 
-            rs_list = sorted(rs_list, key=lambda x: x["versions"][0]["uploaded"], reverse=True)
+            rs_list = sorted(rs_list, key=lambda x: x["versions"][x["versionorder"][0]]["uploaded"], reverse=True)
 
             if browserQuery is not None:
                 return rs_list

@@ -110,21 +110,17 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-muted">File Versions</h5>
-                    {% for version in file.versions %}
-                        <a href="{{ url_for("version", id=version["versionid"]) }}"
+                    {% for versionID in file["versionorder"] %}
+                        <a href="{{ url_for("version", id=versionID) }}"
                            class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                                {% if "title" not in version %}
-                                    <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
-                                {% else %}
-                                    <h5 class="mb-1">{{ version["title"] }}</h5>
-                                {% endif %}
+                                    <h5 class="mb-1">{{ file["versions"][versionID]["title"] }}</h5>
                                 </h5>
                                 <small>
-                                    <time class="timeago" datetime="{{ version.uploaded }}">5 mins ago</time>
+                                    <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5 mins ago</time>
                                 </small>
                             </div>
-                            <small class="text-muted">from {{ version.author.username }}</small>
+                            <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
                         </a>
                     {% endfor %}
                 </div>
@@ -160,9 +156,9 @@
                             title="clipboard"> </span>
                         Generate Report</a>
                         <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
-                               data-target="#deleteFile"><span class="oi oi-trash pr-1"
-                                                               title="trash"> </span> Delete
-                        File</a>
+                               data-target="#deleteFile"><span class="oi oi-box pr-1"
+                                                               title="box"> </span> Archive All Versions
+                        </a>
                     </div>
                 </div>
             {% endif %}

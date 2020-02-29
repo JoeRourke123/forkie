@@ -34,7 +34,7 @@
             <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
-            <a type="button" class="btn btn-outline-dark" href="#" role="button">
+            <a type="button" class="btn btn-outline-dark" href="{{ url_for("signin.signout") }}" role="button">
                 <span class="oi oi-account-logout" title="account-logout"></span>
             </a>
         </div>
@@ -76,12 +76,12 @@
                                 <h5 class="mb-1 text-truncate">{{ file["filename"] }}</h5>
                                 <small>
                                     Updated
-                                    <time class="timeago" datetime="{{ file["versions"][0]["uploaded"] }}">5 mins ago
+                                    <time class="timeago" datetime="{{ file["versions"][file["versionorder"]|first]["uploaded"] }}">5 mins ago
                                     </time>
                                 </small>
                             </div>
                             <small class="text-muted">Created
-                                by {{ file["versions"][file["versions"]|length - 1]["author"]["username"] }}</small>
+                                by {{ file["versions"][file["versionorder"]|last]["author"]["username"] }}</small>
                         </a>
                     {% endfor %}
                 </div>

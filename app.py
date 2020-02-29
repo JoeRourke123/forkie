@@ -142,10 +142,11 @@ def file(id : str):
 
     isLeader = leaderCheck(fileData["groups"], userData["userid"]) or userData["admin"]
 
-    readUnreadComments(id)                          # Marks any comment in the file that isn't read as read
+    readUnreadComments(id, userData["userid"])      # Marks any comment in the file that isn't read as read
     fileComments = getComments(id)                  # Fetches the files comments, with all of them read by current user
 
-    return render_template("file.html", file=fileData, isLeader=isLeader, comments=fileComments, userGroups=userGroups, archive=False)
+    return render_template("file.html", file=fileData, isLeader=isLeader,
+                           comments=fileComments, userGroups=userGroups, archive=False)
 
 
 # Displays the archive page, only accessible to admins
@@ -175,16 +176,14 @@ def archivedFile(id : str):
     if not files:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
-    readUnreadComments(id)
-    fileComments = getComments(id)
     userGroups = getUserGroups(request.cookies.get("userid"))
 
-    return render_template("file.html", file=files, isLeader=True, comments=fileComments, userGroups=userGroups, archive=True)
+    return render_template("file.html", file=files, isLeader=True, userGroups=userGroups, archive=True)
 
 
 # Page showing file version details.
 @app.route("/version/<id>")
-def version(id : str):
+def version(id: str):
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
@@ -194,11 +193,11 @@ def version(id : str):
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
     userData = getUserData(request.cookies.get("userid"))   # Gets the users Data to check whether they have leader/admin/creator access
-    isLeader = (versionData['versions'][0]['author'] == userData)\
+    isLeader = (versionData['versions'][id]['author'] == userData)\
                or leaderCheck(versionData["groups"], userData["userid"]) \
                or userData["admin"]
 
-    return render_template("version.html", version=versionData, isLeader=isLeader)
+    return render_template("version.html", id=id, version=versionData, isLeader=isLeader)
 
 
 # Page to retrieve a file's contents so it can be fetched from a download link

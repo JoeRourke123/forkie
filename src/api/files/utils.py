@@ -27,7 +27,7 @@ def getFileVersions(fileID, archived=False):
             FileVersionTable.archived == archived)
 
         versions = versionQuery.all()
-        results = []
+        results = {}
 
         for version in versions:
             metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
@@ -43,13 +43,13 @@ def getFileVersions(fileID, archived=False):
                 else:
                     versionData[data.title] = data.value
 
-            results.append(versionData)
+            results[str(version.versionid)] = versionData
 
-        return sorted(results, key=lambda x: x["uploaded"], reverse=True)
+        return results
     except Exception as e:
         print(print_exc())
 
-        return []
+        return {}
 
 
 def getFileGroups(fileID):
@@ -79,7 +79,7 @@ def newFileVersion(fileData, uploadData, title, userid):
     if not b2.checkForEqualFiles(upload.get_content_sha1(),
                                  filename=fileData["filename"],
                                  size=upload.get_content_length(),
-                                 versions=getFileVersions(str(fileData["fileid"]))):
+                                 versions=fileData["versions"].values()):
         return False
 
     fileversion.versionhash = upload.get_content_sha1()
