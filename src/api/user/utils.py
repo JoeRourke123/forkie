@@ -18,6 +18,11 @@ def getUserData(userid):
     }
 
 
+def getAdmins():
+    query = UserTable.query.filter(UserTable.admin == True).all()
+    return [getUserData(str(admin.userid)) for admin in query]
+
+
 def getFilesUserCanAccess(userid: str):
     """ Returns the Query of the files that the user (userid) can access. This is the join of
         FileTable, UserTable and FileGroupTable: where FileTable.fileid = FileGroupTable.fileid AND
