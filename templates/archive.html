@@ -58,7 +58,7 @@
                             </a>
                         {% endif %}
                         {% for file in files %}
-                            <a href="{{ url_for("archivedFile", id=file["fileid"]) }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for("archivedFile", id=file["fileid"]) }}" class="list-group-item list-group-item-action pb-0">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">{{ file["filename"] }}</h5>
                                 </div>
@@ -69,7 +69,7 @@
                                     by {{ file["versions"][file["versionorder"]|first]["author"]["username"] }}</small>
 
                                     <div class="d-flex justify-content-start mt-2 mb-0">
-                                        <form action="archive.restoreFile" method="POST" class="mr-2">
+                                        <form action="{{ url_for("files.restoreFile") }}" method="POST" class="mr-2">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
                                             <button type="submit" role="button" class="btn btn-sm btn-outline-info">
                                                 <span class="oi oi-action-undo" title="Restore Archived Versions"></span>

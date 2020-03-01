@@ -162,13 +162,14 @@ def deleteVersion():
 
 @filesBP.route("/restoreFile", methods=["POST"])
 def restoreFile():
-    """ Utility function used throughout the system which given a fileid, and an option to fetch only archived versions,
-        gets all the versions associated with that file
+    """ Endpoint which given a fileid will restore all the archived versions of that specific file, by running the
+        restoreVersion util function iteratively, setting the archived field in the respective FileVersionTable records
+        to false
 
-        - fileid: UUID of the file in which to search for versions from
-        - archived: a boolean to decide whether the function should fetch archived versions or regular versions
+        - fileid: UUID of the file in which to unarchive any archived versions from
+        - userid: UUID of the user triggering the file restoration, must be an admin
 
-        - returns: a dictionary of the versions with the versionids as keys and JSON data as the values
+        - returns: a response which may be either successful or with an error message, depending on outcome of operation
     """
 
     isBrowser = "fileid" in request.form
@@ -190,9 +191,9 @@ def restoreFile():
             return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
 
     try:
-        files = file_query({"fileid": data["fileid"]})
+        files = file_query({"fileid": data["fileid"], "archived": True})[0]
 
-        for version in files["versioncount"]:
+        for version in files["versionorder"]:
             if not restoreVersion(version):
                 raise Exception()
 
@@ -215,13 +216,13 @@ def restoreFile():
 
 @filesBP.route("/restoreVersion", methods=["POST"])
 def restoreFileVersion():
-    """ Utility function used throughout the system which given a fileid, and an option to fetch only archived versions,
-        gets all the versions associated with that file
+    """ An endpoint which interfaces with the restoreVersion util function in order to restore a specified file version
+        from the archive into the main file store
 
-        - fileid: UUID of the file in which to search for versions from
-        - archived: a boolean to decide whether the function should fetch archived versions or regular versions
+        - versionid: UUID of the version which should be restored from the archive
+        - userid: UUID of the user triggering the file restoration, must be an admin
 
-        - returns: a dictionary of the versions with the versionids as keys and JSON data as the values
+        - returns: a response which may be either successful or with an error message, depending on outcome of operation
     """
 
     isBrowser = "versionid" in request.form
