@@ -7,7 +7,9 @@ from src.db import db
 from hashlib import sha256
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+
 import json
+import os
 
 signupBP = Blueprint('signup', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
@@ -65,7 +67,18 @@ def signup():
     if isBrowser:
         return redirect(url_for('index', code=200, msg="Account created! You may now signin"))
     else:
-        return json.dumps({
+        # Changed the response in order to better suit CLI
+        resp = make_response(json.dumps({
             "code": 200,
-            "msg": "Your account has been created, you may not signin"
-        })
+            "msg": "Your account has been created",
+            "b2": {
+                "application_key_id": os.environ["APPLICATION_KEY_ID"],
+                "application_key": os.environ["APPLICATION_KEY"],
+                "bucket_name": os.environ["BUCKET_NAME"]
+            }
+        }))
+        # Also sets cookie
+        query = UserTable.query.filter_by(email=data['email'])\
+            .filter_by(password=hashPassword(data['password'])).first()
+        resp.set_cookie("userid", str(query.userid))
+        return resp

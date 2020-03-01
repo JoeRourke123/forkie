@@ -37,7 +37,7 @@ def getGroupUsers(groupID):
 
 
 def getGroupData(groupID):
-    """ Endpoint to remove a user from a specific group - same endpoint to allow user to leave a group
+    """ Util function to get serialised group data, along with files accessible to the group
 
         - groupid: returns the serialised JSON data from a group, alongside all the files they can access
 
@@ -54,3 +54,7 @@ def getGroupData(groupID):
         "groupleader": getUserData(groupData.groupleaderid),
 
     }
+
+
+def getGroupDataFromName(groupname: str):
+    return GroupTable.query.filter_by(groupname=groupname).first()

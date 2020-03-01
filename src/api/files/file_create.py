@@ -121,8 +121,7 @@ def newVersion():
         - returns: an accurate response/redirection depending on the level of success of file upload/database alteration
     """
 
-    isBrowser = 'python-requests' not in request.headers.get('User-Agent')   # Checks that the request isn't coming from
-    # isBrowser = "fileid" in request.form                                     the CLI, as it sends specific header info
+    isBrowser = "fileid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
     if not request.cookies.get("userid"):       # If the user isn't authenticated, redirect them to sign in or produce
