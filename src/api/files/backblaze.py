@@ -4,13 +4,6 @@ from b2sdk.v1 import InMemoryAccountInfo, B2Api, UploadSourceBytes, DownloadDest
 from uuid import uuid1
 from os.path import join, dirname, abspath
 
-# THIS IS JUST USED FOR TESTING
-# These are my b2 key details for a bucket called file-rep0
-
-application_key_id = '0003976a482cd540000000001'
-application_key = 'K0000L+ZHdPrf3wT4G+7enptKGSct68'
-file_rep_bucket = 'file-rep0'
-
 
 class CouldNotFindCorrectFile(Exception):
     """ Raised when the b2api cannot find the specified folder in the bucket """

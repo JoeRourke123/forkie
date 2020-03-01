@@ -10,6 +10,7 @@ from src.db.FileVersionTable import FileVersionTable
 from src.api.files import filesBP
 from src.api.user.utils import getFilesUserCanAccess
 from src.api.files.utils import getFileGroups, getFileVersions
+from src.api.groups.utils import getGroupDataFromName
 
 import json
 from uuid import UUID
@@ -89,7 +90,9 @@ def file_query(browserQuery=None):
                 if "groupid" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 if "groupname" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
+                    # Get groupid using getGroupDataFromName
+                    groupid = getGroupDataFromName(data['groupname']).serialise()['groupid']
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == groupid)
                 if "first" in data:
                     get_first = data['first']
 
