@@ -17,6 +17,14 @@ metadataBP = Blueprint("metadata", __name__,
 
 @metadataBP.route("/add", methods=["POST"])
 def addMetadata():
+    """ Endpoint to add metadata to a file version
+
+        - versionid: the UUID of the file version to add the metadata to
+        - userid: the UUID of the user who triggered the metadata addition
+
+        - returns: a response for the client to interpret based on the success of the operation
+    """
+
     isBrowser = "versionid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
@@ -43,7 +51,6 @@ def addMetadata():
             })
     except Exception as e:
         print(print_exc())
-        return str(e)
 
         if isBrowser:
             return redirect(url_for("version", id=data["versionid"], msg="Sorry, something went wrong when adding your metadata"))
@@ -57,6 +64,16 @@ def addMetadata():
 
 @metadataBP.route("/edit", methods=["POST"])
 def editMetadata():
+    """ Endpoint to edit metadata
+
+        - versionid: the UUID of the version where the metadata is associated with
+        - title: the title of the metadata to amend
+        - value: the value to change the metadata to
+        - userid: the UUID of the user who triggered the metadata edit
+
+        - returns: a response for the client to interpret based on the success of the operation
+    """
+
     isBrowser = "versionid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
@@ -84,7 +101,7 @@ def editMetadata():
         metadata = MetadataTable.query.filter(MetadataTable.versionid == data["versionid"],
                                               MetadataTable.title == data["title"]).first()
 
-        metadata.value = data["value"]
+        metadata.value = data["value"]          # Sets the queried metadata row value to the value sent by the user
         db.session.commit()
 
         if isBrowser:
@@ -96,7 +113,6 @@ def editMetadata():
             })
     except Exception as e:
         print(print_exc())
-        return str(e)
 
         if isBrowser:
             return redirect(url_for("version", id=data["versionid"],

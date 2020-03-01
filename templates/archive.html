@@ -1,0 +1,110 @@
+<html>
+<head>
+    <title>
+        Archive - rep0
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <style>
+    </style>
+</head>
+<body>
+{% if "msg" in request.args %}
+    <div class="alert alert-warning alert-dismissible fade show position-fixed m-4 msg" role="alert">
+        {{ request.args["msg"] }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light orange-grad">
+    <a class="navbar-brand" href="#">rep0</a>
+    <button class="navbar-toggler text-light" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
+                <span class="oi oi-document" title="document"></span>
+            </a>
+            <a type="button" class="btn btn-outline-dark" href="{{ url_for('signin.signout') }}" role="button">
+                <span class="oi oi-account-logout" title="account-logout"></span>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row mt-4 mb-4">
+        <h2>Archived Files</h2>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-muted">Files</h4>
+                    <div class="list-group">
+                        {% if files|length <= 0 %}
+                            <a href="#" class="list-group-item list-group-item-action disabled">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">There are no files in the archive!</h5>
+                                </div>
+                            </a>
+                        {% endif %}
+                        {% for file in files %}
+                            <a href="{{ url_for("archivedFile", id=file["fileid"]) }}" class="list-group-item list-group-item-action pb-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ file["filename"] }}</h5>
+                                </div>
+                                <div class="d-flex flex-column mb-0 pb-0">
+                                    <small class="text-muted">Updated
+                                    <time class="timeago" datetime="{{ file["versions"][file["versionorder"]|first].uploaded }}">5 mins ago
+                                    </time>
+                                    by {{ file["versions"][file["versionorder"]|first]["author"]["username"] }}</small>
+
+                                    <div class="d-flex justify-content-start mt-2 mb-0">
+                                        <form action="{{ url_for("files.restoreFile") }}" method="POST" class="mr-2">
+                                            <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
+                                            <button type="submit" role="button" class="btn btn-sm btn-outline-info">
+                                                <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
+                                            </button>
+                                        </form>
+                                        <form action="archive.deleteFile" method="POST">
+                                            <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
+                                            <button type="submit" role="button" class="btn btn-sm btn-outline-danger">
+                                                <span class="oi oi-trash" title="Delete Archived Versions"></span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.timeago.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+<script>
+    $(document).ready((e) => {
+        $("time.timeago").timeago();
+    });
+
+    $('.alert').alert();
+
+    setTimeout(() => {
+        $(".alert").alert("close")
+    }, 5000);
+</script>
+</html>

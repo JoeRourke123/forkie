@@ -50,7 +50,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-muted">Groups with Access</h5>
                     <div class="list-group">
-                        {% for group in file.groups %}
+                        {% for group in file["groups"] %}
                             <a href="{{ url_for('group', id=group["groupid"]) }}"
                                class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
@@ -89,8 +89,13 @@
                                                     class="oi oi-check"></span></a></span>
                                         {% endif %}
                                         {% if comment["user"]["userid"]|string == request.cookies.get("userid") %}
-                                            <a class="btn btn-sm btn-outline-danger mt-2"><span
-                                                    class="oi oi-trash text-danger"></span></a>
+                                            <form action="{{ url_for("comments.deleteComment") }}" class="m-0" method="POST">
+                                                <input type="hidden" name="commentid" value="{{ comment["commentid"] }}" />
+                                                <input type="hidden" name="fileid" value="{{ file["fileid"] }}">
+                                                <button type="submit" role="button" class="btn btn-sm btn-outline-danger mt-2">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </form>
                                         {% endif %}
                                     </div>
 
@@ -105,21 +110,34 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-muted">File Versions</h5>
-                    {% for version in file.versions %}
-                        <a href="{{ url_for("version", id=version["versionid"]) }}"
+                    {% for versionID in file["versionorder"] %}
+                        <a href="{{ url_for("version", id=versionID) }}"
                            class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                                {% if "title" not in version %}
-                                    <h5 class="mb-1">Version #{{ file.versions|length - loop.index }}</h5>
-                                {% else %}
-                                    <h5 class="mb-1">{{ version["title"] }}</h5>
-                                {% endif %}
+                                    <h5 class="mb-1">{{ file["versions"][versionID]["title"] }}</h5>
                                 </h5>
                                 <small>
-                                    <time class="timeago" datetime="{{ version.uploaded }}">5 mins ago</time>
+                                    <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5 mins ago</time>
                                 </small>
                             </div>
-                            <small class="text-muted">from {{ version.author.username }}</small>
+                            {% if archive %}
+                                <div class="d-flex justify-content-start">
+                                    <form action="{{ "files.restoreVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                    <form action="{{ "files.deleteVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Delete Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
+                            {% endif %}
                         </a>
                     {% endfor %}
                 </div>
@@ -155,9 +173,9 @@
                             title="clipboard"> </span>
                         Generate Report</a>
                         <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
-                               data-target="#deleteFile"><span class="oi oi-trash pr-1"
-                                                               title="trash"> </span> Delete
-                        File</a>
+                               data-target="#deleteFile"><span class="oi oi-box pr-1"
+                                                               title="box"> </span> Archive All Versions
+                        </a>
                     </div>
                 </div>
             {% endif %}

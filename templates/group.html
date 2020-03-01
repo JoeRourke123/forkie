@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>
-        {{ groupData.groupname }} - rep0
+        {{ group["groupname"] }} - rep0
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -34,7 +34,7 @@
             <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
-            <a type="button" class="btn btn-outline-dark" href="#" role="button">
+            <a type="button" class="btn btn-outline-dark" href="{{ url_for("signin.signout") }}" role="button">
                 <span class="oi oi-account-logout" title="account-logout"></span>
             </a>
         </div>
@@ -42,7 +42,7 @@
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
-        <h2>{{ groupData.groupname }}</h2>
+        <h2>{{ group["groupname"] }}</h2>
     </div>
     <div class="row">
         <div class="col-4">
@@ -50,15 +50,15 @@
                 <div class="card-body">
                     <h5 class="card-title text-muted">Members</h5>
                     <div class="list-group">
-                        {% for member in groupUsers %}
+                        {% for member in group["members"] %}
                             <a href="#" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ member.username }}</h5>
+                                    <h5 class="mb-1">{{ member["username"] }}</h5>
                                     <small>
-                                        <time class="timeago" datetime="{{ member.lastlogin }}">5 mins ago</time>
+                                        <time class="timeago" datetime="{{ member["lastlogin"] }}">5 mins ago</time>
                                     </small>
                                 </div>
-                                <p class="mb-1">{{ member.email }}</p>
+                                <p class="mb-1">{{ member["email"] }}</p>
                             </a>
                         {% endfor %}
                     </div>
@@ -69,19 +69,19 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Group Files</h5>
-                    {% for file in groupFiles %}
+                    {% for file in group["files"] %}
                         <a href="{{ url_for("file", id=file["fileid"]) }}"
                            class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">{{ file["filename"] }}</h5>
+                                <h5 class="mb-1 text-truncate">{{ file["filename"] }}</h5>
                                 <small>
                                     Updated
-                                    <time class="timeago" datetime="{{ file["versions"][0]["uploaded"] }}">5 mins ago
+                                    <time class="timeago" datetime="{{ file["versions"][file["versionorder"]|first]["uploaded"] }}">5 mins ago
                                     </time>
                                 </small>
                             </div>
                             <small class="text-muted">Created
-                                by {{ file["versions"][file["versions"]|length - 1]["author"]["username"] }}</small>
+                                by {{ file["versions"][file["versionorder"]|last]["author"]["username"] }}</small>
                         </a>
                     {% endfor %}
                 </div>
@@ -138,7 +138,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.addMember') }}" method="POST">
-                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+                    <input type="hidden" value="{{ group["groupid"] }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="group">User Email</label>
@@ -163,15 +163,15 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.removeMember') }}" method="POST">
-                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+                    <input type="hidden" value="{{ group["groupid"] }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="group">Select Group</label>
                         <select class="form-control" id="group" name="userid">
-                            {% for member in groupUsers %}
-                                {% if request.cookies.get('userid') != member.userid|string %}
-                                    <option value="{{ member.userid }}">{{ member.username }}
-                                        - {{ member.email }}</option>
+                            {% for member in group["members"] %}
+                                {% if request.cookies.get('userid') != member["userid"] %}
+                                    <option value="{{ member["userid"] }}">{{ member["username"] }}
+                                        - {{ member["email"] }}</option>
                                 {% endif %}
                             {% endfor %}
                         </select>
@@ -195,7 +195,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('email.emailGroup') }}" method="post">
-                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+                    <input type="hidden" value="{{ group["groupid"] }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="subject">Email Subject</label>
@@ -224,7 +224,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('groups.renameGroup') }}" method="post">
-                    <input type="hidden" value="{{ groupData.groupid }}" name="groupid"/>
+                    <input type="hidden" value="{{ group["groupid"] }}" name="groupid"/>
 
                     <div class="form-group">
                         <label for="newname">New Group Name</label>
@@ -253,7 +253,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
-                    <input type="hidden" name="groupid" value="{{ groupData.groupid }}"/>
+                    <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
                     <button class="btn btn-outline-danger">Delete Group</button>
                 </form>
             </div>
@@ -276,7 +276,7 @@
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('groups.removeMember') }}" method="POST">
                     <input type="hidden" name="userid" value="{{ request.cookies.get('userid') }}"/>
-                    <input type="hidden" name="groupid" value="{{ groupData.groupid }}"/>
+                    <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
                     <button class="btn btn-outline-danger">Leave Group</button>
                 </form>
             </div>

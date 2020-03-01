@@ -1,8 +1,8 @@
 <html>
 <head>
     <title>
-        {% if version.versions[0].title %}
-            {{ version.versions[0].title }} - rep0
+        {% if version.versions[id].title %}
+            {{ version.versions[id].title }} - rep0
         {% else %}
             {{ version.filename }}  - repo0
         {% endif %}
@@ -46,10 +46,10 @@
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
-        {% if "title" not in version["versions"][0] %}
+        {% if "title" not in version["versions"][id] %}
             <h2>{{ version.filename }} version</h2>
         {% else %}
-            <h2>{{ version["versions"][0]["title"] }}</h2>
+            <h2>{{ version["versions"][id]["title"] }}</h2>
         {% endif %}
     </div>
     <div class="row">
@@ -68,13 +68,13 @@
                             <tbody>
                             <tr>
                                 <td>Author</td>
-                                <td>{{ version.versions[0]['author'].username }}</td>
+                                <td>{{ version.versions[id]['author'].username }}</td>
                             </tr>
                             <tr>
                                 <td>Version Created</td>
-                                <td>{{ version.versions[0].uploaded }}</td>
+                                <td>{{ version.versions[id].uploaded }}</td>
                             </tr>
-                            {% for key, value in version.versions[0].items() %}
+                            {% for key, value in version.versions[id].items() %}
                                 {% if key not in ["author", "uploaded"] %}
                                     <tr>
                                         <td>{{ key }}</td>
@@ -93,7 +93,7 @@
             <div class="card mb-4">
                 <div class="card-body d-flex flex-column">
                     <a class="btn btn-outline-success"
-                       href="{{ url_for('download', versionid=version["versions"][0]["versionid"]) }}" role="button"
+                       href="{{ url_for('download', id=version["versions"][id]["versionid"]) }}" role="button"
                        download><span
                             class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download
                         File
@@ -111,9 +111,8 @@
                                                title="pencil"> </span> Edit Metadata
                         </a>
                         <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
-                           data-target="#deleteVersion"><span class="oi oi-trash pr-1"
-                                                              title="trash"> </span> Delete
-                            Version</a>
+                           data-target="#deleteVersion"><span class="oi oi-box pr-1"
+                                                              title="box"> </span> Archive Version</a>
                     </div>
                 </div>
             {% endif %}
@@ -131,7 +130,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('metadata.addMetadata') }}" method="post">
-                    <input type="hidden" value="{{ version["versions"][0]["versionid"] }}" name="versionid"/>
+                    <input type="hidden" value="{{ version["versions"][id]["versionid"] }}" name="versionid"/>
 
                     <div class="form-group">
                         <label for="title">Title</label>
@@ -160,7 +159,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for("metadata.editMetadata") }}" method="post">
-                    <input type="hidden" value="{{ version["versions"][0]["versionid"] }}" name="versionid"/>
+                    <input type="hidden" value="{{ version["versions"][id]["versionid"] }}" name="versionid"/>
 
                     <div class="form-group">
                         <label for="edittitle">Select Metadata</label>
@@ -168,7 +167,7 @@
                             {% set currentVal = namespace(value="") %}
                             {% set allVals = {} %}
 
-                            {% for name, value in version["versions"][0].items() %}
+                            {% for name, value in version["versions"][id].items() %}
                                 {% if name not in ["author", "uploaded", "versionhash", "versionid"] %}
                                     {% set currentVal.value = value %}
                                     {% set x = allVals.update({name: value}) %}
@@ -199,16 +198,17 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>This action cannot be undone.</p>
-                {% if versionCount <= 1 %}
-                    <p>Deleting this version will delete the entire file entry.</p>
-                {% endif %}
+                <p>To restore this you'll have to get an admin's permission.</p>
+                {{ version["versions"]|length }}
+{#                {% if versionCount <= 1 %}#}
+{#                    <p>Deleting this version will delete the entire file entry.</p>#}
+{#                {% endif %}#}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('files.deleteVersion') }}" method="POST">
-                    <input type="hidden" name="versionid" value="{{ version["versions"][0]["versionid"] }}"/>
-                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete Version</button>
+                    <input type="hidden" name="versionid" value="{{ version["versions"][id]["versionid"] }}"/>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Archive Version</button>
                 </form>
             </div>
         </div>

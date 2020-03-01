@@ -1,21 +1,18 @@
 from traceback import print_exc
 
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from flask import request, make_response
 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
 
 from src.api.files import filesBP
-from src.api.user.utils import getFilesUserCanAccess
+from src.api.user.utils import getFilesUserCanAccess, getUserData
 from src.api.files.utils import getFileGroups, getFileVersions
 from src.api.groups.utils import getGroupDataFromName
 
 import json
-from uuid import UUID
 from jsonschema import validate, ValidationError
-
-from sqlalchemy import and_
 
 query_schema = {
     "type": "object",
@@ -27,6 +24,7 @@ query_schema = {
         "groupid": {"type": "string"},
         "groupname": {"type": "string"},
         "versionhash": {"type": "number"},
+        "archived": {"type": "boolean"},
         "first": {"type": "boolean"}
     }
 }
@@ -48,7 +46,6 @@ query_schema = {
     shortlisted by the criteria inside the JSON query. Rows from query obj are then converted to a JSON to be returned
 """
 
-
 @filesBP.route("/query", methods=["POST"])
 def file_query(browserQuery=None):
     data = browserQuery if browserQuery is not None else json.loads(request.data)
@@ -67,7 +64,7 @@ def file_query(browserQuery=None):
             userid = request.cookies.get("userid")
 
             # Return bad request if the user id is None
-            if userid is None:
+            if userid is None or ("archived" in data and not getUserData(userid)["admin"]):
                 raise Exception
 
             query = getFilesUserCanAccess(userid)
@@ -81,9 +78,9 @@ def file_query(browserQuery=None):
                 if "versionid" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
+                    query = query.filter(FileTable.extension == data["extension"])
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionhash == data["versionhash"])
                 if "groupid" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 if "groupname" in data:
@@ -92,7 +89,9 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == groupid)
                 if "first" in data:
                     get_first = data['first']
-                    
+                if "archived" in data:
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.archived == data["archived"])
+
             # Queries all even when first flag is true as it needs all columns from query object 
             # and first() method strips other columns for some reason
             query = query.all()
@@ -111,11 +110,15 @@ def file_query(browserQuery=None):
                         "filename": row.filename,
                         "extension": row.extension,
                         "groups": getFileGroups(str(row.fileid)),
-                        "versions": getFileVersions(str(row.fileid))
+                        "versions": getFileVersions(str(row.fileid), archived=("archived" in data and data["archived"])),
                     }
+
+                    rs_json["versionorder"] = sorted(rs_json["versions"].keys(),
+                                                     key=lambda vID: rs_json["versions"][vID]["uploaded"], reverse=True)
+
                     rs_list.append(rs_json)
 
-            rs_list = sorted(rs_list, key=lambda x: x["versions"][0]["uploaded"], reverse=True)
+            rs_list = sorted(rs_list, key=lambda x: x["versions"][x["versionorder"][0]]["uploaded"], reverse=True)
 
             if browserQuery is not None:
                 return rs_list
