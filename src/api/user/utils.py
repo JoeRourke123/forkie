@@ -7,6 +7,12 @@ from src.db.UserGroupTable import UserGroupTable
 from sqlalchemy import and_
 
 def getUserDataFromEmail(email: str):
+    """ Gets the serialised dictionary of the data in the user's record from the UserTable
+
+        - email: email of the user to fetch data from
+
+        - returns: a serialised dictionary of the user's data
+    """
     query = UserTable.query.filter(UserTable.email == email).first()
     
     return {
