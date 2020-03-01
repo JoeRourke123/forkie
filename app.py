@@ -12,7 +12,6 @@ from src.db import db
 from src.api.signin.routes import signinBP
 from src.api.signup.routes import signupBP
 from src.api.groups.routes import groupsBP
-from src.api.errors.routes import errorsBP
 from src.api.email.routes import emailBP
 from src.api.metadata.routes import metadataBP
 from src.api.comments.routes import commentsBP
@@ -38,7 +37,6 @@ db.init_app(app)
 app.register_blueprint(signinBP)
 app.register_blueprint(signupBP)
 app.register_blueprint(groupsBP)
-app.register_blueprint(errorsBP)
 app.register_blueprint(emailBP)
 app.register_blueprint(filesBP)
 app.register_blueprint(metadataBP)
@@ -171,14 +169,16 @@ def archivedFile(id : str):
     if not request.cookies.get("userid"):
         return redirect(url_for('index', msg="You are not signed in, please sign in to see this page."))
 
-    files = file_query({"fileid": id, "archived": True})
+    file = file_query({"fileid": id, "archived": True})
 
-    if not files:
+    if not file:
         return redirect(url_for('dash', msg="Sorry, you do not have access to this file"))
 
-    userGroups = getUserGroups(request.cookies.get("userid"))
 
-    return render_template("file.html", file=files, isLeader=True, userGroups=userGroups, archive=True)
+    userGroups = getUserGroups(request.cookies.get("userid"))
+    fileComments = getComments(id)                  # Fetches the files comments, with all of them read by current user
+
+    return render_template("file.html", file=file[0], isLeader=True, userGroups=userGroups, comments=fileComments, archive=True)
 
 
 # Page showing file version details.
