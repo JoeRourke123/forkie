@@ -87,7 +87,7 @@ def file_query(browserQuery=None):
                 if "first" in data:
                     get_first = data['first']
                 if "archived" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.archived == data["archive"])
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.archived == data["archived"])
 
             # Queries all even when first flag is true as it needs all columns from query object 
             # and first() method strips other columns for some reason
