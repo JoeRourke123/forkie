@@ -77,7 +77,7 @@ def dash():
 
     userData = getUserData(request.cookies.get("userid"))           # Gets dictionary of the user's usertable data
     groupData = getUserGroups(request.cookies.get("userid"))        # Get all the user's groups in order to show them in the dropdown
-    files = file_query({})                                          # Retrieve all user's files in order to show in file list
+    files = file_query({"archived": False})                                          # Retrieve all user's files in order to show in file list
     unread = getUnreadComments(files, request.cookies.get("userid"))    # Gets any unread comments, to display in the notifications pane
 
     return render_template("dashboard.html", user=userData, groups=groupData, files=files, unreadComments=unread)
@@ -158,7 +158,7 @@ def archive():
     if not userData["admin"]:
         return redirect(url_for("dash", msg="You don't have permission to see this page"))
 
-    files = file_query({"archived": True})      # Fetches all files with any archived file versions
+    files = file_query({})      # Fetches all files with any archived file versions
 
     return render_template("archive.html", files=files)
 
@@ -176,7 +176,7 @@ def archivedFile(id : str):
 
 
     userGroups = getUserGroups(request.cookies.get("userid"))
-    fileComments = getComments(id)                  # Fetches the files comments, with all of them read by current user
+    fileComments = getComments(id, True)                  # Fetches the files comments, with all of them read by current user
 
     return render_template("file.html", file=file[0], isLeader=True, userGroups=userGroups, comments=fileComments, archive=True)
 
