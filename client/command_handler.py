@@ -28,6 +28,9 @@ signin_end = '/api/signin'
 signup_end = '/api/signup'
 bulk_comment_end = '/api/comment/bulkComment'
 
+""" Module which handles all subcommands to the forkie CLI
+"""
+
 def make(args: dict):
     """ Handles the 'make' subcommand. If no message option is found or message is empty then a temp file
         will be made and opened with the default editor. After the arguments have been handled then the

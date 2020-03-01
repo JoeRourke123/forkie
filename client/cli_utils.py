@@ -4,6 +4,9 @@ import requests
 import platform
 import subprocess
 
+""" Module which contains the functions relating to frequently used tasks to do with the command line
+"""
+
 class UndefinedSystem(Exception):
     """ Raised when the user's system is unhandled/unrecognized """
     def __init__(self, message):

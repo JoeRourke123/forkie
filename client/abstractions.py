@@ -95,10 +95,16 @@ def handle_message(args: dict, verbose: bool) -> dict:
     return message
 
 def print_dict(args: dict):
+    """ Prints dictionaries in 'key: value' format 
+        - args: dict to print
+    """
     for arg in args.keys():
         print(str(arg) + ": " + str(args[arg]))
         
 def get_emailandpass(login: dict) -> dict:
+    """ Asks for user email and pass input. Uses the getpass package to handle the invisible pass input 
+        - login: the dictionary to populate with the email and pass
+    """
     login["email"] = str(input("Enter email: "))
     login["password"] = str(getpass.getpass(prompt="Enter password: "))
     return login
@@ -106,6 +112,7 @@ def get_emailandpass(login: dict) -> dict:
 def get_repo_details(v: bool) -> list:
     """ Gets the list of repositories in the .forkie folder and returns a dict with the binary cookies
         and url for all available repos
+        -v: verbose
     """
     repos = []
     if not os.path.exists(".forkie"):
@@ -194,6 +201,10 @@ def query_allrepos(query_json: dict, session: requests.Session, repo: dict, v: b
         return False, None, 0
 
 def format_file_rows(formatted_rows: list, offset: int) -> str:
+    """ Formats the rows returned from the file query endpoint to be in a pretty tabulated format 
+        - formatted_rows: input data
+        - offset: the offset at which to start the file numbering
+    """
     formatted_rows = copy.deepcopy(formatted_rows)
     for row in formatted_rows:
         group_name_list = []

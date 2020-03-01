@@ -130,9 +130,12 @@ def find_difference(dict1: dict, dict2: dict) -> dict:
     """
     return {key: dict2[key] for key in dict1.keys() if dict1[key] != dict2[key]}
 
-""" Function called when forkie command is run """
+""" Function called when forkie command or forkie_runner.py is run """
 def main():
+    # Docopts handles the parsing of the command line args
     arguments = docopt(init_docs(__doc__), version=__version__)
+    
+    # Doing some normalisation of the dictionary returned by docopts
     arguments = remove_options(arguments)
     # print(arguments)
     arguments = find_difference(args_commands, arguments)

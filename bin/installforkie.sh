@@ -3,7 +3,7 @@
 # Will take an output argument and then will check if forkie is already installed in that location
 
 TOKEN="bb15550805756f28d4da829116e175c852d59250"
-REQUIREMENTS=( "curl" "pip3" )
+REQUIREMENTS=( "curl" "pip3" "heroku" )
 UNNECESSARY_FILES=( "forkie_runner.py" "MANIFEST.in" "requirements_cli.txt" "setup.py" "forkie.tar.gz" )
 UNNECESSARY_DIRS=( "client" "res" )
 
@@ -68,7 +68,7 @@ if [ "$output" != "" ]; then
             echo -n "Forkie is already installed in that location. Do you want to install in '$PWD'? (y/n) > "
             read response
             if [ "$response" != "y" ]; then
-                echo "Exiting..."
+                echo "Use forkielocal.sh to start the forkie repository on localhost. Exiting..."
                 exit 1
             else
                 output="$PWD"

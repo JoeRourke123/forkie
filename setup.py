@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import re
 from setuptools import setup
- 
+
+""" Setup file only used for forkie CLI. Do not run this if you want to install the forkie web repository on
+    your system, instead run bin/installforkie.sh
+""" 
 
 version = re.search(
     '^__version__\s*=\s*"(.*)"',

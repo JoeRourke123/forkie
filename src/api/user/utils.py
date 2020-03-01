@@ -6,6 +6,17 @@ from src.db.UserGroupTable import UserGroupTable
 
 from sqlalchemy import and_
 
+def getUserDataFromEmail(email: str):
+    query = UserTable.query.filter(UserTable.email == email).first()
+    
+    return {
+        "userid": query.userid,
+        "username": query.username,
+        "email": query.email,
+        "lastlogin": query.lastlogin,
+        "admin": query.admin
+    }
+
 def getUserData(userid):
     query = UserTable.query.filter(UserTable.userid == userid).first()
 
