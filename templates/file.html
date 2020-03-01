@@ -50,7 +50,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-muted">Groups with Access</h5>
                     <div class="list-group">
-                        {% for group in file.groups %}
+                        {% for group in file["groups"] %}
                             <a href="{{ url_for('group', id=group["groupid"]) }}"
                                class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
@@ -120,7 +120,24 @@
                                     <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5 mins ago</time>
                                 </small>
                             </div>
-                            <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
+                            {% if archive %}
+                                <div class="d-flex justify-content-start">
+                                    <form action="{{ "files.restoreVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                    <form action="{{ "files.deleteVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Delete Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
+                            {% endif %}
                         </a>
                     {% endfor %}
                 </div>

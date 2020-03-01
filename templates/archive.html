@@ -58,24 +58,28 @@
                             </a>
                         {% endif %}
                         {% for file in files %}
-                            <a href="/file/{{ file.fileid }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for("archivedFile", id=file["fileid"]) }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">{{ file["filename"] }}</h5>
                                 </div>
-                                <div class="d-flex flex-column">
+                                <div class="d-flex flex-column mb-0 pb-0">
                                     <small class="text-muted">Updated
-                                    <time class="timeago" datetime="{{ file["versions"][0].uploaded }}">5 mins ago
+                                    <time class="timeago" datetime="{{ file["versions"][file["versionorder"]|first].uploaded }}">5 mins ago
                                     </time>
-                                    by {{ file["versions"][0]["author"]["username"] }}</small>
+                                    by {{ file["versions"][file["versionorder"]|first]["author"]["username"] }}</small>
 
-                                    <div class="d-flex justify-content-start">
-                                        <form action="archive.restoreFile" method="POST">
+                                    <div class="d-flex justify-content-start mt-2 mb-0">
+                                        <form action="archive.restoreFile" method="POST" class="mr-2">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
-                                            <button type="submit" role="button" class="btn btn-sm btn-outline-info">Restore File</button>
+                                            <button type="submit" role="button" class="btn btn-sm btn-outline-info">
+                                                <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
+                                            </button>
                                         </form>
                                         <form action="archive.deleteFile" method="POST">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
-                                            <button type="submit" role="button" class="btn btn-sm btn-outline-danger">Delete File</button>
+                                            <button type="submit" role="button" class="btn btn-sm btn-outline-danger">
+                                                <span class="oi oi-trash" title="Delete Archived Versions"></span>
+                                            </button>
                                         </form>
                                     </div>
                                 </div>

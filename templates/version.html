@@ -111,9 +111,8 @@
                                                title="pencil"> </span> Edit Metadata
                         </a>
                         <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
-                           data-target="#deleteVersion"><span class="oi oi-trash pr-1"
-                                                              title="trash"> </span> Delete
-                            Version</a>
+                           data-target="#deleteVersion"><span class="oi oi-box pr-1"
+                                                              title="box"> </span> Archive Version</a>
                     </div>
                 </div>
             {% endif %}
@@ -199,7 +198,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>This action cannot be undone.</p>
+                <p>To restore this you'll have to get an admin's permission.</p>
                 {{ version["versions"]|length }}
 {#                {% if versionCount <= 1 %}#}
 {#                    <p>Deleting this version will delete the entire file entry.</p>#}
@@ -209,7 +208,7 @@
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('files.deleteVersion') }}" method="POST">
                     <input type="hidden" name="versionid" value="{{ version["versions"][id]["versionid"] }}"/>
-                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete Version</button>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Archive Version</button>
                 </form>
             </div>
         </div>
