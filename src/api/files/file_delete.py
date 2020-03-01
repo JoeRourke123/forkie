@@ -14,7 +14,7 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db import db
 
 from src.api.files import filesBP
-from src.api.files.utils import newFileVersion, getFileVersions, leaderCheck
+from src.api.files.utils import newFileVersion, getFileVersions, leaderCheck, restoreVersion
 from src.db.FileVersionTable import FileVersionTable
 
 
@@ -158,6 +158,109 @@ def deleteVersion():
                 "code": 500,
                 "msg": "Something went wrong when deleting the file version"
             }), 500
+
+
+@filesBP.route("/restoreFile", methods=["POST"])
+def restoreFile():
+    """ Utility function used throughout the system which given a fileid, and an option to fetch only archived versions,
+        gets all the versions associated with that file
+
+        - fileid: UUID of the file in which to search for versions from
+        - archived: a boolean to decide whether the function should fetch archived versions or regular versions
+
+        - returns: a dictionary of the versions with the versionids as keys and JSON data as the values
+    """
+
+    isBrowser = "fileid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for("index", msg="You must be signed in to do this"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this"
+            }), 403
+
+    if not getUserData(request.cookies.get("userid"))["admin"]:
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this"))
+        else:
+            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+
+    try:
+        files = file_query({"fileid": data["fileid"]})
+
+        for version in files["versioncount"]:
+            if not restoreVersion(version):
+                raise Exception()
+
+        if isBrowser:
+            return redirect(url_for("file", id=data["fileid"], msg="Archived versions successfully restored"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Archived versions successfully restored"
+            })
+
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("archive", msg="Something went wrong when restoring your files"))
+        else:
+            return json.dumps({"code": 500, "msg": "Something went wrong when restoring your files"})
+
+
+@filesBP.route("/restoreVersion", methods=["POST"])
+def restoreFileVersion():
+    """ Utility function used throughout the system which given a fileid, and an option to fetch only archived versions,
+        gets all the versions associated with that file
+
+        - fileid: UUID of the file in which to search for versions from
+        - archived: a boolean to decide whether the function should fetch archived versions or regular versions
+
+        - returns: a dictionary of the versions with the versionids as keys and JSON data as the values
+    """
+
+    isBrowser = "versionid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for("index", msg="You must be signed in to do this"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this"
+            }), 403
+
+    if not getUserData(request.cookies.get("userid"))["admin"]:
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this"))
+        else:
+            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+
+    try:
+        if not restoreVersion(data["versionid"]):
+            raise Exception()
+
+        if isBrowser:
+            return redirect(url_for("version", id=data["versionid"], msg="Archived version successfully restored"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Archived versions successfully restored"
+            })
+
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("archivedFile", id=data["fileid"], msg="Something went wrong while restoring this version"))
+        else:
+            return json.dumps({"code": 500, "msg": "Something went wrong when restoring the version"})
 
 
 @filesBP.route("/removeGroup", methods=["POST"])

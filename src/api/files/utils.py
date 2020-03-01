@@ -29,6 +29,24 @@ def getFileExtension(filename: str) -> str:
     return os.path.splitext(filename)[1]
 
 
+def restoreVersion(versionid: str):
+    """ Utility function for flipping boolean value of archived version from true to false
+
+        - versionid: the version ID of the file version to unarchive / restore
+
+        - returns: a dictionary of the versions with the versionids as keys and JSON data as the values
+    """
+
+    try:
+        version = FileVersionTable.query.filter(FileVersionTable.versionid == versionid).first()
+        version.archived = False
+        db.session.commit()
+
+        return True
+    except Exception as e:
+        return False
+
+
 def getFileVersions(fileID: str, archived: bool=False):
     """ Utility function used throughout the system which given a fileid, and an option to fetch only archived versions,
         gets all the versions associated with that file
