@@ -129,11 +129,12 @@ def newFileVersion(fileData, uploadData, title, userid):
                            fileid=str(fileData["fileid"]),
                            extension=fileData["extension"])     # Passes all the required information to the b2 in order
                                                                 # to upload the file
-    if not b2.checkForEqualFiles(upload.get_content_sha1(),
-                                 filename=fileData["filename"],
-                                 size=upload.get_content_length(),
-                                 versions=fileData["versions"].values()):       # Checks if the version isn't identical
-        return False                                                            # to any pre-existing versions, returning false if so
+    if "versions" in fileData and len(fileData["versions"]) > 0:
+        if not b2.checkForEqualFiles(upload.get_content_sha1(),
+                                     filename=fileData["filename"],
+                                     size=upload.get_content_length(),
+                                     versions=fileData["versions"].values()):       # Checks if the version isn't identical
+            return False                                                            # to any pre-existing versions, returning false if so
 
     fileversion.versionhash = upload.get_content_sha1()        # Replaces the temporary hash field in the FileVersion record
 

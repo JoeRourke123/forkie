@@ -118,7 +118,7 @@ def file_query(browserQuery=None):
 
                     rs_list.append(rs_json)
 
-            rs_list = sorted(rs_list, key=lambda x: x["versions"][x["versionorder"][0]]["uploaded"], reverse=True)
+                rs_list = sorted(rs_list, key=lambda x: x["versions"][x["versionorder"][0]]["uploaded"], reverse=True)
 
             if browserQuery is not None:
                 return rs_list

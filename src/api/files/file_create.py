@@ -75,7 +75,7 @@ def newFile():
         file = {
             "fileid": str(file.fileid),
             "filename": file.filename,
-            "extension": file.extension
+            "extension": file.extension,
         }
 
         # If the initial file version uploads successfully, titled "Initial Upload", then continue...
