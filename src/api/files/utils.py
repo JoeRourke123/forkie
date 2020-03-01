@@ -29,7 +29,7 @@ def getFileExtension(filename: str) -> str:
     return os.path.splitext(filename)[1]
 
 
-def restoreVersion(versionid: str):
+def setVersionArchive(versionid: str, archived: bool):
     """ Utility function for flipping boolean value of archived version from true to false
 
         - versionid: the version ID of the file version to unarchive / restore
@@ -39,7 +39,7 @@ def restoreVersion(versionid: str):
 
     try:
         version = FileVersionTable.query.filter(FileVersionTable.versionid == versionid).first()
-        version.archived = False
+        version.archived = archived
         db.session.commit()
 
         return True
