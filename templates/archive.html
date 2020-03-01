@@ -75,7 +75,7 @@
                                                 <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
                                             </button>
                                         </form>
-                                        <form action="archive.deleteFile" method="POST">
+                                        <form action="{{ url_for("files.deleteFile") }}" method="POST">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
                                             <button type="submit" role="button" class="btn btn-sm btn-outline-danger">
                                                 <span class="oi oi-trash" title="Delete Archived Versions"></span>

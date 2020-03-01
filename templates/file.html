@@ -258,12 +258,11 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>This action cannot be undone! Deleting the file will also delete all the versions, comments, and
-                    metadata that are associated with it.</p>
+                <p>This action cannot be undone! To restore this file you will need to contact a forkie admin.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('files.deleteFile') }}" method="POST">
+                <form action="{{ url_for('files.archiveFile') }}" method="POST">
                     <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
                     <button class="btn btn-outline-danger" onclick="openLoader()">Delete File</button>
                 </form>
