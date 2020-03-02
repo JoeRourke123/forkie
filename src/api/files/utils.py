@@ -69,7 +69,7 @@ def getFileVersions(fileID: str, archived: bool=False):
 
             versionData = {
                 "versionid": str(version.versionid),
-                "versionhash": str(version.versionhas),
+                "versionhash": str(version.versionhash),
             }
 
             for data in metadata:
@@ -130,7 +130,7 @@ def newFileVersion(fileData, uploadData, title, userid):
                            extension=fileData["extension"])     # Passes all the required information to the b2 in order
                                                                 # to upload the file
 
-    if isUniqueVersion(fileData["fileid"], str(upload.get_content_sha1())):
+    if not isUniqueVersion(fileData["fileid"], str(upload.get_content_sha1())):
         b2.removeVersion(str(fileversion.versionid))
         return False
 
@@ -178,7 +178,7 @@ def newFileVersion(fileData, uploadData, title, userid):
 def isUniqueVersion(fileid: str, versionhash: str):
     versions = getFileVersions(fileid)
 
-    for version in versions:
+    for version in versions.values():
         if version["versionhash"] == versionhash:
             return False
 
