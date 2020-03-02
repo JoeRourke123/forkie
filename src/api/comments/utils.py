@@ -107,11 +107,22 @@ def readUnreadComments(fileid: str, userid: str):
         unread = getUnreadComments([{"fileid": fileid}], userid)
 
         for comment in unread:
-            db.session.add(CommentReadTable({
-                "userid": userid,
-                "commentid": str(comment["commentid"])
-            }))
+            readComment(comment["commentid"], userid)
 
         db.session.commit()
     except Exception as e:
         print(print_exc())
+
+"""
+    Tom's read comment implementation, adds level of abstraction from the readUnreadComments method
+    - commentid: takes a string comment id to read
+    - userid : takes a string user UUID to mark comment as read from
+"""
+def readComment(commentID, userID):
+    entry = CommentReadTable({
+        "commentid": commentID,
+        "userid": userID
+    })
+
+    db.session.add(entry)
+    db.session.commit()
