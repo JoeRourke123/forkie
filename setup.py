@@ -10,8 +10,8 @@ version = re.search(
     '^__version__\s*=\s*"(.*)"',
     open('client/forkie.py').read(),
     re.M
-)
- 
+).group(1)
+
 # Opening readme
 with open("README.md", "rb") as f:
     long_descr = f.read().decode("utf-8")

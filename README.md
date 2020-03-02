@@ -212,7 +212,7 @@ The forkie CLI was made to **accompany** the forkie website not replace it
     - --change: Move person/people to another group
 - *report*: for generating and viewing reports about groups/users
   - Usage:
-    - `forkie report (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]`
+    - `forkie report (-p <group> | <email>) [(-o <file>)] [-v | --verbose]`
     - Generate a PDF report containing information on:
       - All using `-a`
       - On a group using `-p`
