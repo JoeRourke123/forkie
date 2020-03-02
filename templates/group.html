@@ -76,7 +76,9 @@
                                 <h5 class="mb-1 text-truncate">{{ file["filename"] }}</h5>
                                 <small>
                                     Updated
-                                    <time class="timeago" datetime="{{ file["versions"][file["versionorder"]|first]["uploaded"] }}">5 mins ago
+                                    <time class="timeago"
+                                          datetime="{{ file["versions"][file["versionorder"]|first]["uploaded"] }}">5
+                                        mins ago
                                     </time>
                                 </small>
                             </div>
@@ -169,7 +171,7 @@
                         <label for="group">Select Group</label>
                         <select class="form-control" id="group" name="userid">
                             {% for member in group["members"] %}
-                                {% if request.cookies.get('userid') != member["userid"] %}
+                                {% if request.cookies.get('userid') != member["userid"]|string %}
                                     <option value="{{ member["userid"] }}">{{ member["username"] }}
                                         - {{ member["email"] }}</option>
                                 {% endif %}
@@ -269,17 +271,56 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p>To see this group's files you will have to be re-added by the group leader.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-                <form action="{{ url_for('groups.removeMember') }}" method="POST">
-                    <input type="hidden" name="userid" value="{{ request.cookies.get('userid') }}"/>
-                    <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
-                    <button class="btn btn-outline-danger">Leave Group</button>
-                </form>
-            </div>
+            {% if not isLeader %}
+                <div class="modal-body">
+                    <p>To see this group's files you will have to be re-added by the group leader.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('groups.removeMember') }}" method="POST">
+                        <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
+                        <input type="hidden" name="userid" value="{{ request.cookies.get("userid") }}" />
+                        <button class="btn btn-outline-danger">Leave Group</button>
+                    </form>
+                </div>
+            {% else %}
+                {% if group["members"]|length == 1 %}
+                    <div class="modal-body">
+                        <p>By leaving this group you are deleting it, as there are no other members</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                        <form action="{{ url_for('groups.deleteGroup') }}" method="POST">
+                            <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
+                            <button class="btn btn-outline-danger">Delete Group</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <form action="{{ url_for('groups.removeMember') }}" method="POST">
+                        <div class="modal-body">
+                            <p>As you are group leader, you must select a new leader before leaving</p>
+                            <div class="form-group">
+                                <label for="group">New Leader</label>
+                                <select class="form-control" id="group" name="groupleaderid">
+                                    {% for member in group["members"] %}
+                                        {% if request.cookies.get('userid') != member["userid"]|string %}
+                                            <option value="{{ member["userid"] }}">{{ member["username"] }}
+                                                - {{ member["email"] }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                            <input type="hidden" name="userid" value="{{ request.cookies.get('userid') }}"/>
+                            <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
+                            <button class="btn btn-outline-danger">Leave Group</button>
+                        </div>
+                    </form>
+
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 </div>
@@ -294,6 +335,8 @@
     });
 
     $(".alert").alert();
-    setTimeout(() => { $(".alert").alert("close") }, 5000);
+    setTimeout(() => {
+        $(".alert").alert("close")
+    }, 5000);
 </script>
 </html>

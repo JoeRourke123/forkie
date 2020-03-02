@@ -44,8 +44,8 @@ def addComment(commentData: dict, userid: str):
     - fileid: a string representation of the UUID object associated with the provided file's database record
     - returns: a list of comment records with the specified fileid field, mapped to dictionaries - or empty list if an error occurs
 """
-def getComments(fileid: str):
-    fileData = file_query({"fileid": fileid})[0]
+def getComments(fileid: str, archived: bool = False):
+    fileData = file_query({"fileid": fileid, "archived": archived})[0]
     groupMembers = []
 
     try:

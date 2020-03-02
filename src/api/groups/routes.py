@@ -121,7 +121,6 @@ def removeMember(userid: str = None, groupid: str = None, param_userid: str = No
 
     if cookie_userid:
         try:
-            print(data)
             group = GroupTable.query.filter_by(groupid=data["groupid"]).first()
 
             if not group or not (str(group.groupleaderid) is not cookie_userid and cookie_userid is not data["userid"]):
@@ -132,6 +131,11 @@ def removeMember(userid: str = None, groupid: str = None, param_userid: str = No
                         "code": 401,
                         "msg": "You don't have permission to complete this action!"
                     }), 401
+
+            if "groupleaderid" in data and data["userid"] == cookie_userid:
+                group = GroupTable.query.filter(GroupTable.groupid == data["groupid"]).first()
+                group.groupleaderid = data["groupleaderid"]
+                db.session.commit()
 
             # Finds the record associated with the user in the UserGroupTable
             usergroup = UserGroupTable.query.filter(and_(UserGroupTable.userid==data["userid"], UserGroupTable.groupid==data["groupid"])).first()
