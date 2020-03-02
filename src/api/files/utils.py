@@ -69,7 +69,7 @@ def getFileVersions(fileID: str, archived: bool=False):
 
             versionData = {
                 "versionid": str(version.versionid),
-                "versionhash": version.versionhash,
+                "versionhash": str(version.versionhas),
             }
 
             for data in metadata:
@@ -129,12 +129,10 @@ def newFileVersion(fileData, uploadData, title, userid):
                            fileid=str(fileData["fileid"]),
                            extension=fileData["extension"])     # Passes all the required information to the b2 in order
                                                                 # to upload the file
-    if "versions" in fileData and len(fileData["versions"]) > 0:
-        if not b2.checkForEqualFiles(upload.get_content_sha1(),
-                                     filename=fileData["filename"],
-                                     size=upload.get_content_length(),
-                                     versions=fileData["versions"].values()):       # Checks if the version isn't identical
-            return False                                                            # to any pre-existing versions, returning false if so
+
+    if isUniqueVersion(fileData["fileid"], str(upload.get_content_sha1())):
+        b2.removeVersion(str(fileversion.versionid))
+        return False
 
     fileversion.versionhash = upload.get_content_sha1()        # Replaces the temporary hash field in the FileVersion record
 
@@ -173,6 +171,16 @@ def newFileVersion(fileData, uploadData, title, userid):
                 "email"] + ") has created a new version of " +
                        fileData["filename"] + " with the title \"" + titleData.value + "\". \n\nThanks,\nfile-rep0"
         }, userData)
+
+    return True
+
+
+def isUniqueVersion(fileid: str, versionhash: str):
+    versions = getFileVersions(fileid)
+
+    for version in versions:
+        if version["versionhash"] == versionhash:
+            return False
 
     return True
 
