@@ -2,7 +2,6 @@ from traceback import print_exc
 
 from sqlalchemy import and_
 
-import src.api.files.file_query
 from src.api.user.utils import getUserData
 from src.db.GroupTable import GroupTable
 from src.db.UserGroupTable import UserGroupTable
@@ -36,7 +35,10 @@ def getGroupUsers(groupID):
         return []           # Returns an empty list if there is an exception
 
 
+
 def getGroupData(groupID):
+    from src.api.files.file_query import file_query
+
     """ Util function to get serialised group data, along with files accessible to the group
 
         - groupid: returns the serialised JSON data from a group, alongside all the files they can access
@@ -49,7 +51,7 @@ def getGroupData(groupID):
     return {
         "groupid": groupID,
         "members": getGroupUsers(groupID),
-        "files": src.api.files.file_query.file_query({"groupid": groupID}),  # Has to do absolute path of the module here
+        "files": file_query.file_query({"groupid": groupID}),  # Has to do absolute path of the module here
         "groupname": groupData.groupname,                                    # due to circular import error
         "groupleader": getUserData(groupData.groupleaderid),
 
