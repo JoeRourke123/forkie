@@ -2,7 +2,7 @@ import sendgrid
 import os
 from traceback import print_exc
 
-from src.api.groups.utils import getGroupUsers, getGroupData
+import src.api.groups.utils  # import getGroupUsers, getGroupData
 from src.api.user.utils import getAdmins
 
 SG_KEY = os.environ.get('SENDGRID_API_KEY')
@@ -14,7 +14,7 @@ SG_KEY = os.environ.get('SENDGRID_API_KEY')
     - returns: void
 """
 def sendGroupEmail(groupid, data, sender):
-    groupUsers = getGroupUsers(groupid)
+    groupUsers = src.api.groups.utils.getGroupUsers(groupid)
     sg = sendgrid.SendGridAPIClient(SG_KEY)
 
     try:
@@ -38,7 +38,7 @@ def sendErrorEmail(groupid, data, sender):
     admins = getAdmins()
     sg = sendgrid.SendGridAPIClient(SG_KEY)
 
-    groupData = getGroupData(groupid)
+    groupData = src.api.groups.utils.getGroupData(groupid)
 
     try:
         for admin in admins:

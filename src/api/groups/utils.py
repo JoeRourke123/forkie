@@ -57,4 +57,10 @@ def getGroupData(groupID):
 
 
 def getGroupDataFromName(groupname: str):
+    """ Similar to get getGroupData but instead is passed the groupname. Will return the FIRST group with that name
+    
+        - groupname: the groupname to search for
+        
+        - returns: first grouptable object matching the groupname
+    """
     return GroupTable.query.filter_by(groupname=groupname).first()
