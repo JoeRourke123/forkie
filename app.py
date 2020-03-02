@@ -79,7 +79,7 @@ def dash():
 
     userData = getUserData(request.cookies.get("userid"))           # Gets dictionary of the user's usertable data
     groupData = getUserGroups(request.cookies.get("userid"))        # Get all the user's groups in order to show them in the dropdown
-    files = file_query({})                                          # Retrieve all user's files in order to show in file list
+    files = file_query({"archived": False})                                          # Retrieve all user's files in order to show in file list
     unread = getUnreadComments(files, request.cookies.get("userid"))    # Gets any unread comments, to display in the notifications pane
 
     return render_template("dashboard.html", user=userData, groups=groupData, files=files, unreadComments=unread)
@@ -178,7 +178,7 @@ def archivedFile(id : str):
 
 
     userGroups = getUserGroups(request.cookies.get("userid"))
-    fileComments = getComments(id)                  # Fetches the files comments, with all of them read by current user
+    fileComments = getComments(id, True)                  # Fetches the files comments, with all of them read by current user
 
     return render_template("file.html", file=file[0], isLeader=True, userGroups=userGroups, comments=fileComments, archive=True)
 
@@ -203,8 +203,8 @@ def version(id: str):
 
 
 # Page to retrieve a file's contents so it can be fetched from a download link
-@app.route('/download/<id>', methods=['GET', 'POST'])
-def download(id : str):
+@app.route('/download/<id>/<filename>', methods=['GET', 'POST'])
+def download(id : str, filename: str):
     versionData = file_query({"versionid": id})[0]          # Retrieve the file data with the version id using the file_query method
 
     backblaze = B2Interface(application_key_id=APPLICATION_KEY_ID,
@@ -212,7 +212,7 @@ def download(id : str):
                             bucket_name=BUCKET_NAME)      # Define an instance of the B2Interface in order to communicate
                                                                             # with the Backblaze bucket
 
-    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][0]["versionid"]))  # Downloads the file from the bucket
+    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][id]["versionid"]))  # Downloads the file from the bucket
     return send_file(                                                                           # Uses Flask's send_file function in order
         io.BytesIO(bytes(fileInfo["file_body"])),                                               # serve the file in a readable format for
         attachment_filename=versionData["filename"]                                             # the browser

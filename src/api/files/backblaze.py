@@ -96,29 +96,6 @@ class B2Interface:
         print(file_data.file_name)
         return self.downloadFileByVersionId(file_data.file_name)
 
-    def checkForEqualFiles(self, sha1: str, size: int, filename: str, versions: list) -> bool:
-        """ Checks for files that are equal in the bucket """
-        # bucket_gen = self.bucket.ls(
-        #     folder_to_list='',
-        #     show_versions=False,
-        #     recursive=False,
-        #     fetch_count=None
-        # )
-
-        versionFiles = [
-            self.downloadFileByVersionId(version["versionid"]) for version in versions
-        ]
-
-        for file in versionFiles:
-            # print('\n' + file_data.file_info['filename'], 'vs', filename)
-            # print(file_data.size, 'vs', size)
-            # print(file_data.content_sha1, 'vs', sha1)
-            if file["content_length"] == size:
-                if file["content_sha1"] == sha1:
-                    return False
-
-        return True
-    
     def getEqualFilesList(self, sha1: str, size: int, filename: str = None) -> list:
         """ Checks for files that are equal in the bucket """
         bucket_gen = self.bucket.ls(
