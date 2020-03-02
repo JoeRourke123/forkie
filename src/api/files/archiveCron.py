@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from traceback import print_exc
-
+from app import app
 from src.api.files.utils import getFileVersions, setVersionArchive
 from src.db.FileTable import FileTable
 from src.db import db
