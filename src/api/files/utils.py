@@ -8,6 +8,7 @@ from sqlalchemy import and_
 
 from src.api.email.utils import sendGroupEmail
 from src.api.files.backblaze import B2Interface
+from src.api.metadata.utils import getMetadata
 from src.api.user.utils import getUserData
 
 from src.db import db
@@ -65,7 +66,7 @@ def getFileVersions(fileID: str, archived: bool=False):
         results = {}                    # The results that the function will return
 
         for version in versions:        # For each version fetch its metadata and add it as fields to the dictionary
-            metadata = MetadataTable.query.filter(MetadataTable.versionid == version.versionid).all()
+            metadata = getMetadata(str(version.versionid)).all()
 
             versionData = {
                 "versionid": str(version.versionid),
