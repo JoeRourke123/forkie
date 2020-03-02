@@ -27,7 +27,11 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+                {% if archive %}
+                    <a class="nav-link" href="{{ url_for("archive") }}">Back to Archive</a>
+                {% else %}
+                    <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+                {% endif %}
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
@@ -172,10 +176,12 @@
                             class="oi oi-clipboard pr-1"
                             title="clipboard"> </span>
                         Generate Report</a>
+                    {% if not archive %}
                         <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
                                data-target="#deleteFile"><span class="oi oi-box pr-1"
                                                                title="box"> </span> Archive All Versions
                         </a>
+                    {% endif %}
                     </div>
                 </div>
             {% endif %}
@@ -264,7 +270,7 @@
                 <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('files.archiveFile') }}" method="POST">
                     <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
-                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete File</button>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Archive File</button>
                 </form>
             </div>
         </div>
