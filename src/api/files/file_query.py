@@ -9,7 +9,7 @@ from src.db.FileVersionTable import FileVersionTable
 from src.api.files import filesBP
 from src.api.user.utils import getFilesUserCanAccess, getUserData
 from src.api.files.utils import getFileGroups, getFileVersions
-from src.api.groups.utils import getGroupDataFromName
+import src.api.groups.utils  # import getGroupDataFromName
 
 import json
 from jsonschema import validate, ValidationError
@@ -85,7 +85,7 @@ def file_query(browserQuery=None):
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
                 if "groupname" in data:
                     # Get groupid using getGroupDataFromName
-                    groupid = getGroupDataFromName(data['groupname']).serialise()['groupid']
+                    groupid = src.api.groups.utils.getGroupDataFromName(data['groupname']).serialise()['groupid']
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == groupid)
                 if "first" in data:
                     get_first = data['first']
@@ -125,8 +125,10 @@ def file_query(browserQuery=None):
                 return rs_list
 
             # Fixes JSON serialisation issues. Did this this way to not interfere with any other modules
+            print("rslist", rs_list)
             for rs in rs_list:
-                for ver in rs['versions']:
+                for versionid in rs['versions'].keys():
+                    ver = rs['versions'][versionid]
                     # Userid key is UUID object so convert to string
                     ver['author']['userid'] = str(ver['author']['userid'])
                     # lastlogin key is datetime object so convert to string

@@ -47,7 +47,7 @@ def getAdmins():
         - returns: a list of dictionaries for all the users who have admin privileges
     """
 
-    query = UserTable.query.filter(UserTable.admin == True).all()
+    query = UserTable.query.filter(UserTable.admin is True).all()
     return [getUserData(str(admin.userid)) for admin in query]
 
 

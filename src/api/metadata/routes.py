@@ -4,8 +4,9 @@ import json
 from traceback import print_exc
 
 from src.api.files.file_query import file_query
-from src.db.MetadataTable import MetadataTable
+from src.api.metadata.utils import getMetadata
 
+from src.db.MetadataTable import MetadataTable
 from src.db import db
 
 
@@ -13,6 +14,23 @@ metadataBP = Blueprint("metadata", __name__,
                     template_folder='../../templates',
                     static_folder='../../static',
                     url_prefix='/api/metadata')
+
+
+@metadataBP.route("/get", methods = ["POST"])
+def getMetadataRoute():
+    isBrowser = "versionID" in request.form
+
+    if isBrowser:
+        data = request.form
+    else:
+        data = request.data
+
+    result = getMetadata(data["versionid"])
+
+    result_json = {"title": result[0][2],
+                   "value": result[0][3]}
+
+    return result_json
 
 
 @metadataBP.route("/add", methods=["POST"])

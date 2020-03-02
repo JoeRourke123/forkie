@@ -48,12 +48,6 @@ def getComments(fileid: str, archived: bool = False):
     fileData = file_query({"fileid": fileid, "archived": archived})[0]
     groupMembers = []
 
-    # Generates a list of all the users with access to a file, except the current user
-    for group in fileData["groups"]:
-        for member in getGroupUsers(group["groupid"]):
-            if str(member["userid"]) not in groupMembers:
-                groupMembers.append(str(member["userid"]))
-
     try:
         comments = CommentTable.query.filter(CommentTable.fileid == fileid).order_by(CommentTable.date.desc()).all()
 
@@ -63,9 +57,8 @@ def getComments(fileid: str, archived: bool = False):
             "commentid": str(x.commentid),
             "file": fileid,
             "user": getUserData(str(x.userid)),     # User data of the commenter
-            "read": CommentReadTable.query.filter(CommentReadTable.commentid == str(x.commentid)).count() == len(
-                groupMembers)           # Checks if the no. of commentRead entries == number of users with access
-        }), comments))
+            "read": False not in [commentRead(str(x.commentid), group["groupid"]) for group in fileData["groups"]]
+        }), comments))      # Checks if all users from all groups have read the comment
 
     except Exception as e:
         print(print_exc())              # Prints any exceptions if they occur and returns an empty list
@@ -107,11 +100,49 @@ def readUnreadComments(fileid: str, userid: str):
         unread = getUnreadComments([{"fileid": fileid}], userid)
 
         for comment in unread:
-            db.session.add(CommentReadTable({
-                "userid": userid,
-                "commentid": str(comment["commentid"])
-            }))
+            readComment(comment["commentid"], userid)
 
         db.session.commit()
     except Exception as e:
         print(print_exc())
+
+"""
+    Tom's read comment implementation, adds level of abstraction from the readUnreadComments method
+    - commentid: takes a string comment id to read
+    - userid : takes a string user UUID to mark comment as read from
+"""
+def readComment(commentID, userID):
+    entry = CommentReadTable({
+        "commentid": commentID,
+        "userid": userID
+    })
+
+    db.session.add(entry)
+    db.session.commit()
+
+
+def commentRead(commentID, groupID):
+    """
+    get all users in group
+    for each user:
+        if (userID, fileVersionID) is not in CommentReadTable:
+            return False
+    """
+
+    # get all users in the group
+    groupUsersQuery = getGroupUsers(groupID)
+
+    # iterate through the users
+    read_status = True
+    for row in groupUsersQuery:
+        userID = row["userid"]
+
+        # check whether there is a log of the comment being read by this user
+        commentReadQuery = CommentReadTable.query.filter(and_(CommentReadTable.userid == userID, CommentReadTable.commentid == commentID))
+
+        # if the comment has not been read by this user
+        # not all members of the group have read it, so the comment will be shown as being unread
+        if not commentReadQuery:
+            read_status = False
+
+    return read_status
