@@ -92,8 +92,8 @@
         <div class="col-3">
             <div class="card mb-4">
                 <div class="card-body d-flex flex-column">
-                    <a class="btn btn-outline-success"
-                       href="{{ url_for('download', id=version["versions"][id]["versionid"]) }}" role="button"
+                    <a class="btn btn-outline-success" id="download"
+                       href="{{ url_for('download', id=id, filename=version["filename"]) }}" role="button"
                        download><span
                             class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download
                         File
@@ -229,14 +229,21 @@
 <script>
     $(document).ready((e) => {
         $("time.timeago").timeago();
-
-        window.history.replaceState(window.history.state, {{ version.filename }}, "../{{ version.filename }}")
     });
 
     $("#edittitle").on("change", (e) => {
         let metadata = JSON.parse('{{ allVals|tojson }}');
         console.log(e);
         $("#editvalue").val(metadata[e.target.value]);
+    });
+
+    $('#download').on('click', function(e) {
+        $("body").prepend('    <div class="alert alert-warning alert-dismissible fade show position-fixed m-4 msg" role="alert">\n' +
+            ' Your download will begin shortly!' +
+            '        <button type="button" class="close" data-dismiss="alert" aria-label="Close">\n' +
+            '            <span aria-hidden="true">&times;</span>\n' +
+            '        </button>\n' +
+            '    </div>');
     });
 
     $(".alert").alert();

@@ -201,8 +201,8 @@ def version(id: str):
 
 
 # Page to retrieve a file's contents so it can be fetched from a download link
-@app.route('/download/<id>', methods=['GET', 'POST'])
-def download(id : str):
+@app.route('/download/<id>/<filename>', methods=['GET', 'POST'])
+def download(id : str, filename: str):
     versionData = file_query({"versionid": id})[0]          # Retrieve the file data with the version id using the file_query method
 
     backblaze = B2Interface(application_key_id=APPLICATION_KEY_ID,
@@ -210,7 +210,7 @@ def download(id : str):
                             bucket_name=BUCKET_NAME)      # Define an instance of the B2Interface in order to communicate
                                                                             # with the Backblaze bucket
 
-    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][0]["versionid"]))  # Downloads the file from the bucket
+    fileInfo = backblaze.downloadFileByVersionId(str(versionData["versions"][id]["versionid"]))  # Downloads the file from the bucket
     return send_file(                                                                           # Uses Flask's send_file function in order
         io.BytesIO(bytes(fileInfo["file_body"])),                                               # serve the file in a readable format for
         attachment_filename=versionData["filename"]                                             # the browser
