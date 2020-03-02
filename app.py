@@ -158,7 +158,7 @@ def archive():
     if not userData["admin"]:
         return redirect(url_for("dash", msg="You don't have permission to see this page"))
 
-    files = file_query({})      # Fetches all files with any archived file versions
+    files = file_query({"archived": True})      # Fetches all files with any archived file versions
 
     return render_template("archive.html", files=files)
 
