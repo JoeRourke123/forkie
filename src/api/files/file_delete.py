@@ -14,11 +14,20 @@ from src.db.FileGroupTable import FileGroupTable
 from src.db import db
 
 from src.api.files import filesBP
-from src.api.files.utils import newFileVersion, getFileVersions, leaderCheck
+from src.api.files.utils import newFileVersion, getFileVersions, leaderCheck, restoreVersion
 from src.db.FileVersionTable import FileVersionTable
+
 
 @filesBP.route("/deleteFile", methods=["POST"])
 def deleteFile(fileid=None):
+    """ Endpoint for the complete deletion of a file once an admin deletes it from the archive. Accessible three ways,
+        it is callable (for when duplicate versions might be found), accessible from the web app, and also from the CLI
+
+        - userid: the UUID of the user who created the file, used to check for admin privileges
+        - fileid: the UUID of the file in which to delete
+
+        - returns: an accurate response/redirection depending on the level of success of file removal/db record removal
+    """
     if fileid is not None:
         isBrowser = True
         data = {"fileid": fileid}
@@ -38,7 +47,7 @@ def deleteFile(fileid=None):
     fileData = file_query({"fileid": data["fileid"]})[0]
     userData = getUserData(request.cookies.get("userid"))
 
-    if not fileData or not (userData["admin"] or True in [str(group["groupleaderid"]) == str(userData["userid"]) for group in fileData["groups"]]):
+    if not userData["admin"]:
         if isBrowser:
             return redirect(url_for("dash", msg="You don't have permission to do this!"))
         else:
@@ -50,26 +59,26 @@ def deleteFile(fileid=None):
     try:
         file = FileTable.query.filter(FileTable.fileid == fileData["fileid"]).first()
         db.session.delete(file)
-        db.session.commit()
-
+        db.session.commit()     # Remove the FileTable record from the database, and due to the cascading deletion
+                                # rules, any associated metadata, versions, comments, group linkings should be removed also
         b2 = B2Interface(
-            os.environ.get("APPLICATION_KEY_ID"),
-            os.environ.get("APPLICATION_KEY"),
+            os.environ.get("APPLICATION_KEY_ID"),       # Create an instance of the B2Interface in order to communicate
+            os.environ.get("APPLICATION_KEY"),          # with the Backblaze bucket
             os.environ.get("BUCKET_NAME")
         )
 
-        for version in fileData["versions"]:
-            b2.removeVersion(version["versionid"])
+        for version in fileData["versions"]:            # Run the B2Interface remove method in order to delete each
+            b2.removeVersion(version["versionid"])      # file versions' actual file from the B2 bucket
 
-        if isBrowser:
+        if isBrowser:                                   # If all goes successfully, the user should be redirected or...
             return redirect(url_for("dash", msg=fileData["filename"] + " successfully deleted!"))
         else:
-            return json.dumps({
+            return json.dumps({                         # receive a JSON response indicating success
                 "code": 200,
                 "msg": fileData["filename"] + " has been successfully deleted"
             })
     except Exception as e:
-        print(print_exc())
+        print(print_exc())      # Print the stack trace if an error occurs and redirect the user to the dashboard
 
         if isBrowser:
             return redirect(url_for("dash", msg="Something went wrong when deleting the file"))
@@ -82,6 +91,14 @@ def deleteFile(fileid=None):
 
 @filesBP.route("/deleteVersion", methods=["POST"])
 def deleteVersion():
+    """ Endpoint which can delete a file version by an admin, once moved to the archive
+
+        - versionid: the UUID of the version in which to delete
+        - userid: the UUID of the admin user who triggered the version delete
+
+        - returns: an accurate response/redirection depending on the level of success in deleting the version
+    """
+
     isBrowser = "versionid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
@@ -95,25 +112,15 @@ def deleteVersion():
             }), 401
 
     fileData = file_query({"versionid": data["versionid"]})[0]
-
-    versionCount = len(getFileVersions(fileData["fileid"]))
-
+    versionCount = len(fileData["versionorder"])            # Version order is a list of versionids therefore can be
+                                                            # used as an accurate count for the number of versions
     if versionCount <= 1:
-        return deleteFile(fileData["fileid"])
-
+        return deleteFile(fileData["fileid"])               # Deletes the entire file in the case of there only being
+                                                            # one version left
     try:
         userData = getUserData(request.cookies.get("userid"))
 
-        hasPermissions = False
-
-        for version in fileData["versions"]:
-            if version["versionid"] == data["versionid"] and version["author"]["userid"] == userData["userid"]:
-                hasPermissions = True
-                break
-
-        hasPermissions = hasPermissions or userData["admin"] or True in [group["groupleaderid"] == userData["userid"] for group in fileData["groups"]]
-
-        if fileData not in file_query({}) or not hasPermissions:
+        if not userData["admin"]:                           # User has to be an admin to access this endpoint
             if isBrowser:
                 return redirect(url_for("dash", msg="You don't have permission to do this!"))
             else:
@@ -122,8 +129,8 @@ def deleteVersion():
                     "msg": "You don't have permission to delete this file version",
                 })
 
-        fileVersion = FileVersionTable.query.get(data["versionid"])
-        db.session.delete(fileVersion)
+        fileVersion = FileVersionTable.query.get(data["versionid"])     # Gets file version row from the table
+        db.session.delete(fileVersion)                                  # Deletes it and commits changes
         db.session.commit()
 
         b2 = B2Interface(
@@ -132,16 +139,16 @@ def deleteVersion():
             os.environ.get("BUCKET_NAME")
         )
 
-        b2.removeVersion(data["versionid"])
+        b2.removeVersion(data["versionid"])                            # Removes the version's B2 file
 
-        if isBrowser:
+        if isBrowser:                   # Returns with a response upon successful deletion
             return redirect(url_for("file", id=fileData["fileid"], msg="File version successfully deleted!"))
         else:
             return json.dumps({
                 "code": 200,
                 "msg": "The file version has been successfully deleted"
             })
-    except Exception as e:
+    except Exception as e:              # Provides error response for failed deletion
         print(print_exc())
 
         if isBrowser:
@@ -153,14 +160,127 @@ def deleteVersion():
             }), 500
 
 
-@filesBP.route("/removeGroup", methods=["POST"])
-def removeGroup():
+@filesBP.route("/restoreFile", methods=["POST"])
+def restoreFile():
+    """ Endpoint which given a fileid will restore all the archived versions of that specific file, by running the
+        restoreVersion util function iteratively, setting the archived field in the respective FileVersionTable records
+        to false
+
+        - fileid: UUID of the file in which to unarchive any archived versions from
+        - userid: UUID of the user triggering the file restoration, must be an admin
+
+        - returns: a response which may be either successful or with an error message, depending on outcome of operation
+    """
+
     isBrowser = "fileid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
     if not request.cookies.get("userid"):
         if isBrowser:
-            return redirect(url_for('errors.error', code=401))
+            return redirect(url_for("index", msg="You must be signed in to do this"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this"
+            }), 403
+
+    if not getUserData(request.cookies.get("userid"))["admin"]:
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this"))
+        else:
+            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+
+    try:
+        files = file_query({"fileid": data["fileid"], "archived": True})[0]
+
+        for version in files["versionorder"]:
+            if not restoreVersion(version):
+                raise Exception()
+
+        if isBrowser:
+            return redirect(url_for("file", id=data["fileid"], msg="Archived versions successfully restored"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Archived versions successfully restored"
+            })
+
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("archive", msg="Something went wrong when restoring your files"))
+        else:
+            return json.dumps({"code": 500, "msg": "Something went wrong when restoring your files"})
+
+
+@filesBP.route("/restoreVersion", methods=["POST"])
+def restoreFileVersion():
+    """ An endpoint which interfaces with the restoreVersion util function in order to restore a specified file version
+        from the archive into the main file store
+
+        - versionid: UUID of the version which should be restored from the archive
+        - userid: UUID of the user triggering the file restoration, must be an admin
+
+        - returns: a response which may be either successful or with an error message, depending on outcome of operation
+    """
+
+    isBrowser = "versionid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for("index", msg="You must be signed in to do this"))
+        else:
+            return json.dumps({
+                "code": 403,
+                "msg": "You must be signed in to do this"
+            }), 403
+
+    if not getUserData(request.cookies.get("userid"))["admin"]:
+        if isBrowser:
+            return redirect(url_for("dash", msg="You don't have permission to do this"))
+        else:
+            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+
+    try:
+        if not restoreVersion(data["versionid"]):
+            raise Exception()
+
+        if isBrowser:
+            return redirect(url_for("version", id=data["versionid"], msg="Archived version successfully restored"))
+        else:
+            return json.dumps({
+                "code": 200,
+                "msg": "Archived versions successfully restored"
+            })
+
+    except Exception as e:
+        print(print_exc())
+
+        if isBrowser:
+            return redirect(url_for("archivedFile", id=data["fileid"], msg="Something went wrong while restoring this version"))
+        else:
+            return json.dumps({"code": 500, "msg": "Something went wrong when restoring the version"})
+
+
+@filesBP.route("/removeGroup", methods=["POST"])
+def removeGroup():
+    """ Endpoint for removing access from a file for a group
+
+        - groupid: the UUID of the group in which the file will no longer be able to access
+        - userid: the UUID of the user who triggered the group permissions change
+        - fileid: UUID of the file in which to revoke the group's access to
+
+        - returns: an accurate response/redirection depending on the level of success in changing the file permissions
+    """
+
+    isBrowser = "fileid" in request.form
+    data = request.form if isBrowser else json.loads(request.data)
+
+    if not request.cookies.get("userid"):
+        if isBrowser:
+            return redirect(url_for('index', msg="You must be signed in to do this"))
         else:
             return json.dumps({
                 "code": 401,
@@ -181,13 +301,13 @@ def removeGroup():
 
     try:
         groupExists = True in [str(group["groupid"]) == data["groupid"] for group in file["groups"]]
-
+        # Runs checks to see if this group is in the file's groups, and raises an exception if not
         if not groupExists:
-            raise Exception("That group couldn't be found")
+            raise Exception()
 
         filegroup = FileGroupTable.query.filter(and_(FileGroupTable.groupid == data["groupid"],
                                                      FileGroupTable.fileid == data["fileid"])).first()
-
+        # Retrieves the corresponding record from the group-file linking table so it can be deleted
         db.session.delete(filegroup)
         db.session.commit()
 

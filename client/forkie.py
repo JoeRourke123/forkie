@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """forkie CLI
 
 Usage:
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
     {0} {1} (-a | -n <name> [(-p <group>)]) [-vd] [(-c <comment>) [-f | --force]]
-    {0} {1} [-V [(-a | (-k <keyword>))] [-p <group>]] [-vf]
-    {0} {1} (-V [--peeps] [<email>...] | --add [-p <group>] (<email>...) | --rm [-p <group>] (<email>...) | --change (-p <group>) (<email>...)) [-vf]
+    {0} {1} (-V [--peeps] [<email>...] | (--add | --rm | --change) (-p <group>) [<email>]) [-vf]
     {0} {1} (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]
     {0} {1} (<repo>) [-v | --verbose]
     {0} -h | --help | --version
@@ -40,18 +39,17 @@ Options:
 """
 
 from docopt import docopt
-from client.cli import command_handler
+from client import command_handler
 import sys
 
-__version__ = '1.0.0'
+__version__ = "0.0.1"
 
 python_interpreter = sys.executable
-main_exec = "forkie.py"
+main_exec = "forkie"
 commands = {
     "make": command_handler.make, 
     "update": command_handler.update,
     "find": command_handler.find,
-    "archive": command_handler.archive,
     "group": command_handler.group, 
     "report": command_handler.report, 
     "login": command_handler.login
@@ -59,27 +57,24 @@ commands = {
 
 # Template of all commands, options and arguments
 args_commands = {
-    'make': False,
+    'make': False, 
     '--verbose': 0, 
     '--message': 0, 
     '<message>': None, 
     '<file>': [], 
     'update': False, 
-    '--keyword': 0, 
-    '<keyword>': None, 
     'find': False, 
     '-a': False, 
     '--name': 0, 
     '<name>': None, 
-    '-p': False,
+    '-p': False, 
     '<group>': None, 
     '--download': 0, 
     '--comment': 0, 
     '<comment>': None, 
     '--force': 0, 
-    'archive': False, 
-    '--view': 0, 
     'group': 0, 
+    '--view': 0, 
     '--peeps': False, 
     '<email>': [], 
     '--add': False, 
@@ -135,8 +130,12 @@ def find_difference(dict1: dict, dict2: dict) -> dict:
     """
     return {key: dict2[key] for key in dict1.keys() if dict1[key] != dict2[key]}
 
-if __name__ == '__main__':
+""" Function called when forkie command or forkie_runner.py is run """
+def main():
+    # Docopts handles the parsing of the command line args
     arguments = docopt(init_docs(__doc__), version=__version__)
+    
+    # Doing some normalisation of the dictionary returned by docopts
     arguments = remove_options(arguments)
     # print(arguments)
     arguments = find_difference(args_commands, arguments)

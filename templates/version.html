@@ -1,10 +1,10 @@
 <html>
 <head>
     <title>
-        {% if version.versions[0].title %}
-            {{ version.versions[0].title }} - file-rep0
+        {% if version.versions[id].title %}
+            {{ version.versions[id].title }} - rep0
         {% else %}
-            {{ version.filename }}  - file-rep0
+            {{ version.filename }}  - repo0
         {% endif %}
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
@@ -14,8 +14,16 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">forkie</a>
+{% if "msg" in request.args %}
+    <div class="alert alert-warning alert-dismissible fade show position-fixed m-4 msg" role="alert">
+        {{ request.args["msg"] }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light orange-grad">
+    <a class="navbar-brand" href="#">rep0</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -27,10 +35,10 @@
             </li>
         </ul>
         <div class="form-inline my-2 my-lg-0">
-            <a type="button" class="btn btn-outline-success mr-2" href="{{ url_for('newFilePage') }}" role="button">
+            <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
-            <a type="button" class="btn btn-outline-danger" href="#" role="button">
+            <a type="button" class="btn btn-outline-dark" href="#" role="button">
                 <span class="oi oi-account-logout" title="account-logout"></span>
             </a>
         </div>
@@ -38,43 +46,43 @@
 </nav>
 <div class="container">
     <div class="row mt-4 mb-4">
-        {% if "title" not in version["versions"][0] %}
+        {% if "title" not in version["versions"][id] %}
             <h2>{{ version.filename }} version</h2>
         {% else %}
-            <h2>{{ version["versions"][0]["title"] }}</h2>
+            <h2>{{ version["versions"][id]["title"] }}</h2>
         {% endif %}
     </div>
     <div class="row">
         <div class="col-9">
             <div class="card">
                 <div class="card-body">
-                    <div class="card-title">Version Metadata</div>
+                    <h5 class="card-title text-muted">Metadata</h5>
                     <div class="list-group">
                         <table class="table table-striped">
-                          <thead>
+                            <thead>
                             <tr>
-                              <th scope="col">Name</th>
-                              <th scope="col">Value</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Value</th>
                             </tr>
-                          </thead>
-                          <tbody>
+                            </thead>
+                            <tbody>
                             <tr>
                                 <td>Author</td>
-                                <td>{{ version.versions[0]['author'].username }}</td>
+                                <td>{{ version.versions[id]['author'].username }}</td>
                             </tr>
                             <tr>
                                 <td>Version Created</td>
-                                <td>{{ version.versions[0].uploaded }}</td>
+                                <td>{{ version.versions[id].uploaded }}</td>
                             </tr>
-                            {% for key, value in version.versions[0].items() %}
+                            {% for key, value in version.versions[id].items() %}
                                 {% if key not in ["author", "uploaded"] %}
                                     <tr>
-                                      <td>{{ key }}</td>
-                                      <td style="max-width: 18ch;">{{ value }}</td>
+                                        <td>{{ key }}</td>
+                                        <td style="max-width: 18ch;">{{ value }}</td>
                                     </tr>
                                 {% endif %}
                             {% endfor %}
-                          </tbody>
+                            </tbody>
                         </table>
 
                     </div>
@@ -84,30 +92,34 @@
         <div class="col-3">
             <div class="card mb-4">
                 <div class="card-body d-flex flex-column">
-                    <a class="btn btn-outline-success" href="{{ url_for('download', versionid=version["versions"][0]["versionid"]) }}" role="button" download><span
-                            class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download File
+                    <a class="btn btn-outline-success"
+                       href="{{ url_for('download', id=version["versions"][id]["versionid"]) }}" role="button"
+                       download><span
+                            class="oi oi-data-transfer-download pr-1" title="data-transfer-download"> </span> Download
+                        File
                     </a>
                 </div>
             </div>
             {% if isLeader %}
                 <div class="card">
                     <div class="card-body d-flex flex-column">
-                        <div class="card-title">Version Actions</div>
+                        <h5 class="card-title text-muted">Version Actions</h5>
                         <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addMetadata"
-                               role="button"><span class="oi oi-tags pr-1" title="tags"> </span> Add Metadata</a>
-                        <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#renameGroup" role="button"><span class="oi oi-pencil pr-1"
-                                                             title="pencil"> </span> Edit Metadata
+                           role="button"><span class="oi oi-tags pr-1" title="tags"> </span> Add Metadata</a>
+                        <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal" data-target="#editMetadata"
+                           role="button"><span class="oi oi-pencil pr-1"
+                                               title="pencil"> </span> Edit Metadata
                         </a>
-                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal" data-target="#deleteVersion"><span class="oi oi-trash pr-1"
-                                                                                        title="trash"> </span> Delete
-                        Version</a>
+                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
+                           data-target="#deleteVersion"><span class="oi oi-box pr-1"
+                                                              title="box"> </span> Archive Version</a>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
-<div class="modal hide" id="addMetadata" tabindex="-1" role="dialog">
+<div class="modal fade" id="addMetadata" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -118,7 +130,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('metadata.addMetadata') }}" method="post">
-                    <input type="hidden" value="{{ version["versions"][0]["versionid"] }}" name="versionid"/>
+                    <input type="hidden" value="{{ version["versions"][id]["versionid"] }}" name="versionid"/>
 
                     <div class="form-group">
                         <label for="title">Title</label>
@@ -136,30 +148,71 @@
         </div>
     </div>
 </div>
-<div class="modal hide" id="deleteVersion" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Are you sure?</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-          <p>This action cannot be undone.</p>
-          {% if versionCount <= 1 %}
-            <p>Deleting this version will delete the entire file entry.</p>
-          {% endif %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
-        <form action="{{ url_for('files.deleteVersion') }}" method="POST">
-            <input type="hidden" name="versionid" value="{{ version["versions"][0]["versionid"] }}" />
-            <button class="btn btn-outline-danger" onclick="openLoader()">Delete Version</button>
-        </form>
-      </div>
+<div class="modal fade" id="editMetadata" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Metadata</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for("metadata.editMetadata") }}" method="post">
+                    <input type="hidden" value="{{ version["versions"][id]["versionid"] }}" name="versionid"/>
+
+                    <div class="form-group">
+                        <label for="edittitle">Select Metadata</label>
+                        <select class="form-control" name="title" id="edittitle" required>
+                            {% set currentVal = namespace(value="") %}
+                            {% set allVals = {} %}
+
+                            {% for name, value in version["versions"][id].items() %}
+                                {% if name not in ["author", "uploaded", "versionhash", "versionid"] %}
+                                    {% set currentVal.value = value %}
+                                    {% set x = allVals.update({name: value}) %}
+                                    <option value="{{ name }}" selected>{{ name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editvalue">Value</label>
+                        <input type="text" class="form-control" id="editvalue" name="value" value="{{ currentVal.value }}">
+                    </div>
+                    <button class="btn btn-outline-warning">
+                        <span class="oi oi-pencil" title="pencil"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+<div class="modal fade" id="deleteVersion" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>To restore this you'll have to get an admin's permission.</p>
+                {{ version["versions"]|length }}
+{#                {% if versionCount <= 1 %}#}
+{#                    <p>Deleting this version will delete the entire file entry.</p>#}
+{#                {% endif %}#}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('files.deleteVersion') }}" method="POST">
+                    <input type="hidden" name="versionid" value="{{ version["versions"][id]["versionid"] }}"/>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Archive Version</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 <div class="modal fade" tabindex="-1" role="dialog" id="loading">
     <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
@@ -179,5 +232,15 @@
 
         window.history.replaceState(window.history.state, {{ version.filename }}, "../{{ version.filename }}")
     });
+
+    $("#edittitle").on("change", (e) => {
+        let metadata = JSON.parse('{{ allVals|tojson }}');
+        console.log(e);
+        $("#editvalue").val(metadata[e.target.value]);
+    });
+
+    $(".alert").alert();
+
+    setTimeout(() => { $(".alert").alert("close") }, 5000);
 </script>
 </html>

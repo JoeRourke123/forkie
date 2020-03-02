@@ -4,6 +4,9 @@ import requests
 import platform
 import subprocess
 
+""" Module which contains the functions relating to frequently used tasks to do with the command line
+"""
+
 class UndefinedSystem(Exception):
     """ Raised when the user's system is unhandled/unrecognized """
     def __init__(self, message):
@@ -40,14 +43,23 @@ def open_default_editor(filename: str) -> subprocess.Popen:
     else:
         raise FileNotFoundError("Filename specified does not exist")
 
-def ask_for(question: str, answers: list):
+def ask_for_string(prompt: str) -> str:
+    """ Asks the user for a string and asks if that the string they entered is ok
+    """
+    while True:
+        output = str(input(prompt + ': '))
+        if ask_for('Is "' + output + '" ok?', ['y', 'n']):
+            break
+    return output
+
+def ask_for(question: str, answers: list) -> int:
     """ Given a question and a list of answers it will return the answer. If the list of answers has only 2 elements then
         if the answer is equal to the first element it will return True and False otherwise
     """
     answer = str(input(question + " " + str(answers) + ": ")).lower()
     while answer not in answers:
         print("Don't understand that input")
-        answer = str(input(question + " " + str(answers))).lower()
+        answer = str(input(question + " " + str(answers)) + ': ').lower()
     return answer if len(answers) > 2 else answers[0] == answer
 
 def ask_for_list(input_ls: list) -> int:
