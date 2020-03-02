@@ -141,7 +141,7 @@ def archiveFile():
         if isBrowser:
             return redirect(url_for("dash", msg="You don't have permission to do this"))
         else:
-            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+            return json.dumps({"code": 403, "msg": "You don't have the permissions to do this"}), 403
 
     try:
         files = file_query({"fileid": data["fileid"]})[0]
@@ -151,7 +151,7 @@ def archiveFile():
                 raise Exception()
 
         if isBrowser:
-            return redirect(url_for("archivedFile", id=data["fileid"], msg="All versions successfully archived"))
+            return redirect(url_for("archive", msg="All versions successfully archived"))
         else:
             return json.dumps({
                 "code": 200,
@@ -177,7 +177,7 @@ def archiveVersion():
         - returns: a response which may be either successful or with an error message, depending on outcome of operation
     """
 
-    isBrowser = "fileid" in request.form
+    isBrowser = "versionid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
 
     if not request.cookies.get("userid"):
@@ -193,18 +193,18 @@ def archiveVersion():
         if isBrowser:
             return redirect(url_for("dash", msg="You don't have permission to do this"))
         else:
-            return json.dumps({"code": 200, "msg": "You don't have the permissions to do this"})
+            return json.dumps({"code": 403, "msg": "You don't have the permissions to do this"}), 403
 
     try:
         if not setVersionArchive(data["versionid"], True):
             raise Exception()
 
         if isBrowser:
-            return redirect(url_for("file", id=data["fileid"], msg="Archived versions successfully restored"))
+            return redirect(url_for("archive", msg="Version successfully archived"))
         else:
             return json.dumps({
                 "code": 200,
-                "msg": "Archived versions successfully restored"
+                "msg": "Version has been successfully archived"
             })
 
     except Exception as e:
