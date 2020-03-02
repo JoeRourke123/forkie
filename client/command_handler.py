@@ -1,5 +1,5 @@
 from client import cli_utils
-from client.abstractions import check_bool_option, check_if_equal, check_string_option, handle_message, print_dict, get_emailandpass, get_repo_details, format_file_rows, query_allrepos
+from client.abstractions import check_bool_option, check_if_equal, check_string_option, handle_message, print_dict, get_emailandpass, get_repo_details, format_file_rows, query_allrepos, generatePdfFromHtml
 from src.api.files.backblaze import B2Interface, UploadSourceBytes
 from urllib.parse import urljoin
 from traceback import print_exc
@@ -11,6 +11,7 @@ import pickle
 import json
 import io
 import copy
+import datetime
 
 
 file_new_end = '/api/files/new'
@@ -27,6 +28,7 @@ group_movmem_end = '/api/groups/moveMember'
 signin_end = '/api/signin'
 signup_end = '/api/signup'
 bulk_comment_end = '/api/comment/bulkComment'
+report_end = '/api/report/generateReport'
 
 """ Module which handles all subcommands to the forkie CLI
 """
@@ -541,8 +543,6 @@ def group(args: dict):
     args_norm["force"] = check_bool_option(args, "--force")
     # Check if there's a view
     args_norm["view"] = check_bool_option(args, "--view")
-    # Check for group
-    args_norm["group"] = check_string_option(args, "-p", "group")
     # Check for email
     if '<email>' in args:
         args_norm['email'] = args['<email>']
@@ -760,8 +760,115 @@ def report(args: dict):
     """ Generate report on everything or an individual group or person. A report is a PDF which is generated from a markdown file and output to a 
         specific location if the -o option is specified
     """
-    # (-a | (-p <group> | <email>)) [(-o <file>)] [-v | --verbose]
-    print(args)
+    # (-p <group> | <email>) [(-o <file>)] [-v | --verbose]
+    args_norm = {
+        'group': None,
+        'email': None,
+        'output': None,
+        'verbose': False
+    }
+
+    # Check if there's verbose
+    args_norm["verbose"] = check_bool_option(args, "--verbose")
+    v = args_norm['verbose']
+    # Check for email
+    if '<email>' in args:
+        args_norm['email'] = args['<email>'][0]
+    # Check for group
+    if check_string_option(args, "-p", "group"):
+        args_norm['group'] = args['<group>']
+    # Check for output
+    if check_string_option(args, '--output', "file"):
+        args_norm['output'] = args['<file>'][0]
+
+    # Check if the server cookie file exists
+    session = requests.session()
+    repos: list = get_repo_details(v)
+
+    if len(repos) != 0:
+        offset = 0
+        for r in range(len(repos)):
+            repo = repos[r]
+            session.cookies.update(repo['cookie'])
+            print('\n\n' + str(r + 1) + '. Repo name:', str(repo['repo_name']), '(url:', str(repo['url']) + ')')
+    else:
+        print('No cookie files found in .forkie')
+        return
+
+    print('Which repo do you want? ', end='')
+    chosen_repo = repos[cli_utils.ask_for_list(repos)]
+
+    # Query groups
+    if args_norm['group'] is not None:
+        # Display all groups with the given groupname
+        if v:
+            print('Getting: https://' + chosen_repo['url'] + report_end)
+        groups = requests.Response()
+        try:
+            groups = session.get('http://' + chosen_repo['url'] + group_query_end)
+        except requests.exceptions.ConnectionError:
+            print('\nCould not connect to ' + chosen_repo['repo_name'])
+            return
+
+        try:
+            code = groups.json()['code']
+            msg = groups.json()['msg']
+        except Exception:
+            print('\nSomething went wrong generating a report ' + chosen_repo['repo_name'])
+            return
+        if v:
+            print('Returned code:', code)
+            print('Returned message:', msg)
+
+        if code == 200:
+            groups_queried = groups.json()['rows']
+            groups_matching = list(filter(lambda x: x['groupname'] == args_norm['group'], groups_queried))
+            if len(groups_matching) > 1:
+                print('\nThere are multiple groups with that name which one do you mean?:')
+                for g in range(len(groups_matching)):
+                    group = groups_matching[g]
+                    print(str(g) + '. Groupname ID: ' + group['groupid'] + "| Groupleader ID: " + group['groupleaderid'])
+                chosen_group = groups_matching[cli_utils.ask_for_list(groups_matching)]
+            else:
+                chosen_group = groups_queried[0]
+        else:
+            print(msg)
+            
+
+    if v:
+        print('Getting: https://' + chosen_repo['url'] + report_end)
+    report = requests.Response()
+    try:
+        report = session.post('http://' + chosen_repo['url'] + report_end, json={'groupid': chosen_group['groupid']} if args_norm['group'] is not None else {'email': args_norm['email']})
+    except requests.exceptions.ConnectionError:
+        print('\nCould not connect to ' + chosen_repo['repo_name'])
+        return
+
+    try:
+        code = report.json()['code']
+        msg = report.json()['msg']
+    except Exception:
+        print('\nSomething went wrong generating a report ' + chosen_repo['repo_name'])
+        return
+    if v:
+        print('Returned code:', code)
+        print('Returned message:', msg)
+
+    if code == 200:
+        output_path = os.getcwd()
+        if args_norm['output'] is not None:
+            if not os.path.isfile(args_norm['output']) or not os.path.isdir(os.path.dirname(args_norm['output'])):
+                print('Saving report to "' + args_norm['output'] + '"')
+                output_path = args_norm['output']
+            else:
+                print('Output path doesn\'t exist')
+                return
+        else:
+            print('Saving to cwd (' + output_path + ')')
+        generatePdfFromHtml(report.json()['report'], os.path.join(output_path, datetime.datetime.now().strftime("%d|%m|%Y") + '.pdf'))
+    else:
+        print(msg)
+    print('Done!')
 
 def login(args: dict):
     """ Logs into the given forkie repository at the given address, this creates a .forkie folder in the current directory which will store the

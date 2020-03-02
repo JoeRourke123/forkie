@@ -64,7 +64,7 @@ def file_query(browserQuery=None):
             userid = request.cookies.get("userid")
 
             # Return bad request if the user id is None
-            if userid is None or ("archived" in data and not getUserData(userid)["admin"]):
+            if userid is None:
                 raise Exception
 
             query = getFilesUserCanAccess(userid)

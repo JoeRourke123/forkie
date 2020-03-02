@@ -26,7 +26,7 @@ reportBP = Blueprint('report', __name__,
 def generateReport():
     """ JSON requires either groupid or email of a user and userid inside cookie.
         - If only email is specified then a report is generated on user. Querying
-        - If only groupid is specified then a report is generated on user
+        - If only groupid is specified then a report is generated on user (also now accepts groupname)
         - If both then a report is generated on the user's activity within said group
     """
     isBrowser = "email" in request.form or "groupid" in request.form
@@ -37,6 +37,8 @@ def generateReport():
         try:
             # First check if user requesting report has the permission to do this. If the user is admin then
             # skip over this bit
+            if 'groupname' in data:
+                data['groupid'] = str(getGroupDataFromName(data['groupname']).groupid)
             user_groups = getUserGroups(cookie_userid)
             print("Generating a report for " + cookie_userid + " subject:", data)
             user_info = getUserData(cookie_userid)
