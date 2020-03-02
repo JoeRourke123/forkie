@@ -211,10 +211,10 @@ def format_file_rows(formatted_rows: list, offset: int) -> str:
         for group in row['groups']:
             group_name_list.append(group['groupname'])
         row['belongs to'] = ', '.join(group_name_list)
-        versions = len(row['versions'])
+        versions = len(list(row['versions'].keys()))
         row['no. of versions'] = versions
 
-    formatted_rows = cli_utils.delete_listdict_keys(formatted_rows, ['groups', 'versions'])
+    formatted_rows = cli_utils.delete_listdict_keys(formatted_rows, ['groups', 'versions', 'versionorder'])
     headers = list(formatted_rows[0].keys())
     headers.insert(0, 'file no.')
-    return cli_utils.format_rows(headers, [list(data.values()) for data in formatted_rows], offset)
+    return cli_utils.format_rows(headers, [[data['fileid'], data['filename'], data['extension'], data['belongs to'], data['no. of versions']] for data in formatted_rows], offset)

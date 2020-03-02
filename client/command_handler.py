@@ -596,7 +596,7 @@ def group(args: dict):
                             headers = list(groups_returned[0].keys())
                             headers.sort()
                             headers.insert(0, 'file no.')
-                            values = [list(data.values()) for data in groups_returned]
+                            values = [[data['groupid'], data['groupleaderid'], data['groupname']] for data in groups_returned]
                             print(cli_utils.format_rows(headers, values))
                         else:
                             print('You have no groups in this repo')

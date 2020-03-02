@@ -16,6 +16,7 @@ from src.api.email.routes import emailBP
 from src.api.metadata.routes import metadataBP
 from src.api.comments.routes import commentsBP
 from src.api.files import filesBP
+from src.api.report.routes import reportBP
 
 from src.api.files.file_query import file_query
 from src.api.files.file_create import newFile       # Must be imported, despite not being used so the endpoint can be added to the Blueprint
@@ -41,6 +42,7 @@ app.register_blueprint(emailBP)
 app.register_blueprint(filesBP)
 app.register_blueprint(metadataBP)
 app.register_blueprint(commentsBP)
+app.register_blueprint(reportBP)
 
 APPLICATION_KEY_ID = os.environ['APPLICATION_KEY_ID']
 APPLICATION_KEY = os.environ['APPLICATION_KEY']
