@@ -44,7 +44,7 @@ def deleteFile(fileid=None):
                 "msg": "You must be signed in to do this",
             }), 401
 
-    fileData = file_query({"fileid": data["fileid"]})[0]
+    fileData = file_query({"fileid": data["fileid"], "archived": True})[0]
     userData = getUserData(request.cookies.get("userid"))
 
     if not userData["admin"]:
@@ -67,11 +67,11 @@ def deleteFile(fileid=None):
             os.environ.get("BUCKET_NAME")
         )
 
-        for version in fileData["versions"]:            # Run the B2Interface remove method in order to delete each
+        for version in fileData["versions"].values():            # Run the B2Interface remove method in order to delete each
             b2.removeVersion(version["versionid"])      # file versions' actual file from the B2 bucket
 
         if isBrowser:                                   # If all goes successfully, the user should be redirected or...
-            return redirect(url_for("dash", msg=fileData["filename"] + " successfully deleted!"))
+            return redirect(url_for("archive", msg=fileData["filename"] + " successfully deleted!"))
         else:
             return json.dumps({                         # receive a JSON response indicating success
                 "code": 200,
@@ -111,7 +111,7 @@ def deleteVersion():
                 "msg": "You must be signed in to do this",
             }), 401
 
-    fileData = file_query({"versionid": data["versionid"]})[0]
+    fileData = file_query({"versionid": data["versionid"], "archived": True})[0]
     versionCount = len(fileData["versionorder"])            # Version order is a list of versionids therefore can be
                                                             # used as an accurate count for the number of versions
     if versionCount <= 1:
@@ -142,7 +142,7 @@ def deleteVersion():
         b2.removeVersion(data["versionid"])                            # Removes the version's B2 file
 
         if isBrowser:                   # Returns with a response upon successful deletion
-            return redirect(url_for("file", id=fileData["fileid"], msg="File version successfully deleted!"))
+            return redirect(url_for("archivedFile", id=fileData["fileid"], msg="File version successfully deleted!"))
         else:
             return json.dumps({
                 "code": 200,

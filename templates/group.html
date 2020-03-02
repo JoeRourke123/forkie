@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>
-        {{ group["groupname"] }} - rep0
+        {{ group["groupname"] }} - forkie
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -19,7 +19,7 @@
     </div>
 {% endif %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light orange-grad">
-    <a class="navbar-brand" href="#">rep0</a>
+    <a class="navbar-brand" href="#">forkie</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -69,6 +69,14 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Group Files</h5>
+                    {% if group["files"]|length <= 0 %}
+                        <a href="#" class="list-group-item list-group-item-action disabled">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">This group has no associated files, upload one with the <span
+                                        class="oi oi-document"></span> button.</h5>
+                            </div>
+                        </a>
+                    {% endif %}
                     {% for file in group["files"] %}
                         <a href="{{ url_for("file", id=file["fileid"]) }}"
                            class="list-group-item list-group-item-action">
@@ -279,7 +287,7 @@
                     <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
                     <form action="{{ url_for('groups.removeMember') }}" method="POST">
                         <input type="hidden" name="groupid" value="{{ group["groupid"] }}"/>
-                        <input type="hidden" name="userid" value="{{ request.cookies.get("userid") }}" />
+                        <input type="hidden" name="userid" value="{{ request.cookies.get("userid") }}"/>
                         <button class="btn btn-outline-danger">Leave Group</button>
                     </form>
                 </div>

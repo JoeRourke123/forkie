@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>
-        {{ file.filename }} - rep0
+        {{ file.filename }} - forkie
     </title>
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
@@ -19,7 +19,7 @@
     </div>
 {% endif %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light orange-grad">
-    <a class="navbar-brand" href="#">rep0</a>
+    <a class="navbar-brand" href="#">forkie</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -38,7 +38,7 @@
             <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
                 <span class="oi oi-document" title="document"></span>
             </a>
-            <a type="button" class="btn btn-outline-dark" href="#" role="button">
+            <a type="button" class="btn btn-outline-dark" href="{{ url_for('signin.signout') }}" role="button">
                 <span class="oi oi-account-logout" title="account-logout"></span>
             </a>
         </div>
@@ -69,6 +69,14 @@
                 <div class="card-body">
                     <h5 class="card-title text-muted">File Comments</h5>
                     <div class="list-group">
+                        {% if comments|length <= 0 %}
+                            <a href="#" class="list-group-item list-group-item-action disabled">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">This file has no comments, you can add one with the <span
+                                            class="oi oi-comment-square"></span> button.</h5>
+                                </div>
+                            </a>
+                        {% endif %}
                         {% for comment in comments %}
                             <div class="list-group-item list-group-item-action">
                                 <div class="w-100">
@@ -93,10 +101,13 @@
                                                     class="oi oi-check"></span></a></span>
                                         {% endif %}
                                         {% if comment["user"]["userid"]|string == request.cookies.get("userid") %}
-                                            <form action="{{ url_for("comments.deleteComment") }}" class="m-0" method="POST">
-                                                <input type="hidden" name="commentid" value="{{ comment["commentid"] }}" />
+                                            <form action="{{ url_for("comments.deleteComment") }}" class="m-0"
+                                                  method="POST">
+                                                <input type="hidden" name="commentid"
+                                                       value="{{ comment["commentid"] }}"/>
                                                 <input type="hidden" name="fileid" value="{{ file["fileid"] }}">
-                                                <button type="submit" role="button" class="btn btn-sm btn-outline-danger mt-2">
+                                                <button type="submit" role="button"
+                                                        class="btn btn-sm btn-outline-danger mt-2">
                                                     <span class="oi oi-trash"></span>
                                                 </button>
                                             </form>
@@ -114,33 +125,44 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-muted">File Versions</h5>
+                    {% if file["versionorder"]|length <= 0 %}
+                        <a href="#" class="list-group-item list-group-item-action disabled">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">This file has no versions, upload one with the <span
+                                        class="oi oi-document"></span> button.</h5>
+                            </div>
+                        </a>
+                    {% endif %}
                     {% for versionID in file["versionorder"] %}
                         <a href="{{ url_for("version", id=versionID) }}"
                            class="list-group-item list-group-item-action">
                             <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ file["versions"][versionID]["title"] }}</h5>
+                                <h5 class="mb-1">{{ file["versions"][versionID]["title"] }}</h5>
                                 </h5>
                                 <small>
-                                    <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5 mins ago</time>
+                                    <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5
+                                        mins ago
+                                    </time>
                                 </small>
                             </div>
                             {% if archive %}
                                 <div class="d-flex justify-content-start">
                                     <form action="{{ "files.restoreVersion" }}" method="post">
-                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <input type="hidden" value="{{ versionID }}" name="versionid"/>
                                         <button type="submit" onclick="openLoader()" class="btn btn-outline-info">
                                             <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
                                         </button>
                                     </form>
                                     <form action="{{ "files.deleteVersion" }}" method="post">
-                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <input type="hidden" value="{{ versionID }}" name="versionid"/>
                                         <button type="submit" onclick="openLoader()" class="btn btn-outline-danger">
                                             <span class="oi oi-trash" title="Delete Archived Versions"></span>
                                         </button>
                                     </form>
                                 </div>
                             {% else %}
-                                <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
+                                <small class="text-muted">
+                                    from {{ file["versions"][versionID]["author"]["username"] }}</small>
                             {% endif %}
                         </a>
                     {% endfor %}
@@ -155,33 +177,33 @@
                        role="button"><span
                             class="oi oi-document pr-1" title="document"> </span> New Version</a>
                     <a class="btn btn-outline-info mb-2" href="#" data-toggle="modal" data-target="#addComment"
-                           role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
-                    Comment</a>
+                       role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
+                        Comment</a>
                 </div>
             </div>
             {% if isLeader %}
                 <div class="card">
                     <div class="card-body d-flex w-100 flex-column flex-fill">
-                    <h5 class="card-title text-muted">Admin Actions</h5>
+                        <h5 class="card-title text-muted">Admin Actions</h5>
                         <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addGroup"
                            role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Group</a>
 
                         {% if file["groups"]|length > 1 %}
                             <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
-                                   data-target="#removeGroup"
-                                   role="button"><span class="oi oi-minus pr-1"
-                                                       title="minus"> </span> Revoke Group Access</a>
+                               data-target="#removeGroup"
+                               role="button"><span class="oi oi-minus pr-1"
+                                                   title="minus"> </span> Revoke Group Access</a>
                         {% endif %}
                         <a class="btn btn-outline-info mb-2" href="#" role="button"><span
-                            class="oi oi-clipboard pr-1"
-                            title="clipboard"> </span>
-                        Generate Report</a>
-                    {% if not archive %}
-                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
+                                class="oi oi-clipboard pr-1"
+                                title="clipboard"> </span>
+                            Generate Report</a>
+                        {% if not archive %}
+                            <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
                                data-target="#deleteFile"><span class="oi oi-box pr-1"
                                                                title="box"> </span> Archive All Versions
-                        </a>
-                    {% endif %}
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             {% endif %}
@@ -201,7 +223,7 @@
                 <form action="{{ url_for("files.addGroup") }}" method="POST">
                     <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                      <div class="form-group">
+                    <div class="form-group">
                         <label for="groupid">Select a Group</label>
                         <select class="form-control" name="groupid" id="groupid" required>
                             {% set groupCount = namespace(value=0) %}
@@ -216,7 +238,7 @@
                                 <option disabled>No other groups to add</option>
                             {% endif %}
                         </select>
-                      </div>
+                    </div>
                     <button class="btn btn-outline-success">
                         <span class="oi oi-plus" title="plus"></span>
                     </button>
@@ -238,14 +260,14 @@
                 <form action="{{ url_for("files.removeGroup") }}" method="POST">
                     <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
 
-                      <div class="form-group">
+                    <div class="form-group">
                         <label for="groupid">Select a Group</label>
                         <select class="form-control" name="groupid" id="groupid" required>
                             {% for group in file["groups"] %}
                                 <option value="{{ group["groupid"] }}">{{ group["groupname"] }}</option>
                             {% endfor %}
                         </select>
-                      </div>
+                    </div>
                     <button class="btn btn-outline-danger">
                         <span class="oi oi-check" title="check"></span>
                     </button>
@@ -352,6 +374,8 @@
 
     $(".alert").alert();
 
-    setTimeout(() => { $(".alert").alert("close") }, 5000);
+    setTimeout(() => {
+        $(".alert").alert("close")
+    }, 5000);
 </script>
 </html>
