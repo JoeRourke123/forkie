@@ -2,18 +2,39 @@ from flask import current_app as app
 from flask import render_template, Blueprint, request, make_response, redirect, url_for
 
 from src.db.UserTable import UserTable
-from src.utils import hashPassword
 from src.db import db
 
+from hashlib import sha256
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+
 import json
+import os
 
 signupBP = Blueprint('signup', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 
 
+
+def hashPassword(password):
+    """ Given a password (or any text input) will return a sha256 hash of the text
+        - password: the user inputted plain text password to hash
+
+        - returns: a string hex representation of the sha256 hashed string
+    """
+
+    return str(sha256(password.encode('utf-8')).hexdigest())
+
 @signupBP.route("/signup", methods=["POST"])
 def signup():
+    """ Endpoint to remove a user from a specific group - same endpoint to allow user to leave a group
+
+        - email: the user inputted email, in order to send notification emails to the user
+        - username: the user's display name / real name to allow for personalised messages
+        - password: the password of the user's account
+
+        - returns: a response for the client to interpret based on the success of the operation
+    """
+
     isBrowser = bool("email" in request.form)
     data = request.form if isBrowser else json.loads(request.data)
 
@@ -29,15 +50,14 @@ def signup():
         db.session.commit()  # Ensure the database transaction properly completes
     except IntegrityError as e:  # Thrown if the user attempts to use an email that already exists in the table
         if isBrowser:
-            return redirect(url_for('index', code=401, msg="That email is already associated with an account, try signing in!"))
+            return redirect(url_for('index', msg="That email is already associated with an account!"))
         else:
             return json.dumps({
-                "code": 401,
-                "msg": "That email is already assoicated with an account, try signing in!"
+                "msg": "That email is already assoicated with an account!"
             }), 401
     except Exception as e:
         if isBrowser:
-            return redirect(url_for("error.error", code=500))
+            return redirect(url_for("index", msg="Something went wrong when creating an account!"))
         else:
             return json.dumps({
                 "code": 500,
@@ -47,7 +67,18 @@ def signup():
     if isBrowser:
         return redirect(url_for('index', code=200, msg="Account created! You may now signin"))
     else:
-        return json.dumps({
+        # Changed the response in order to better suit CLI
+        resp = make_response(json.dumps({
             "code": 200,
-            "msg": "Your account has been created, you may not signin"
-        })
+            "msg": "Your account has been created",
+            "b2": {
+                "application_key_id": os.environ["APPLICATION_KEY_ID"],
+                "application_key": os.environ["APPLICATION_KEY"],
+                "bucket_name": os.environ["BUCKET_NAME"]
+            }
+        }))
+        # Also sets cookie
+        query = UserTable.query.filter_by(email=data['email'])\
+            .filter_by(password=hashPassword(data['password'])).first()
+        resp.set_cookie("userid", str(query.userid))
+        return resp

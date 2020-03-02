@@ -6,8 +6,8 @@ import uuid
 class UserGroupTable(db.Model):
     __tablename__ = "usergrouptable"
 
-    userid = db.Column(UUID(as_uuid=True), db.ForeignKey('usertable.userid'), primary_key=True)
-    groupid = db.Column(UUID(as_uuid=True), db.ForeignKey('grouptable.groupid'), primary_key=True)
+    userid = db.Column(UUID(as_uuid=True), db.ForeignKey('usertable.userid', ondelete='CASCADE'), primary_key=True)
+    groupid = db.Column(UUID(as_uuid=True), db.ForeignKey('grouptable.groupid', ondelete='CASCADE'), primary_key=True)
 
     def __init__(self, data):
         self.groupid = data["groupid"]

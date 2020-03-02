@@ -1,15 +1,19 @@
-from flask import render_template, Blueprint, request, make_response, redirect, url_for
+from traceback import print_exc
+
+from flask import request, make_response
 
 from src.db.FileTable import FileTable
 from src.db.FileGroupTable import FileGroupTable
 from src.db.FileVersionTable import FileVersionTable
-from src.api.user.utils import getFilesUserCanAccess
+
+from src.api.files import filesBP
+from src.api.user.utils import getFilesUserCanAccess, getUserData
+from src.api.files.utils import getFileGroups, getFileVersions
+from src.api.groups.utils import getGroupDataFromName
 
 import json
-from uuid import UUID
 from jsonschema import validate, ValidationError
 
-fQueryBP = Blueprint('file_query', __name__, template_folder='../../templates', static_folder='../../static', url_prefix='/api')
 query_schema = {
     "type": "object",
     "properties": {
@@ -20,6 +24,7 @@ query_schema = {
         "groupid": {"type": "string"},
         "groupname": {"type": "string"},
         "versionhash": {"type": "number"},
+        "archived": {"type": "boolean"},
         "first": {"type": "boolean"}
     }
 }
@@ -41,7 +46,7 @@ query_schema = {
     shortlisted by the criteria inside the JSON query. Rows from query obj are then converted to a JSON to be returned
 """
 
-@fQueryBP.route("/file_query", methods=["POST"])
+@filesBP.route("/query", methods=["POST"])
 def file_query(browserQuery=None):
     data = browserQuery if browserQuery is not None else json.loads(request.data)
 
@@ -57,68 +62,83 @@ def file_query(browserQuery=None):
                 })
 
             userid = request.cookies.get("userid")
-            
+
             # Return bad request if the user id is None
-            if userid is None:
+            if userid is None or ("archived" in data and not getUserData(userid)["admin"]):
                 raise Exception
 
             query = getFilesUserCanAccess(userid)
             get_first = False
-            print(data)
             if len(data) > 0:
-                # Works (tested)
                 if "filename" in data:
                     # Searches by wildcard so any filename containing that string will be included
                     query = query.filter(FileTable.filename.like("%" + str(data["filename"]) + "%"))
-                # Works (tested)
                 if "fileid" in data:
-                    query = query.filter(FileTable.fileid == UUID(str(data["fileid"])))
-                # No worky (not tested)
+                    query = query.filter(FileTable.fileid == str(data["fileid"]))
                 if "versionid" in data:
                     query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionid"])
-                # No worky (not tested)
                 if "extension" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["extension"])
-                # No worky (not tested)
+                    query = query.filter(FileTable.extension == data["extension"])
                 if "versionhash" in data:
-                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionid == data["versionhash"])
-                # Works (not tested)
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.versionhash == data["versionhash"])
                 if "groupid" in data:
                     query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == data["groupid"])
-                # Works (not tested)
                 if "groupname" in data:
-                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupname == data["groupname"])
-                # Works (tested)
+                    # Get groupid using getGroupDataFromName
+                    groupid = getGroupDataFromName(data['groupname']).serialise()['groupid']
+                    query = query.filter(FileTable.fileid == FileGroupTable.fileid, FileGroupTable.groupid == groupid)
                 if "first" in data:
                     get_first = data['first']
-                    
+                if "archived" in data:
+                    query = query.filter(FileTable.fileid == FileVersionTable.fileid, FileVersionTable.archived == data["archived"])
+
             # Queries all even when first flag is true as it needs all columns from query object 
             # and first() method strips other columns for some reason
             query = query.all()
             # Construct return rows to be passed to the returned JSON response
             rs_list = []
-            for r in range(0, len(query) if not get_first else 1):
-                row = query[r]
+            print('\n\nGetting files for user: ' + userid + ' query of', data)
+            for x, row in enumerate(query):
+                # print('\nFile ' + str(x) + ':')
                 if row is not None:
-                    print(row)
+                    # print("FileID:", str(row.fileid))
+                    # print("Filename:", row.filename)
+                    # print("Groups:", getFileGroups(str(row.fileid)))
+                    # print("Versions:", getFileVersions(str(row.fileid)))
                     rs_json = {
-                        "fileid": row[1].hex,
-                        "filename": row[2],
-                        "groupname": row[3],
-                        "groupid": row[4].hex
+                        "fileid": str(row.fileid),
+                        "filename": row.filename,
+                        "extension": row.extension,
+                        "groups": getFileGroups(str(row.fileid)),
+                        "versions": getFileVersions(str(row.fileid), archived=("archived" in data and data["archived"])),
                     }
+
+                    rs_json["versionorder"] = sorted(rs_json["versions"].keys(),
+                                                     key=lambda vID: rs_json["versions"][vID]["uploaded"], reverse=True)
+
                     rs_list.append(rs_json)
 
+                rs_list = sorted(rs_list, key=lambda x: x["versions"][x["versionorder"][0]]["uploaded"], reverse=True)
+
+            if browserQuery is not None:
+                return rs_list
+
+            # Fixes JSON serialisation issues. Did this this way to not interfere with any other modules
+            for rs in rs_list:
+                for ver in rs['versions']:
+                    # Userid key is UUID object so convert to string
+                    ver['author']['userid'] = str(ver['author']['userid'])
+                    # lastlogin key is datetime object so convert to string
+                    ver['author']['lastlogin'] = str(ver['author']['lastlogin'])
             resp = make_response(json.dumps({"code": 200, "msg": "Here are the returned rows", "rows": rs_list}))
             resp.set_cookie("userid", userid)
 
             return resp
         except Exception as e:
-            # print(e.with_traceback())
-            print(e)
+            print(print_exc())
 
-            if browserQuery:
-                return redirect(url_for("errors.error", code=500, url="file_query.file_query"))
+            if browserQuery is not None:
+                return []
             else:
                 return json.dumps({
                     "code": 500,
@@ -126,7 +146,7 @@ def file_query(browserQuery=None):
                 }), 500
     except ValidationError:
         if browserQuery is not None:
-            return redirect(url_for("errors.error", code=400, url="file_query.file_query"))
+            []
         else:
             return json.dumps({
                 "code": 400,

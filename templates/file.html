@@ -1,0 +1,352 @@
+<html>
+<head>
+    <title>
+        {{ file.filename }} - rep0
+    </title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/open-iconic-bootstrap.min.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <style>
+    </style>
+</head>
+<body>
+{% if "msg" in request.args %}
+    <div class="alert alert-warning alert-dismissible fade show position-fixed m-4 msg" role="alert">
+        {{ request.args["msg"] }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+{% endif %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light orange-grad">
+    <a class="navbar-brand" href="#">rep0</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dash') }}">Back to Dashboard</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <a type="button" class="btn btn-outline-dark mr-2" href="{{ url_for('newFilePage') }}" role="button">
+                <span class="oi oi-document" title="document"></span>
+            </a>
+            <a type="button" class="btn btn-outline-dark" href="#" role="button">
+                <span class="oi oi-account-logout" title="account-logout"></span>
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row mt-4 mb-4">
+        <h2>{{ file.filename }}</h2>
+    </div>
+    <div class="row">
+        <div class="col-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Groups with Access</h5>
+                    <div class="list-group">
+                        {% for group in file["groups"] %}
+                            <a href="{{ url_for('group', id=group["groupid"]) }}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ group["groupname"] }}</h5>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">File Comments</h5>
+                    <div class="list-group">
+                        {% for comment in comments %}
+                            <div class="list-group-item list-group-item-action">
+                                <div class="w-100">
+                                    <h5 class="mb-1">{{ comment["comment"] }}</h5>
+                                    <p class="text-muted">from {{ comment["user"]["username"] }}</p>
+                                </div>
+                                <div class="d-block">
+                                    <small class="text-muted mb-2">
+                                        <time class="timeago" datetime="{{ comment["date"] }}"></time>
+                                    </small>
+                                    <br>
+                                    <div class="d-flex flex-row">
+                                        {% if not comment["read"] %}
+                                            <span tabindex="0" data-toggle="tooltip" data-placement="top"
+                                                  title="Comment not seen by all with access"><a
+                                                    class="btn btn-sm btn-outline-dark disabled mt-2 mr-2"><span
+                                                    class="oi oi-check"></span></a></span>
+                                        {% else %}
+                                            <span tabindex="0" data-toggle="tooltip" data-placement="top"
+                                                  title="Comment seen by all"><a
+                                                    class="btn btn-sm btn-outline-success disabled mt-2 mr-2"><span
+                                                    class="oi oi-check"></span></a></span>
+                                        {% endif %}
+                                        {% if comment["user"]["userid"]|string == request.cookies.get("userid") %}
+                                            <form action="{{ url_for("comments.deleteComment") }}" class="m-0" method="POST">
+                                                <input type="hidden" name="commentid" value="{{ comment["commentid"] }}" />
+                                                <input type="hidden" name="fileid" value="{{ file["fileid"] }}">
+                                                <button type="submit" role="button" class="btn btn-sm btn-outline-danger mt-2">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">File Versions</h5>
+                    {% for versionID in file["versionorder"] %}
+                        <a href="{{ url_for("version", id=versionID) }}"
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ file["versions"][versionID]["title"] }}</h5>
+                                </h5>
+                                <small>
+                                    <time class="timeago" datetime="{{ file["versions"][versionID]["uploaded"] }}">5 mins ago</time>
+                                </small>
+                            </div>
+                            {% if archive %}
+                                <div class="d-flex justify-content-start">
+                                    <form action="{{ "files.restoreVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                    <form action="{{ "files.deleteVersion" }}" method="post">
+                                        <input type="hidden" value="{{ versionID }}" name="versionid" />
+                                        <button type="submit" class="btn btn-outline-info">
+                                            <span class="oi oi-action-undo" title="Delete Archived Versions"></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <small class="text-muted">from {{ file["versions"][versionID]["author"]["username"] }}</small>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="card mb-4">
+                <div class="card-body d-flex w-100 flex-column flex-fill">
+                    <h5 class="card-title text-muted">File Actions</h5>
+                    <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#newVersion"
+                       role="button"><span
+                            class="oi oi-document pr-1" title="document"> </span> New Version</a>
+                    <a class="btn btn-outline-info mb-2" href="#" data-toggle="modal" data-target="#addComment"
+                           role="button"><span class="oi oi-comment-square pr-1" title="comment square"> </span> Add
+                    Comment</a>
+                </div>
+            </div>
+            {% if isLeader %}
+                <div class="card">
+                    <div class="card-body d-flex w-100 flex-column flex-fill">
+                    <h5 class="card-title text-muted">Admin Actions</h5>
+                        <a class="btn btn-outline-success mb-2" href="#" data-toggle="modal" data-target="#addGroup"
+                           role="button"><span class="oi oi-plus pr-1" title="plus"> </span> Add Group</a>
+
+                        {% if file["groups"]|length > 1 %}
+                            <a class="btn btn-outline-warning mb-2" href="#" data-toggle="modal"
+                                   data-target="#removeGroup"
+                                   role="button"><span class="oi oi-minus pr-1"
+                                                       title="minus"> </span> Revoke Group Access</a>
+                        {% endif %}
+                        <a class="btn btn-outline-info mb-2" href="#" role="button"><span
+                            class="oi oi-clipboard pr-1"
+                            title="clipboard"> </span>
+                        Generate Report</a>
+                        <a class="btn btn-outline-danger mb-2" href="#" role="button" data-toggle="modal"
+                               data-target="#deleteFile"><span class="oi oi-box pr-1"
+                                                               title="box"> </span> Archive All Versions
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGroup" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Group</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for("files.addGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
+
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% set groupCount = namespace(value=0) %}
+                            {% for group in userGroups %}
+                                {% if group not in file["groups"] %}
+                                    <option value="{{ group["groupid"] }}" selected>{{ group["groupname"] }}</option>
+                                    {% set groupCount.value = groupCount.value + 1 %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if groupCount.value <= 0 %}
+                                <option disabled>No other groups to add</option>
+                            {% endif %}
+                        </select>
+                      </div>
+                    <button class="btn btn-outline-success">
+                        <span class="oi oi-plus" title="plus"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="removeGroup" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Revoke Group Access</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for("files.removeGroup") }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
+
+                      <div class="form-group">
+                        <label for="groupid">Select a Group</label>
+                        <select class="form-control" name="groupid" id="groupid" required>
+                            {% for group in file["groups"] %}
+                                <option value="{{ group["groupid"] }}">{{ group["groupname"] }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    <button class="btn btn-outline-danger">
+                        <span class="oi oi-check" title="check"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteFile" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This action cannot be undone! Deleting the file will also delete all the versions, comments, and
+                    metadata that are associated with it.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('files.deleteFile') }}" method="POST">
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
+                    <button class="btn btn-outline-danger" onclick="openLoader()">Delete File</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal hide" id="addComment" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Comment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('comments.newComment') }}" method="POST">
+                    <input type="hidden" value="{{ file["fileid"] }}" name="fileid"/>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="comment" id="comment"/>
+                    </div>
+                    <button class="btn btn-outline-info">
+                        <span class="oi oi-comment-square" title="comment sqaure"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal hide" id="newVersion" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Version</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('files.newVersion') }}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="fileid" value="{{ file["fileid"] }}"/>
+                    <div class="form-group">
+                        <input type="file" class="form-control-file" id="file" name="file" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Version Title</label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               placeholder='"Fixed punctation version etc..."' required>
+                    </div>
+                    <button class="btn btn-outline-success" onclick="openLoader()">
+                        <span class="oi oi-cloud-upload" title="cloud upload"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="loading">
+    <div class="modal-dialog modal-dialog-centered justify-content-center" role="document">
+        <div class="spinner-grow text-warning" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.timeago.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/filerep0.js') }}"></script>
+<script>
+    $(document).ready((e) => {
+        $("time.timeago").timeago();
+    });
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    });
+
+    $(".alert").alert();
+
+    setTimeout(() => { $(".alert").alert("close") }, 5000);
+</script>
+</html>

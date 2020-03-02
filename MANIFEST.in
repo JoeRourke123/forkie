@@ -1,0 +1,6 @@
+include README.md
+include requirements_cli.txt
+prune src/api/files/file_create.py
+prune src/api/files/file_query.py
+prune src/api/files/file_delete.py
+prune src/api/files/utils.py

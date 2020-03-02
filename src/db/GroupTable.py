@@ -17,3 +17,10 @@ class GroupTable(db.Model):
         self.groupid = str(uuid.uuid1())
         self.groupname = data["groupname"]
         self.groupleaderid = data["groupleaderid"]
+
+    def serialise(self):
+        return {
+            "groupid": str(self.groupid),
+            "groupname": str(self.groupname),
+            "groupleaderid": str(self.groupleaderid)
+        }
