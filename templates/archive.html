@@ -71,13 +71,13 @@
                                     <div class="d-flex justify-content-start mt-2 mb-0">
                                         <form action="{{ url_for("files.restoreFile") }}" method="POST" class="mr-2">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
-                                            <button type="submit" role="button" class="btn btn-sm btn-outline-info">
+                                            <button type="submit" onclick="openLoader()" role="button" class="btn btn-sm btn-outline-info">
                                                 <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
                                             </button>
                                         </form>
                                         <form action="{{ url_for("files.deleteFile") }}" method="POST">
                                             <input type="hidden" name="fileid" value="{{ file["fileid"] }}" />
-                                            <button type="submit" role="button" class="btn btn-sm btn-outline-danger">
+                                            <button type="submit" onclick="openLoader()" role="button" class="btn btn-sm btn-outline-danger">
                                                 <span class="oi oi-trash" title="Delete Archived Versions"></span>
                                             </button>
                                         </form>
