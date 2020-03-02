@@ -5,6 +5,8 @@ import markdown
 from weasyprint import HTML, CSS
 from weasyprint.fonts import FontConfiguration
 
+from io import BytesIO
+
 from src.api.user.utils import getUserDataFromEmail, getUserData
 from src.api.groups.utils import getGroupData, getGroupUsers, getUserGroups
 from src.api.comments.utils import getComments
@@ -126,22 +128,20 @@ def generateReportHTML(groupid: str, email: str) -> str:
     return markdown.markdown(report.getvalue()).replace("\n", "")
 
 # From weazyprint docs (https://weasyprint.readthedocs.io/en/latest/tutorial.html#instantiating-html-and-css-objects)
-def generatePdfFromHtml(html: str, outputPath: str, cssPath: str = None):
-    """ Generates a pdf from a given html string and outputs to the specified path. Will also include css style if specified
+def generatePdfFromHtml(html: str, cssPath: str = None) -> BytesIO:
+    """ Generates a pdf from a given html string and outputs to a BytesIO. Will also include css style if specified
         - Uses: weazyprint
         _ html: given html string to convert and save to pdf
-        - outputPath: the path at which to save pdf
         - cssPath: if specified, will add the css from the given path to the pdf doc
     """
     font_config = FontConfiguration()
     html = HTML(string=html)
     css = CSS(string=open(cssPath, "r").read(), font_config=font_config) if cssPath is not None else None
 
-    html.write_pdf(
-        outputPath, 
+    return BytesIO(html.write_pdf(
         stylesheets=[css] if css is not None else None,
         font_config=font_config
-    )
+    ))
 
 # From: https://stackoverflow.com/questions/9320370/markdown-to-html-using-a-specified-css/9470679
 def linkCSSToReport(cssPath: str, body: str) -> str:
