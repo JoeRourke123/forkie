@@ -69,12 +69,9 @@ def generateReport(groupname=None):
                         "msg": "You don't have permission to complete this action!"
                     }), 401
 
-            # generatePdfFromHtml(generateReportHTML(data['groupid'], data['email']), 'example.pdf')
             if isBrowser:
-                # I'm not quite sure on what to do for the browser side
-                # The linkCSSToReport just adds the given CSS to the header of the given html string, didn't which css to use so just used bootstrap
                 return send_file(
-                    generatePdfFromHtml(generateReportHTML(data['groupid'], data['email'])),
+                    generatePdfFromHtml(generateReportHTML(data.get("groupid"), data.get("email"))),
                     attachment_filename=groupname + ".pdf"
                 )
             else:
