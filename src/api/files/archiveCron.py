@@ -19,8 +19,8 @@ def checkFiles():
 
             if len(versions) >= 1:
                 mostRecent = sorted(versions.keys(), key=lambda vID: versions[vID]["uploaded"], reverse=True)[0]
-
-                if datetime.fromisoformat(versions[mostRecent]["uploaded"]) < yearAgo:
+                # 2020-03-01 22:09:14.935694
+                if datetime.strptime(versions[mostRecent]["uploaded"], "%Y-%m-%d %H:%M:%S.%f") < yearAgo:
                     count += 1
                     for version in versions.values():
                         setVersionArchive(version["versionid"], True)

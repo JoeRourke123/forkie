@@ -1,4 +1,6 @@
-from flask import Blueprint, request, redirect, url_for, make_response
+import io
+
+from flask import Blueprint, request, redirect, url_for, make_response, send_file
 
 import json
 import os
@@ -23,7 +25,8 @@ reportBP = Blueprint('report', __name__,
 
 
 @reportBP.route("/generateReport", methods=["POST"])
-def generateReport():
+@reportBP.route("/generateReport/<groupname>.pdf", methods=["POST"])
+def generateReport(groupname=None):
     """ JSON requires either groupid or email of a user and userid inside cookie.
         - If only email is specified then a report is generated on user. Querying
         - If only groupid is specified then a report is generated on user (also now accepts groupname)
@@ -69,19 +72,21 @@ def generateReport():
             if isBrowser:
                 # I'm not quite sure on what to do for the browser side
                 # The linkCSSToReport just adds the given CSS to the header of the given html string, didn't which css to use so just used bootstrap
-                return linkCSSToReport('static/css/bootstrap.css', generateReportHTML(data['groupid'], data['email']))
+                return send_file(
+                    generatePdfFromHtml(generateReportHTML(data['groupid'], data['email'])),
+                    attachment_filename=groupname + ".pdf"
+                )
             else:
                 return json.dumps({
                     "code": 200,
                     "msg": "Report has been created!",
-                    "report": generateReportHTML(data['groupid'], data['email'])
+                    "report": generateReportHTML(data.get("groupid"), data.get("email"))
                 })
         except Exception as e:
             print(print_exc())
-            return str(e)
 
             if isBrowser:
-                return redirect(url_for('errors.error', code=500, msg=print_exc()))
+                return redirect(url_for("group", id=data["groupid"], msg="Something went wrong while generating your report"))
             else:
                 return json.dumps({
                     "code": 500,
@@ -89,10 +94,9 @@ def generateReport():
                 }), 500
     else:
         if isBrowser:
-            return redirect(url_for('errors.error', code=403, msg=print_exc()))
+            return redirect(url_for("index", msg="You must be signed in to do this"))
         else:
             return json.dumps({
                 "code": 403,
                 "msg": "You must be signed in to do this",
-                "exc": print_exc()
             }), 403

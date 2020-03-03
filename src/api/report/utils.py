@@ -139,6 +139,7 @@ def generatePdfFromHtml(html: str, cssPath: str = None) -> BytesIO:
     css = CSS(string=open(cssPath, "r").read(), font_config=font_config) if cssPath is not None else None
 
     return BytesIO(html.write_pdf(
+        None,
         stylesheets=[css] if css is not None else None,
         font_config=font_config
     ))
