@@ -109,9 +109,9 @@ response=
 echo -n "Do you want to pip install requirements.txt? (y/n) > "
 read response
 if [ $response == "y" ]; then
-    pip3 install -r "$output/requirements.txt"
     echo "Brew installing pango (required for weasyprint)"
     brew install pango
+    pip3 install -r "$output/requirements.txt"
 else
     echo "If you're on macOS you may need to 'brew install pango' to get weasyprint to work"
 fi
