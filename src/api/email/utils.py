@@ -20,17 +20,12 @@ def sendGroupEmail(groupid, data, sender):
 
     try:
         for user in groupUsers:
-            mail = sendgrid.Mail("forkie@example.com",
-                                 str(user["email"]), str(data["subject"] + " - from " + sender["username"]),
-                                 str(data["content"]))
+            mail = Mail(from_email="forkie@file-rep0.herokuapp.com",
+                        subject=data["subject"] + " - from " + sender["username"],
+                        to_emails=user["email"],
+                        plain_text_content=data["content"])
+
             response = sg.send(mail)
-
-            mail = Mail(from_email=Email("forkie@file-rep0.herokuapp.com"),
-                        subject=Subject(data["subject"] + " - from " + sender["username"]),
-                        to_emails=Email(user["email"]),
-                        plain_text_content=Content(content=data["content"], mime_type="text/plain"))
-
-            response = sg.client.mail.sen.post(mail.get())
 
     except Exception as e:
         print(print_exc())
@@ -50,10 +45,10 @@ def sendErrorEmail(groupid, data, sender):
 
     try:
         for admin in admins:
-            mail = Mail(from_email=Email("forkie-error@file-rep0.herokuapp.com"),
-                        subject=Subject("Error sending email to group " + groupData["groupname"]),
-                        to_emails=Email(str(admin["email"])),
-                        plain_text_content=Content(mime_type="text/plain",content="""
+            mail = Mail(from_email="forkie-error@file-rep0.herokuapp.com",
+                        subject="Error sending email to group " + groupData["groupname"],
+                        to_emails=str(admin["email"]),
+                        plain_text_content="""
                                     There was an error when %s uploaded a file and attempted to send an email to group %s (%s).
                                     
                                     Please attend to logs as soon as possible to resolve the issue.
@@ -63,8 +58,8 @@ def sendErrorEmail(groupid, data, sender):
                                     
                                     Thank you,
                                     forkie Admin Alert
-                                 """.format([sender["username"], groupData["groupid"], groupData["groupname"], data["content"]])))
+                                 """.format([sender["username"], groupData["groupid"], groupData["groupname"], data["content"]]))
 
-            response = sg.client.mail.sen.post(mail.get())
+            response = sg.send(mail)
     except Exception as e:
         print(print_exc())
