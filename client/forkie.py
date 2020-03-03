@@ -6,7 +6,7 @@ Usage:
     {0} {1} [-v | --verbose] [(-m <message>)] (<file>)...
     {0} {1} (-a | -n <name> [(-p <group>)]) [-vd] [(-c <comment>) [-f | --force]]
     {0} {1} (-V [--peeps] [<email>...] | (--add | --rm | --change) (-p <group>) [<email>]) [-vf]
-    {0} {1} (-a | ((-p <group>) | (--peeps <email>))) [(-o <file>)] [-v | --verbose]
+    {0} {1} (-p <group> | <email>) [(-o <file>)] [-v | --verbose]
     {0} {1} (<repo>) [-v | --verbose]
     {0} -h | --help | --version
 Options:

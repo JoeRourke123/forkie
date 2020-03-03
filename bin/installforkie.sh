@@ -3,7 +3,7 @@
 # Will take an output argument and then will check if forkie is already installed in that location
 
 TOKEN="bb15550805756f28d4da829116e175c852d59250"
-REQUIREMENTS=( "curl" "pip3" "heroku" )
+REQUIREMENTS=( "curl" "pip3" "heroku" "brew" )
 UNNECESSARY_FILES=( "forkie_runner.py" "MANIFEST.in" "requirements_cli.txt" "setup.py" "forkie.tar.gz" )
 UNNECESSARY_DIRS=( "client" "res" )
 
@@ -110,6 +110,10 @@ echo -n "Do you want to pip install requirements.txt? (y/n) > "
 read response
 if [ $response == "y" ]; then
     pip3 install -r "$output/requirements.txt"
+    echo "Brew installing pango (required for weasyprint)"
+    brew install pango
+else
+    echo "If you're on macOS you may need to 'brew install pango' to get weasyprint to work"
 fi
 printf "\nFinished forkie setup\nTo start the forkie web server on localhost run the 'forkielocal.sh' script\n"
 

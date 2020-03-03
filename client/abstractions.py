@@ -1,5 +1,7 @@
 from src.api.files.file_compare import check_if_equal
 from client import cli_utils
+from weasyprint import HTML, CSS
+from weasyprint.fonts import FontConfiguration
 
 import getpass
 import requests
@@ -218,3 +220,22 @@ def format_file_rows(formatted_rows: list, offset: int) -> str:
     headers = list(formatted_rows[0].keys())
     headers.insert(0, 'file no.')
     return cli_utils.format_rows(headers, [[data['fileid'], data['filename'], data['extension'], data['belongs to'], data['no. of versions']] for data in formatted_rows], offset)
+
+# Copied from src.api.report.utils to avoid weird setuptools things for CLI
+# From weazyprint docs (https://weasyprint.readthedocs.io/en/latest/tutorial.html#instantiating-html-and-css-objects)
+def generatePdfFromHtml(html: str, outputPath: str, cssPath: str = None):
+    """ Generates a pdf from a given html string and outputs to the specified path. Will also include css style if specified
+        - Uses: weazyprint
+        _ html: given html string to convert and save to pdf
+        - outputPath: the path at which to save pdf
+        - cssPath: if specified, will add the css from the given path to the pdf doc
+    """
+    font_config = FontConfiguration()
+    html = HTML(string=html)
+    css = CSS(string=open(cssPath, "r").read(), font_config=font_config) if cssPath is not None else None
+
+    html.write_pdf(
+        outputPath, 
+        stylesheets=[css] if css is not None else None,
+        font_config=font_config
+    )
