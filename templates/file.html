@@ -147,7 +147,7 @@
                             </div>
                             {% if archive %}
                                 <div class="d-flex justify-content-start">
-                                    <form action="{{ url_for("files.restoreVersion") }}" method="post">
+                                    <form action="{{ url_for("files.restoreFileVersion") }}" class="mr-2" method="post">
                                         <input type="hidden" value="{{ versionID }}" name="versionid"/>
                                         <button type="submit" onclick="openLoader()" class="btn btn-outline-info">
                                             <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
