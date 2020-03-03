@@ -37,7 +37,7 @@ def getGroupUsers(groupID):
 
 
 def getGroupData(groupID):
-    from src.api.files.file_query import file_query
+    from src.api.files import file_query
 
     """ Util function to get serialised group data, along with files accessible to the group
 
