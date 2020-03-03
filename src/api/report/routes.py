@@ -34,6 +34,7 @@ def generateReport(groupname=None):
     """
     isBrowser = "email" in request.form or "groupid" in request.form
     data = request.form if isBrowser else json.loads(request.data)
+    data = dict(data)
     cookie_userid = request.cookies.get('userid')
 
     if cookie_userid:
