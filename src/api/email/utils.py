@@ -1,4 +1,5 @@
 import sendgrid
+from sendgrid.helpers.mail import *
 import os
 from traceback import print_exc
 
@@ -24,6 +25,13 @@ def sendGroupEmail(groupid, data, sender):
                                  str(data["content"]))
             response = sg.send(mail)
 
+            mail = Mail(from_email=Email("forkie@file-rep0.herokuapp.com"),
+                        subject=Subject(data["subject"] + " - from " + sender["username"]),
+                        to_emails=Email(user["email"]),
+                        plain_text_content=Content(content=data["content"], mime_type="text/plain"))
+
+            response = sg.client.mail.sen.post(mail.get())
+
     except Exception as e:
         print(print_exc())
         sendErrorEmail(groupid, data, sender)
@@ -42,9 +50,10 @@ def sendErrorEmail(groupid, data, sender):
 
     try:
         for admin in admins:
-            mail = sendgrid.Mail("forkie-error@example.com",
-                                 str(admin["email"]), "Error sending email to group " + groupData["groupname"],
-                                 plain_text_content="""
+            mail = Mail(from_email=Email("forkie-error@file-rep0.herokuapp.com"),
+                        subject=Subject("Error sending email to group " + groupData["groupname"]),
+                        to_emails=Email(str(admin["email"])),
+                        plain_text_content=Content(mime_type="text/plain",content="""
                                     There was an error when %s uploaded a file and attempted to send an email to group %s (%s).
                                     
                                     Please attend to logs as soon as possible to resolve the issue.
@@ -54,7 +63,8 @@ def sendErrorEmail(groupid, data, sender):
                                     
                                     Thank you,
                                     forkie Admin Alert
-                                 """.format([sender["username"], groupData["groupid"], groupData["groupname"], data["content"]]))
-            response = sg.send(mail)
+                                 """.format([sender["username"], groupData["groupid"], groupData["groupname"], data["content"]])))
+
+            response = sg.client.mail.sen.post(mail.get())
     except Exception as e:
         print(print_exc())
