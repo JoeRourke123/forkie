@@ -146,16 +146,16 @@
                                 </small>
                             </div>
                             {% if archive %}
-                                <div class="d-flex justify-content-start">
-                                    <form action="{{ "files.restoreVersion" }}" method="post">
+                                <div class="d-flex justify-content-start mt-2">
+                                    <form action="{{ url_for("files.restoreFileVersion") }}" class="mr-2" method="post">
                                         <input type="hidden" value="{{ versionID }}" name="versionid"/>
-                                        <button type="submit" onclick="openLoader()" class="btn btn-outline-info">
+                                        <button type="submit" onclick="openLoader()" class="btn btn-sm btn-outline-info">
                                             <span class="oi oi-action-undo" title="Restore Archived Versions"></span>
                                         </button>
                                     </form>
-                                    <form action="{{ "files.deleteVersion" }}" method="post">
+                                    <form action="{{ url_for("files.deleteVersion") }}" onsubmit="openLoader()" method="post">
                                         <input type="hidden" value="{{ versionID }}" name="versionid"/>
-                                        <button type="submit" onclick="openLoader()" class="btn btn-outline-danger">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <span class="oi oi-trash" title="Delete Archived Versions"></span>
                                         </button>
                                     </form>

@@ -4,8 +4,9 @@
 
 TOKEN="bb15550805756f28d4da829116e175c852d59250"
 REQUIREMENTS=( "curl" "pip3" "heroku" "brew" )
-UNNECESSARY_FILES=( "forkie_runner.py" "MANIFEST.in" "requirements_cli.txt" "setup.py" "forkie.tar.gz" )
-UNNECESSARY_DIRS=( "client" "res" )
+# Removed client and forkie_runner from unnecessary dirs/files
+UNNECESSARY_FILES=( "MANIFEST.in" "setup.py" "forkie.tar.gz" )
+UNNECESSARY_DIRS=()
 
 
 usage() {
@@ -106,11 +107,13 @@ do
 done
 
 response=
-echo -n "Do you want to pip install requirements.txt? (y/n) > "
+echo -n "Do you want to install dependencies? (y/n) > "
 read response
 if [ $response == "y" ]; then
     echo "Brew installing pango (required for weasyprint)"
+    brew update --debug --verbose
     brew install pango
+    echo "Pip installing the requirements.txt"
     pip3 install -r "$output/requirements.txt"
 else
     echo "If you're on macOS you may need to 'brew install pango' to get weasyprint to work"
