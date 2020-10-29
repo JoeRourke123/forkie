@@ -1,6 +1,6 @@
 # forkie
 
-Group 9 Project for CS1813 Assignment 1.
+Project for a first year CS assignment.
 
 A simple file repository web app and command line interface, with ability to apply group permissions for users and files, hosted on Heroku!
 
